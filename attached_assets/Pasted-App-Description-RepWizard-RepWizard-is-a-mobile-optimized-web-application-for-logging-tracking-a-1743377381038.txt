@@ -1,0 +1,39 @@
+App Description: RepWizard
+
+RepWizard is a mobile-optimized web application for logging, tracking, and planning structured strength training routines. Designed for fitness enthusiasts and trainers alike, the app focuses on evidence-based training with a clean, responsive interface and intelligent guidance features.
+
+⸻
+
+Core Features:
+	•	Quick & Structured Workout Entry
+	•	Log individual sets with fields for reps, weight, RPE, set type, and notes
+	•	Tap to add sets or exercises using pre-defined program templates
+	•	Built-in logic to dynamically suggest warm-up sets based on working weight, reps, and RPE
+	•	Custom Program Management
+	•	Create structured multi-week training programs with exercises, rep schemes, rest intervals, and alternates
+	•	Reference a centralized Exercise Library with associated muscle groups and instructional videos
+	•	Progress Tracking & Visualization
+	•	Track performance over time with charts showing progress in weight lifted, reps completed, and RPE trends
+	•	Review historical workout logs and individual set-level data
+	•	Goal Setting
+	•	Set and monitor short- or long-term goals (e.g., “Bench 225x5 at RPE 8”)
+	•	Get feedback and recommendations based on previous workout history
+	•	Smart Recommendations
+	•	Intelligent warm-up planning using a percentage-based algorithm that adjusts to training intensity
+	•	Suggests alternate exercises based on pre-configured program data
+	•	Offline-Friendly Data Entry
+	•	Local-first design enables logging even in low-connectivity gym environments
+	•	Syncs with cloud storage when reconnected
+
+⸻
+
+UI / Style:
+	•	Sleek, Minimalist Interface
+	•	Built for quick thumb-based interaction on mobile screens
+	•	Clean forms, icon-based navigation, collapsible logs for readability
+	•	Intuitive Navigation
+	•	Start workouts, view programs, and review progress with 1–2 taps
+	•	Modal overlays for quick edits without losing context
+	•	Visual Hierarchy
+	•	Emphasis on clarity and function, with high-contrast fonts and adaptive layouts
+	•	Use of subtle animations to guide interaction without clutter
