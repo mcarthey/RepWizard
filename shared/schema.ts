@@ -40,7 +40,10 @@ export const programs = pgTable("programs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  weeks: integer("weeks").default(1),
+  weeks: integer("weeks").default(4),
+  daysPerWeek: integer("days_per_week").default(3),
+  type: text("type").default("strength"), // e.g., strength, hypertrophy, endurance
+  difficulty: text("difficulty").default("intermediate"), // e.g., beginner, intermediate, advanced
   userId: integer("user_id").references(() => users.id),
 });
 

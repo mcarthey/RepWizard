@@ -13,6 +13,10 @@ export default function Programs() {
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [newProgramName, setNewProgramName] = useState("");
   const [newProgramDescription, setNewProgramDescription] = useState("");
+  const [newProgramWeeks, setNewProgramWeeks] = useState<number>(4);
+  const [newProgramDaysPerWeek, setNewProgramDaysPerWeek] = useState<number>(3);
+  const [newProgramType, setNewProgramType] = useState<string>("strength");
+  const [newProgramDifficulty, setNewProgramDifficulty] = useState<string>("intermediate");
   const [expandedPrograms, setExpandedPrograms] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -46,6 +50,10 @@ export default function Programs() {
       // Reset form and close modal
       setNewProgramName("");
       setNewProgramDescription("");
+      setNewProgramWeeks(4);
+      setNewProgramDaysPerWeek(3);
+      setNewProgramType("strength");
+      setNewProgramDifficulty("intermediate");
       setShowCreateModal(false);
       
       // Show success toast
@@ -92,6 +100,10 @@ export default function Programs() {
       setSelectedProgram(null);
       setNewProgramName("");
       setNewProgramDescription("");
+      setNewProgramWeeks(4);
+      setNewProgramDaysPerWeek(3);
+      setNewProgramType("strength");
+      setNewProgramDifficulty("intermediate");
       setShowEditModal(false);
       
       // Show success toast
@@ -117,6 +129,10 @@ export default function Programs() {
     setSelectedProgram(program);
     setNewProgramName(program.name);
     setNewProgramDescription(program.description || "");
+    setNewProgramWeeks(program.weeks || 4);
+    setNewProgramDaysPerWeek(program.daysPerWeek || 3);
+    setNewProgramType(program.type || "strength");
+    setNewProgramDifficulty(program.difficulty || "intermediate");
     setShowEditModal(true);
   };
   
@@ -241,11 +257,26 @@ export default function Programs() {
                           </div>
                         </div>
                         
-                        <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
-                          <div className="text-sm text-gray-500">
-                            <span className="material-icons-round text-gray-400 text-sm align-text-bottom mr-1">calendar_today</span>
-                            <span className="font-medium">{program.weeks || 4} week program</span>
+                        <div className="px-4 py-3 flex flex-wrap gap-2 border-t border-gray-100">
+                          <div className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 flex items-center">
+                            <span className="material-icons-round text-gray-500 text-xs mr-1">calendar_today</span>
+                            {program.weeks || 4} weeks
                           </div>
+                          <div className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 flex items-center">
+                            <span className="material-icons-round text-gray-500 text-xs mr-1">date_range</span>
+                            {program.daysPerWeek || 3} days/week
+                          </div>
+                          <div className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 flex items-center">
+                            <span className="material-icons-round text-gray-500 text-xs mr-1">fitness_center</span>
+                            {program.type ? program.type.charAt(0).toUpperCase() + program.type.slice(1) : 'Strength'}
+                          </div>
+                          <div className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 flex items-center">
+                            <span className="material-icons-round text-gray-500 text-xs mr-1">signal_cellular_alt</span>
+                            {program.difficulty ? program.difficulty.charAt(0).toUpperCase() + program.difficulty.slice(1) : 'Intermediate'}
+                          </div>
+                        </div>
+                        
+                        <div className="px-4 py-3 bg-gray-50 flex justify-end">
                           <button 
                             className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md flex items-center shadow-sm hover:bg-blue-700 transition-colors"
                             onClick={() => {
@@ -318,6 +349,62 @@ export default function Programs() {
                 ></textarea>
               </div>
               
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Program Length (weeks)</label>
+                  <select
+                    value={newProgramWeeks}
+                    onChange={(e) => setNewProgramWeeks(parseInt(e.target.value))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    {[1, 2, 3, 4, 6, 8, 10, 12, 16].map(weeks => (
+                      <option key={weeks} value={weeks}>{weeks} weeks</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Days Per Week</label>
+                  <select
+                    value={newProgramDaysPerWeek}
+                    onChange={(e) => setNewProgramDaysPerWeek(parseInt(e.target.value))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map(days => (
+                      <option key={days} value={days}>{days} days</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Program Type</label>
+                  <select
+                    value={newProgramType}
+                    onChange={(e) => setNewProgramType(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="strength">Strength</option>
+                    <option value="hypertrophy">Hypertrophy</option>
+                    <option value="endurance">Endurance</option>
+                    <option value="power">Power</option>
+                    <option value="general">General Fitness</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                  <select
+                    value={newProgramDifficulty}
+                    onChange={(e) => setNewProgramDifficulty(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+              
               <div className="pt-2 flex gap-3">
                 <button 
                   className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-100 active:bg-gray-200"
@@ -333,6 +420,10 @@ export default function Programs() {
                       createProgramMutation.mutate({
                         name: newProgramName.trim(),
                         description: newProgramDescription.trim() || null,
+                        weeks: newProgramWeeks,
+                        daysPerWeek: newProgramDaysPerWeek,
+                        type: newProgramType,
+                        difficulty: newProgramDifficulty,
                         userId: null
                       });
                     }
@@ -394,6 +485,62 @@ export default function Programs() {
                 ></textarea>
               </div>
               
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Program Length (weeks)</label>
+                  <select
+                    value={newProgramWeeks}
+                    onChange={(e) => setNewProgramWeeks(parseInt(e.target.value))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    {[1, 2, 3, 4, 6, 8, 10, 12, 16].map(weeks => (
+                      <option key={weeks} value={weeks}>{weeks} weeks</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Days Per Week</label>
+                  <select
+                    value={newProgramDaysPerWeek}
+                    onChange={(e) => setNewProgramDaysPerWeek(parseInt(e.target.value))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map(days => (
+                      <option key={days} value={days}>{days} days</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Program Type</label>
+                  <select
+                    value={newProgramType}
+                    onChange={(e) => setNewProgramType(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="strength">Strength</option>
+                    <option value="hypertrophy">Hypertrophy</option>
+                    <option value="endurance">Endurance</option>
+                    <option value="power">Power</option>
+                    <option value="general">General Fitness</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                  <select
+                    value={newProgramDifficulty}
+                    onChange={(e) => setNewProgramDifficulty(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+              
               <div className="pt-2 flex gap-3">
                 <button 
                   className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-100 active:bg-gray-200"
@@ -411,6 +558,10 @@ export default function Programs() {
                         data: {
                           name: newProgramName.trim(),
                           description: newProgramDescription.trim() || null,
+                          weeks: newProgramWeeks,
+                          daysPerWeek: newProgramDaysPerWeek,
+                          type: newProgramType,
+                          difficulty: newProgramDifficulty,
                         }
                       });
                     }

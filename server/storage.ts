@@ -127,13 +127,28 @@ export class MemStorage implements IStorage {
       {
         name: 'Push/Pull/Legs',
         description: 'A 3-day split focusing on pushing movements, pulling movements, and leg exercises',
-        weeks: 4,
+        weeks: 6,
+        daysPerWeek: 3,
+        type: 'strength',
+        difficulty: 'intermediate',
         userId: null
       },
       {
         name: 'Upper/Lower Split',
         description: 'A 4-day split alternating between upper body and lower body workouts',
         weeks: 4,
+        daysPerWeek: 4,
+        type: 'hypertrophy',
+        difficulty: 'intermediate',
+        userId: null
+      },
+      {
+        name: 'Full Body Program',
+        description: 'A beginner-friendly program working the entire body each session',
+        weeks: 8,
+        daysPerWeek: 3,
+        type: 'strength',
+        difficulty: 'beginner',
         userId: null
       }
     ] as const;
@@ -144,7 +159,10 @@ export class MemStorage implements IStorage {
         id, 
         name: program.name, 
         description: program.description, 
-        weeks: program.weeks, 
+        weeks: program.weeks,
+        daysPerWeek: program.daysPerWeek,
+        type: program.type,
+        difficulty: program.difficulty,
         userId: program.userId 
       };
       this.programs.set(id, newProgram);
@@ -203,7 +221,7 @@ export class MemStorage implements IStorage {
         name: exercise.name,
         description: exercise.description,
         instructions: exercise.instructions,
-        muscleGroups: exercise.muscleGroups,
+        muscleGroups: [...exercise.muscleGroups],
         videoUrl: exercise.videoUrl,
         userId: exercise.userId
       };
@@ -246,7 +264,15 @@ export class MemStorage implements IStorage {
 
   async createExercise(insertExercise: InsertExercise): Promise<Exercise> {
     const id = this.currentIds.exercises++;
-    const exercise: Exercise = { ...insertExercise, id };
+    const exercise: Exercise = { 
+      id,
+      name: insertExercise.name,
+      description: insertExercise.description ?? null,
+      instructions: insertExercise.instructions ?? null,
+      muscleGroups: insertExercise.muscleGroups ?? null,
+      videoUrl: insertExercise.videoUrl ?? null,
+      userId: insertExercise.userId ?? null
+    };
     this.exercises.set(id, exercise);
     return exercise;
   }
@@ -275,7 +301,16 @@ export class MemStorage implements IStorage {
 
   async createProgram(insertProgram: InsertProgram): Promise<Program> {
     const id = this.currentIds.programs++;
-    const program: Program = { ...insertProgram, id };
+    const program: Program = { 
+      id,
+      name: insertProgram.name,
+      description: insertProgram.description ?? null,
+      weeks: insertProgram.weeks ?? null,
+      daysPerWeek: insertProgram.daysPerWeek ?? null,
+      type: insertProgram.type ?? null,
+      difficulty: insertProgram.difficulty ?? null,
+      userId: insertProgram.userId ?? null
+    };
     this.programs.set(id, program);
     return program;
   }
