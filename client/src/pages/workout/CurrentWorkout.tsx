@@ -121,13 +121,14 @@ export default function CurrentWorkout() {
             <div className="py-16 text-center bg-white rounded-lg shadow-sm">
               <p className="text-gray-500 mb-6 text-lg">No exercises added yet</p>
               <button
-                className="py-3 px-6 bg-primary-600 text-white rounded-lg font-medium text-lg"
+                className="py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-lg shadow-md flex items-center justify-center mx-auto transition-colors"
                 onClick={() => {
                   console.log("Add First Exercise button clicked");
                   setShowAddModal(true);
                 }}
                 id="add-first-exercise-btn"
               >
+                <span className="material-icons-round text-xl mr-2">add_circle</span>
                 Add Your First Exercise
               </button>
             </div>
