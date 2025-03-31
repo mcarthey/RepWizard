@@ -33,7 +33,14 @@ export default function CurrentWorkout() {
   }, [loading, workout, createWorkout]);
   
   // Get sample program data for header
-  const { data: programs } = useQuery({
+  interface ProgramData {
+    id: number;
+    name: string;
+    description: string | null;
+    userId: number | null;
+  }
+  
+  const { data: programs = [] } = useQuery<ProgramData[]>({
     queryKey: ['/api/programs'],
   });
   
@@ -103,6 +110,7 @@ export default function CurrentWorkout() {
               <button
                 className="py-2 px-4 bg-primary-600 text-white rounded-lg"
                 onClick={() => setShowAddModal(true)}
+                id="add-first-exercise-btn"
               >
                 Add Your First Exercise
               </button>
@@ -123,6 +131,7 @@ export default function CurrentWorkout() {
               <button 
                 className="w-full py-3 mb-6 bg-white text-primary-600 rounded-lg shadow-sm flex items-center justify-center hover:bg-primary-50 transition-colors"
                 onClick={() => setShowAddModal(true)}
+                id="add-exercise-btn"
               >
                 <span className="material-icons-round text-sm mr-1">add</span>
                 Add Exercise

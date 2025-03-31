@@ -1,4 +1,4 @@
-import { LocalExercise } from "@shared/schema";
+import { Exercise, LocalExercise } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 
 interface ExerciseInfoModalProps {
@@ -7,13 +7,24 @@ interface ExerciseInfoModalProps {
   onClose: () => void;
 }
 
+// Define a custom type instead of extending Exercise
+interface ExerciseDetails {
+  id: number;
+  name: string;
+  description: string | null;
+  muscleGroups: string[] | null;
+  videoUrl: string | null;
+  instructions: string | null;
+  userId: number | null;
+}
+
 export default function ExerciseInfoModal({ 
   isVisible, 
   exercise, 
   onClose 
 }: ExerciseInfoModalProps) {
   // Get full exercise details
-  const { data: exerciseDetails, isLoading } = useQuery({
+  const { data: exerciseDetails, isLoading } = useQuery<ExerciseDetails>({
     queryKey: [`/api/exercises/${exercise.exerciseId}`],
     enabled: isVisible,
   });
@@ -72,7 +83,7 @@ export default function ExerciseInfoModal({
               <div>
                 <h4 className="font-medium mb-2">Instructions</h4>
                 <ol className="space-y-2 text-sm text-gray-700 list-decimal pl-5">
-                  {exerciseDetails.instructions.split('\n').map((instruction, i) => (
+                  {exerciseDetails.instructions.split('\n').map((instruction: string, i: number) => (
                     <li key={i}>{instruction}</li>
                   ))}
                 </ol>
@@ -82,15 +93,29 @@ export default function ExerciseInfoModal({
             {/* This would be populated with actual data in a fully implemented app */}
             <div className="pt-2">
               <h4 className="font-medium mb-2">Recent Performance</h4>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="flex justify-between text-sm items-center">
-                  <span className="text-gray-500">Today</span>
-                  <span className="font-medium">
-                    {exercise.sets.length > 0 
-                      ? `${exercise.sets[0].weight} lbs × ${exercise.sets[0].reps} reps` 
-                      : 'No sets recorded yet'}
-                  </span>
-                </div>
+              <div className="bg-gray-50 rounded-lg">
+                {exercise.sets.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {exercise.sets.map((set, index) => (
+                      <div key={set.id} className="p-3">
+                        <div className="flex justify-between text-sm items-center">
+                          <span className="text-gray-500">Set {set.setNumber}</span>
+                          <span className="font-medium">
+                            {`${set.weight} lbs × ${set.reps} reps`}
+                            {set.rpe ? ` @ RPE ${set.rpe}` : ''}
+                          </span>
+                        </div>
+                        {set.notes && (
+                          <div className="text-xs text-gray-500 mt-1">{set.notes}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 text-center text-gray-500">
+                    No sets recorded yet
+                  </div>
+                )}
               </div>
             </div>
             

@@ -69,6 +69,7 @@ export default function SetRow({ set, onSetClick, onUpdateSet }: SetRowProps) {
                 onUpdateSet({ weight: newValue });
               }
             }}
+            title={`Previous weight: ${set.weight} lbs`}
           />
           <button 
             className="text-gray-400 hover:text-gray-600"
@@ -100,6 +101,7 @@ export default function SetRow({ set, onSetClick, onUpdateSet }: SetRowProps) {
                 onUpdateSet({ reps: newValue });
               }
             }}
+            title={`Previous reps: ${set.reps}`}
           />
           <button 
             className="text-gray-400 hover:text-gray-600"
