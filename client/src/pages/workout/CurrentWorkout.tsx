@@ -28,7 +28,10 @@ export default function CurrentWorkout() {
   // Create a default workout if none exists
   useEffect(() => {
     if (!loading && !workout) {
+      console.log("Creating new workout because none exists");
       createWorkout(createNewWorkout());
+    } else {
+      console.log("Current workout state:", { loading, workout });
     }
   }, [loading, workout, createWorkout]);
   
@@ -45,7 +48,12 @@ export default function CurrentWorkout() {
   });
   
   const handleAddExercise = (exercise: Exercise) => {
-    if (!workout) return;
+    console.log("handleAddExercise called with exercise:", exercise);
+    
+    if (!workout) {
+      console.error("Cannot add exercise: No active workout");
+      return;
+    }
     
     const newExercise = createWorkoutExercise(
       workout.id,
@@ -53,6 +61,7 @@ export default function CurrentWorkout() {
       workout.exercises.length
     );
     
+    console.log("Adding new exercise to workout:", newExercise);
     addExercise(newExercise);
   };
   
@@ -109,7 +118,10 @@ export default function CurrentWorkout() {
               <p className="text-gray-500 mb-4">No exercises added yet</p>
               <button
                 className="py-2 px-4 bg-primary-600 text-white rounded-lg"
-                onClick={() => setShowAddModal(true)}
+                onClick={() => {
+                  console.log("Add First Exercise button clicked");
+                  setShowAddModal(true);
+                }}
                 id="add-first-exercise-btn"
               >
                 Add Your First Exercise

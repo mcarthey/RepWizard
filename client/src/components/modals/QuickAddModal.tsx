@@ -22,13 +22,28 @@ export default function QuickAddModal({
     enabled: isVisible
   });
   
+  // Log when exercises are loaded
+  useEffect(() => {
+    if (exercises && exercises.length > 0) {
+      console.log("Exercises loaded successfully:", exercises.length, "exercises");
+    }
+  }, [exercises]);
+  
   // Get unique muscle groups from exercises for categories
-  const muscleGroups = [...new Set(
-    exercises.flatMap(ex => ex.muscleGroups || [])
-  )].sort();
+  const muscleGroups: string[] = [];
+  exercises.forEach((ex: Exercise) => {
+    if (ex.muscleGroups) {
+      ex.muscleGroups.forEach(group => {
+        if (!muscleGroups.includes(group)) {
+          muscleGroups.push(group);
+        }
+      });
+    }
+  });
+  muscleGroups.sort();
   
   // Filter exercises based on search term and selected category
-  const filteredExercises = exercises.filter(exercise => {
+  const filteredExercises = exercises.filter((exercise: Exercise) => {
     const matchesSearch = searchTerm === "" || 
       exercise.name.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -87,7 +102,7 @@ export default function QuickAddModal({
                   : "SUGGESTED EXERCISES"}
             </h3>
             <div className="space-y-3">
-              {filteredExercises.slice(0, 5).map(exercise => (
+              {filteredExercises.slice(0, 5).map((exercise: Exercise) => (
                 <div 
                   key={exercise.id}
                   className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
