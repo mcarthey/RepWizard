@@ -194,6 +194,17 @@ export function useCurrentWorkout() {
     }
   }, []);
 
+  // Update the entire workout object
+  const updateWorkout = useCallback((updates: Partial<LocalWorkout>) => {
+    setWorkout(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        ...updates
+      };
+    });
+  }, []);
+
   return {
     workout,
     loading,
@@ -205,7 +216,8 @@ export function useCurrentWorkout() {
     updateSet,
     removeSet,
     completeWorkout,
-    clearWorkout
+    clearWorkout,
+    updateWorkout
   };
 }
 

@@ -121,6 +121,7 @@ export default function Programs() {
   
   // Function to handle program details view
   const handleProgramDetails = (programId: number) => {
+    console.log(`Navigating to program details: /programs/${programId}`);
     navigate(`/programs/${programId}`);
   };
 
