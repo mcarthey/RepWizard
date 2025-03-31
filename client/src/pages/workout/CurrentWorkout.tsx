@@ -118,10 +118,10 @@ export default function CurrentWorkout() {
         {/* Workout Content */}
         <div className="px-4 pt-4">
           {workout.exercises.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-gray-500 mb-4">No exercises added yet</p>
+            <div className="py-16 text-center bg-white rounded-lg shadow-sm">
+              <p className="text-gray-500 mb-6 text-lg">No exercises added yet</p>
               <button
-                className="py-2 px-4 bg-primary-600 text-white rounded-lg"
+                className="py-3 px-6 bg-primary-600 text-white rounded-lg font-medium text-lg"
                 onClick={() => {
                   console.log("Add First Exercise button clicked");
                   setShowAddModal(true);
