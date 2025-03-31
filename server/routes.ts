@@ -172,6 +172,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/workout-templates/:id', async (req, res) => {
+    try {
+      const template = await storage.getWorkoutTemplate(Number(req.params.id));
+      if (!template) {
+        return res.status(404).json({ error: 'Workout template not found' });
+      }
+      res.json(template);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
   app.post('/api/workout-templates', async (req, res) => {
     try {
       const templateData = insertWorkoutTemplateSchema.parse(req.body);

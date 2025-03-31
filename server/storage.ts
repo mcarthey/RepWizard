@@ -341,7 +341,13 @@ export class MemStorage implements IStorage {
 
   async createWorkoutTemplate(insertTemplate: InsertWorkoutTemplate): Promise<WorkoutTemplate> {
     const id = this.currentIds.workoutTemplates++;
-    const template: WorkoutTemplate = { ...insertTemplate, id };
+    const template: WorkoutTemplate = { 
+      id,
+      name: insertTemplate.name,
+      day: insertTemplate.day,
+      week: insertTemplate.week ?? null,
+      programId: insertTemplate.programId ?? null
+    };
     this.workoutTemplates.set(id, template);
     return template;
   }
@@ -355,7 +361,16 @@ export class MemStorage implements IStorage {
 
   async createExerciseTemplate(insertTemplate: InsertExerciseTemplate): Promise<ExerciseTemplate> {
     const id = this.currentIds.exerciseTemplates++;
-    const template: ExerciseTemplate = { ...insertTemplate, id };
+    const template: ExerciseTemplate = { 
+      id,
+      order: insertTemplate.order,
+      sets: insertTemplate.sets,
+      reps: insertTemplate.reps,
+      exerciseId: insertTemplate.exerciseId ?? null,
+      workoutTemplateId: insertTemplate.workoutTemplateId ?? null,
+      restTime: insertTemplate.restTime ?? null,
+      targetRpe: insertTemplate.targetRpe ?? null
+    };
     this.exerciseTemplates.set(id, template);
     return template;
   }
@@ -385,7 +400,16 @@ export class MemStorage implements IStorage {
 
   async createWorkout(insertWorkout: InsertWorkout): Promise<Workout> {
     const id = this.currentIds.workouts++;
-    const workout: Workout = { ...insertWorkout, id };
+    const workout: Workout = { 
+      id,
+      date: insertWorkout.date || new Date(), // Ensure a date is always provided
+      name: insertWorkout.name ?? null,
+      userId: insertWorkout.userId ?? null,
+      programId: insertWorkout.programId ?? null,
+      notes: insertWorkout.notes ?? null,
+      templateId: insertWorkout.templateId ?? null,
+      completed: insertWorkout.completed ?? null
+    };
     this.workouts.set(id, workout);
     return workout;
   }
@@ -436,7 +460,12 @@ export class MemStorage implements IStorage {
 
   async createWorkoutExercise(insertWorkoutExercise: InsertWorkoutExercise): Promise<WorkoutExercise> {
     const id = this.currentIds.workoutExercises++;
-    const workoutExercise: WorkoutExercise = { ...insertWorkoutExercise, id };
+    const workoutExercise: WorkoutExercise = { 
+      id,
+      order: insertWorkoutExercise.order,
+      exerciseId: insertWorkoutExercise.exerciseId ?? null,
+      workoutId: insertWorkoutExercise.workoutId ?? null
+    };
     this.workoutExercises.set(id, workoutExercise);
     return workoutExercise;
   }
@@ -454,7 +483,17 @@ export class MemStorage implements IStorage {
 
   async createSet(insertSet: InsertSet): Promise<Set> {
     const id = this.currentIds.sets++;
-    const set: Set = { ...insertSet, id };
+    const set: Set = { 
+      id,
+      reps: insertSet.reps,
+      setNumber: insertSet.setNumber,
+      weight: insertSet.weight,
+      setType: insertSet.setType,
+      notes: insertSet.notes ?? null,
+      completed: insertSet.completed ?? null,
+      workoutExerciseId: insertSet.workoutExerciseId ?? null,
+      rpe: insertSet.rpe ?? null
+    };
     this.sets.set(id, set);
     return set;
   }
@@ -485,7 +524,17 @@ export class MemStorage implements IStorage {
 
   async createGoal(insertGoal: InsertGoal): Promise<Goal> {
     const id = this.currentIds.goals++;
-    const goal: Goal = { ...insertGoal, id };
+    const goal: Goal = { 
+      id,
+      targetWeight: insertGoal.targetWeight,
+      targetReps: insertGoal.targetReps,
+      userId: insertGoal.userId ?? null,
+      exerciseId: insertGoal.exerciseId ?? null,
+      targetRpe: insertGoal.targetRpe ?? null,
+      deadline: insertGoal.deadline ?? null,
+      achieved: insertGoal.achieved ?? null,
+      achievedDate: insertGoal.achievedDate ?? null
+    };
     this.goals.set(id, goal);
     return goal;
   }

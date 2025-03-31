@@ -160,6 +160,7 @@ export default function ProgramDetail() {
                         <div 
                           key={template.id}
                           className="flex items-center border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/programs/${programId}/templates/${template.id}`)}
                         >
                           <div className="h-8 w-8 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mr-3">
                             <span className="material-icons-round text-sm">fitness_center</span>
