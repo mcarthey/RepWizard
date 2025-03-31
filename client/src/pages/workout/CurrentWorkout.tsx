@@ -70,6 +70,7 @@ export default function CurrentWorkout() {
   };
   
   const handleUpdateSet = (exerciseId: string, setId: string, updates: Partial<LocalSet>) => {
+    console.log("CurrentWorkout: Updating set", { exerciseId, setId, updates });
     updateSet(exerciseId, setId, updates);
   };
   

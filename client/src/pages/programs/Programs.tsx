@@ -128,7 +128,7 @@ export default function Programs() {
               </div>
               
               <button 
-                className="w-full py-3 mb-6 bg-white text-primary-600 rounded-lg shadow-sm flex items-center justify-center hover:bg-primary-50 transition-colors"
+                className="w-full py-3 mb-6 bg-blue-600 text-white rounded-lg shadow-md flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium"
                 onClick={() => setShowCreateModal(true)}
               >
                 <span className="material-icons-round text-sm mr-1">add</span>

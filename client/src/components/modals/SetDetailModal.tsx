@@ -36,23 +36,18 @@ export default function SetDetailModal({
   }, [isVisible, set]);
 
   const handleSave = () => {
-    console.log("Saving set:", {
+    const updatedSet = {
       ...set,
       weight,
       reps,
       rpe,
       setType,
       notes: notes || null
-    });
+    };
     
-    onSave({
-      ...set,
-      weight,
-      reps,
-      rpe,
-      setType,
-      notes: notes || null
-    });
+    console.log("Saving set:", updatedSet);
+    onSave(updatedSet);
+    onClose();
   };
 
   if (!isVisible) return null;

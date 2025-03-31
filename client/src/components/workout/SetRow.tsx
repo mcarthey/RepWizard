@@ -1,6 +1,6 @@
 import { LocalSet } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface SetRowProps {
   set: LocalSet;
@@ -9,17 +9,25 @@ interface SetRowProps {
 }
 
 export default function SetRow({ set, onSetClick, onUpdateSet }: SetRowProps) {
+  // Initialize local state with props
   const [weight, setWeight] = useState(set.weight);
   const [reps, setReps] = useState(set.reps);
+  
+  // Update local state when the prop changes
+  useEffect(() => {
+    console.log("SetRow: Set prop updated:", set);
+    setWeight(set.weight);
+    setReps(set.reps);
+  }, [set]);
 
   const handleWeightChange = (delta: number) => {
-    const newWeight = Math.max(0, weight + delta);
+    const newWeight = Math.max(0, set.weight + delta);
     setWeight(newWeight);
     onUpdateSet({ weight: newWeight });
   };
 
   const handleRepsChange = (delta: number) => {
-    const newReps = Math.max(0, reps + delta);
+    const newReps = Math.max(0, set.reps + delta);
     setReps(newReps);
     onUpdateSet({ reps: newReps });
   };

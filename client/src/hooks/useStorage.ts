@@ -115,8 +115,27 @@ export function useCurrentWorkout() {
 
   // Update a set
   const updateSet = useCallback((exerciseId: string, setId: string, updates: Partial<LocalSet>) => {
+    console.log("useStorage.updateSet:", { exerciseId, setId, updates });
+    
     setWorkout(prev => {
       if (!prev) return null;
+      
+      // Find the exercise to update
+      const exerciseToUpdate = prev.exercises.find(ex => ex.id === exerciseId);
+      if (!exerciseToUpdate) {
+        console.error(`Exercise with id ${exerciseId} not found`);
+        return prev;
+      }
+      
+      // Find the set to update
+      const setToUpdate = exerciseToUpdate.sets.find(set => set.id === setId);
+      if (!setToUpdate) {
+        console.error(`Set with id ${setId} not found in exercise ${exerciseId}`);
+        return prev;
+      }
+      
+      console.log("Found set to update:", setToUpdate);
+      
       return {
         ...prev,
         exercises: prev.exercises.map(ex => {

@@ -54,9 +54,11 @@ export default function ExerciseCard({
 
   const handleSaveSet = (updatedSet: LocalSet) => {
     if (selectedSet) {
+      console.log("ExerciseCard: Updating set with:", updatedSet);
       onUpdateSet(exercise.id, selectedSet.id, updatedSet);
     }
     setShowSetDetail(false);
+    setSelectedSet(null);
   };
 
   const handleDeleteSet = (setId: string) => {
