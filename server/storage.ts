@@ -116,13 +116,44 @@ export class MemStorage implements IStorage {
       goals: 1,
     };
     
-    // Initialize with some default exercises
+    // Initialize with some default exercises and programs
     this.seedExercises();
+    this.seedPrograms();
+  }
+
+  // Initialize with some default programs
+  private seedPrograms() {
+    const defaultPrograms = [
+      {
+        name: 'Push/Pull/Legs',
+        description: 'A 3-day split focusing on pushing movements, pulling movements, and leg exercises',
+        weeks: 4,
+        userId: null
+      },
+      {
+        name: 'Upper/Lower Split',
+        description: 'A 4-day split alternating between upper body and lower body workouts',
+        weeks: 4,
+        userId: null
+      }
+    ] as const;
+
+    defaultPrograms.forEach(program => {
+      const id = this.currentIds.programs++;
+      const newProgram: Program = { 
+        id, 
+        name: program.name, 
+        description: program.description, 
+        weeks: program.weeks, 
+        userId: program.userId 
+      };
+      this.programs.set(id, newProgram);
+    });
   }
 
   // Initialize with some common exercises
   private seedExercises() {
-    const defaultExercises: Omit<Exercise, 'id'>[] = [
+    const defaultExercises = [
       {
         name: 'Barbell Bench Press',
         description: 'A compound chest exercise using a barbell',
@@ -163,11 +194,20 @@ export class MemStorage implements IStorage {
         videoUrl: null,
         userId: null
       }
-    ];
+    ] as const;
     
     defaultExercises.forEach(exercise => {
       const id = this.currentIds.exercises++;
-      this.exercises.set(id, { ...exercise, id });
+      const newExercise: Exercise = {
+        id,
+        name: exercise.name,
+        description: exercise.description,
+        instructions: exercise.instructions,
+        muscleGroups: exercise.muscleGroups,
+        videoUrl: exercise.videoUrl,
+        userId: exercise.userId
+      };
+      this.exercises.set(id, newExercise);
     });
   }
 
@@ -337,6 +377,9 @@ export class MemStorage implements IStorage {
     const result: ExerciseWithSets[] = [];
     
     for (const workoutExercise of workoutExercisesList) {
+      // Skip if exerciseId is null
+      if (workoutExercise.exerciseId === null) continue;
+      
       const exercise = await this.getExercise(workoutExercise.exerciseId);
       const sets = await this.getSets(workoutExercise.id);
       
