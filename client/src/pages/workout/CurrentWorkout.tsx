@@ -87,6 +87,10 @@ export default function CurrentWorkout() {
     );
   }
 
+  console.log("Rendering CurrentWorkout with workout:", workout);
+  console.log("Exercise count:", workout.exercises.length);
+  console.log("ShowAddModal state:", showAddModal);
+
   return (
     <>
       <Header title="Today's Workout" />
@@ -158,7 +162,10 @@ export default function CurrentWorkout() {
       <QuickAddModal
         isVisible={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onSelectExercise={handleAddExercise}
+        onSelectExercise={(exercise) => {
+          console.log("Exercise selected from modal:", exercise);
+          handleAddExercise(exercise);
+        }}
       />
     </>
   );

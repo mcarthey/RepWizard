@@ -25,9 +25,16 @@ export default function QuickAddModal({
   // Log when exercises are loaded
   useEffect(() => {
     if (exercises && exercises.length > 0) {
-      console.log("Exercises loaded successfully:", exercises.length, "exercises");
+      console.log("Exercises loaded successfully:", exercises.length, "exercises", exercises[0]);
+    } else {
+      console.log("No exercises loaded yet or empty exercise list:", exercises);
     }
   }, [exercises]);
+  
+  // Log when modal visibility changes
+  useEffect(() => {
+    console.log("QuickAddModal visibility changed:", isVisible);
+  }, [isVisible]);
   
   // Get unique muscle groups from exercises for categories
   const muscleGroups: string[] = [];

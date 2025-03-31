@@ -11,8 +11,10 @@ export function useCurrentWorkout() {
   useEffect(() => {
     const loadWorkout = async () => {
       try {
+        console.log("Loading workout from local storage...");
         const localForage = await getLocalForage();
         const storedWorkout = await localForage.getItem<LocalWorkout>(STORAGE_KEYS.CURRENT_WORKOUT);
+        console.log("Retrieved workout from storage:", storedWorkout);
         setWorkout(storedWorkout || null);
       } catch (error) {
         console.error('Error loading workout:', error);
@@ -29,8 +31,10 @@ export function useCurrentWorkout() {
     const saveWorkout = async () => {
       if (workout) {
         try {
+          console.log("Saving workout to storage:", workout);
           const localForage = await getLocalForage();
           await localForage.setItem(STORAGE_KEYS.CURRENT_WORKOUT, workout);
+          console.log("Workout saved successfully");
         } catch (error) {
           console.error('Error saving workout:', error);
         }
@@ -44,17 +48,25 @@ export function useCurrentWorkout() {
 
   // Create a new workout
   const createWorkout = useCallback((newWorkout: LocalWorkout) => {
+    console.log("Creating new workout:", newWorkout);
     setWorkout(newWorkout);
   }, []);
 
   // Add an exercise to the workout
   const addExercise = useCallback((exercise: LocalExercise) => {
+    console.log("Adding exercise to workout:", exercise);
     setWorkout(prev => {
-      if (!prev) return null;
-      return {
+      if (!prev) {
+        console.error("Cannot add exercise: workout is null");
+        return null;
+      }
+      console.log("Current exercises:", prev.exercises.length);
+      const updated = {
         ...prev,
         exercises: [...prev.exercises, exercise]
       };
+      console.log("Updated workout:", updated);
+      return updated;
     });
   }, []);
 
