@@ -177,8 +177,8 @@ export default function SetDetailModal({
                   key={type}
                   className={`py-2 rounded-lg text-sm ${
                     setType === type
-                      ? 'border border-primary-500 bg-primary-50 text-primary-700 font-medium'
-                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      ? 'border-2 border-blue-600 bg-blue-100 text-blue-800 font-medium shadow-sm'
+                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                   }`}
                   onClick={() => setSetType(type)}
                 >
@@ -202,13 +202,13 @@ export default function SetDetailModal({
           
           <div className="pt-2 flex gap-3">
             <button 
-              className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700"
+              className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-100 active:bg-gray-200"
               onClick={() => onDelete(set.id)}
             >
               Delete
             </button>
             <button 
-              className="flex-1 py-3 bg-primary-600 text-white rounded-lg font-medium"
+              className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm hover:bg-blue-700 active:bg-blue-800"
               onClick={handleSave}
             >
               Save

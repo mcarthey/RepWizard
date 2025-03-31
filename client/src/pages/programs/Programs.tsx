@@ -184,13 +184,13 @@ export default function Programs() {
               
               <div className="pt-2 flex gap-3">
                 <button 
-                  className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700"
+                  className="flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 shadow-sm hover:bg-gray-100 active:bg-gray-200"
                   onClick={() => setShowCreateModal(false)}
                 >
                   Cancel
                 </button>
                 <button 
-                  className="flex-1 py-3 bg-primary-600 text-white rounded-lg font-medium disabled:opacity-50"
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:hover:bg-blue-600"
                   disabled={!newProgramName.trim()}
                   onClick={() => {
                     if (newProgramName.trim()) {

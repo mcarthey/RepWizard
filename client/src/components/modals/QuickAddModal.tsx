@@ -121,7 +121,7 @@ export default function QuickAddModal({
                     </div>
                   </div>
                   <button 
-                    className="p-1 text-primary-600"
+                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
                     onClick={() => {
                       onSelectExercise(exercise);
                       onClose();
@@ -142,10 +142,10 @@ export default function QuickAddModal({
             {muscleGroups.map(group => (
               <div 
                 key={group}
-                className={`flex items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer ${
+                className={`flex items-center p-3 border rounded-lg transition-colors cursor-pointer ${
                   selectedCategory === group 
-                    ? 'border-primary-500 bg-primary-50 text-primary-700' 
-                    : 'border-gray-200 text-gray-700'
+                    ? 'border-2 border-blue-600 bg-blue-100 text-blue-800 font-medium shadow-sm' 
+                    : 'border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                 }`}
                 onClick={() => {
                   if (selectedCategory === group) {
@@ -155,7 +155,7 @@ export default function QuickAddModal({
                   }
                 }}
               >
-                <span className="material-icons-round mr-2 text-primary-500">fitness_center</span>
+                <span className="material-icons-round mr-2 text-blue-600">fitness_center</span>
                 <span>{group}</span>
               </div>
             ))}
