@@ -7,6 +7,7 @@ import CurrentWorkout from "@/pages/workout/CurrentWorkout";
 import WorkoutHistory from "@/pages/workout/WorkoutHistory";
 import Programs from "@/pages/programs/Programs";
 import ProgramDetail from "@/pages/programs/ProgramDetail";
+import ProgramSchedule from "@/pages/programs/ProgramSchedule";
 import Exercises from "@/pages/exercises/Exercises";
 import Progress from "@/pages/progress/Progress";
 import Settings from "@/pages/settings/Settings";
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/history" component={WorkoutHistory} />
       <Route path="/programs" component={Programs} />
       <Route path="/programs/:id" component={ProgramDetail} />
+      <Route path="/programs/:id/schedule" component={ProgramSchedule} />
       <Route path="/exercises" component={Exercises} />
       <Route path="/progress" component={Progress} />
       <Route path="/settings" component={Settings} />

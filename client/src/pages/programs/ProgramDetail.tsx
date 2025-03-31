@@ -17,6 +17,7 @@ export default function ProgramDetail() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newWorkoutName, setNewWorkoutName] = useState("");
   const [newWorkoutDay, setNewWorkoutDay] = useState(1);
+  const [selectedDays, setSelectedDays] = useState<number[]>([1]);
   
   const programId = params?.id ? parseInt(params.id) : null;
 
@@ -185,13 +186,13 @@ export default function ProgramDetail() {
                 </div>
               </div>
               
-              {/* Start Program Button */}
+              {/* Schedule Program Button */}
               <button 
                 className="w-full py-3 bg-blue-600 text-white rounded-lg shadow-md flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium"
-                onClick={handleStartProgram}
+                onClick={() => navigate(`/programs/${programId}/schedule`)}
               >
-                <span className="material-icons-round mr-2">play_arrow</span>
-                Start Program
+                <span className="material-icons-round mr-2">event_available</span>
+                Schedule Program
               </button>
             </div>
           ) : (
@@ -240,16 +241,39 @@ export default function ProgramDetail() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Day in Program</label>
-                <select
-                  value={newWorkoutDay}
-                  onChange={(e) => setNewWorkoutDay(parseInt(e.target.value))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                    <option key={day} value={day}>Day {day}</option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Days</label>
+                <div className="grid grid-cols-7 gap-2 mt-1">
+                  {[1, 2, 3, 4, 5, 6, 7].map(day => {
+                    const isSelected = selectedDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        className={`
+                          flex items-center justify-center rounded-full h-10 w-10
+                          ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+                        `}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedDays(days => days.filter(d => d !== day));
+                          } else {
+                            setSelectedDays(days => [...days, day]);
+                          }
+                        }}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedDays.length === 0 
+                    ? "Please select at least one day" 
+                    : selectedDays.length === 1 
+                      ? "1 day selected"
+                      : `${selectedDays.length} days selected`
+                  }
+                </p>
               </div>
               
               <div className="pt-2 flex gap-3">
@@ -263,12 +287,24 @@ export default function ProgramDetail() {
                   className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:hover:bg-blue-600 flex items-center justify-center"
                   disabled={!newWorkoutName.trim() || createTemplateMutation.isPending}
                   onClick={() => {
-                    if (programId && newWorkoutName.trim()) {
-                      createTemplateMutation.mutate({
-                        name: newWorkoutName.trim(),
-                        day: newWorkoutDay,
-                        week: 1,
-                        programId
+                    if (programId && newWorkoutName.trim() && selectedDays.length > 0) {
+                      // Create multiple templates, one for each selected day
+                      const createPromises = selectedDays.sort().map(day => 
+                        createTemplateMutation.mutate({
+                          name: newWorkoutName.trim(),
+                          day,
+                          week: 1,
+                          programId
+                        })
+                      );
+                      
+                      // Reset selected days
+                      setSelectedDays([1]);
+                    } else if (selectedDays.length === 0) {
+                      toast({
+                        title: "No Days Selected",
+                        description: "Please select at least one day for this workout",
+                        variant: "destructive"
                       });
                     }
                   }}
