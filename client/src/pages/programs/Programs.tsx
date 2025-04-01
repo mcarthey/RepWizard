@@ -18,6 +18,11 @@ export default function Programs() {
   const [newProgramType, setNewProgramType] = useState<string>("strength");
   const [newProgramDifficulty, setNewProgramDifficulty] = useState<string>("intermediate");
   const [expandedPrograms, setExpandedPrograms] = useState<Record<number, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("");
+  const [lengthFilter, setLengthFilter] = useState<string>("");
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   
@@ -141,6 +146,35 @@ export default function Programs() {
     console.log(`Navigating to program details: /programs/${programId}`);
     navigate(`/programs/${programId}`);
   };
+  
+  // Filtering logic
+  const filteredPrograms = programs.filter(program => {
+    // Text search
+    const nameMatch = program.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const descMatch = program.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+    const textMatch = nameMatch || descMatch;
+    
+    // Type filter
+    const typeMatch = !typeFilter || program.type === typeFilter;
+    
+    // Difficulty filter
+    const difficultyMatch = !difficultyFilter || program.difficulty === difficultyFilter;
+    
+    // Length filter
+    let lengthMatch = true;
+    if (lengthFilter) {
+      const weeks = program.weeks || 4;
+      if (lengthFilter === "1-4") {
+        lengthMatch = weeks >= 1 && weeks <= 4;
+      } else if (lengthFilter === "5-8") {
+        lengthMatch = weeks >= 5 && weeks <= 8;
+      } else if (lengthFilter === "9+") {
+        lengthMatch = weeks >= 9;
+      }
+    }
+    
+    return textMatch && typeMatch && difficultyMatch && lengthMatch;
+  });
 
   return (
     <>
@@ -148,6 +182,93 @@ export default function Programs() {
       
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
         <div className="px-4 py-4">
+          {/* Search and filter section */}
+          <div className="mb-4">
+            <div className="flex items-center mb-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search programs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <span className="material-icons-round absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  search
+                </span>
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="ml-2 p-2 text-gray-500 hover:text-blue-600 transition-colors border border-gray-300 rounded-lg flex items-center"
+              >
+                <span className="material-icons-round">filter_list</span>
+              </button>
+            </div>
+            
+            {showFilters && (
+              <div className="bg-white p-3 rounded-lg shadow-sm mb-3 border border-gray-200">
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                    <select
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value)}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Types</option>
+                      <option value="strength">Strength</option>
+                      <option value="hypertrophy">Hypertrophy</option>
+                      <option value="endurance">Endurance</option>
+                      <option value="power">Power</option>
+                      <option value="general">General</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Difficulty</label>
+                    <select
+                      value={difficultyFilter}
+                      onChange={(e) => setDifficultyFilter(e.target.value)}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Difficulties</option>
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Length</label>
+                    <select
+                      value={lengthFilter}
+                      onChange={(e) => setLengthFilter(e.target.value)}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Any Length</option>
+                      <option value="1-4">1-4 Weeks</option>
+                      <option value="5-8">5-8 Weeks</option>
+                      <option value="9+">9+ Weeks</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setTypeFilter("");
+                      setDifficultyFilter("");
+                      setLengthFilter("");
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
           {isLoading ? (
             <div className="flex justify-center items-center h-48">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -170,10 +291,32 @@ export default function Programs() {
                 Create Program
               </button>
             </div>
+          ) : filteredPrograms.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="material-icons-round text-gray-400 text-4xl mb-3">
+                filter_alt_off
+              </div>
+              <h3 className="text-md font-medium text-gray-800 mb-1">No matching programs</h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Try adjusting your search or filters
+              </p>
+              <button 
+                onClick={() => {
+                  setSearchTerm("");
+                  setTypeFilter("");
+                  setDifficultyFilter("");
+                  setLengthFilter("");
+                }}
+                className="px-4 py-2 bg-gray-100 text-blue-600 rounded-lg text-sm flex items-center justify-center mx-auto hover:bg-gray-200"
+              >
+                <span className="material-icons-round text-sm mr-1">restart_alt</span>
+                Clear all filters
+              </button>
+            </div>
           ) : (
             <div className="space-y-4">
-              {/* Display actual programs from API */}
-              {programs.map((program) => {
+              {/* Display filtered programs */}
+              {filteredPrograms.map((program) => {
                 const isExpanded = expandedPrograms[program.id] ?? false;
                 
                 return (

@@ -29,6 +29,7 @@ export default function CurrentWorkout() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
+  const [todaysScheduledProgram, setTodaysScheduledProgram] = useState<Program | null>(null);
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -47,10 +48,45 @@ export default function CurrentWorkout() {
     queryKey: ['/api/programs'],
   });
   
+  // Check if there's a program scheduled for today
+  useEffect(() => {
+    if (programs.length > 0) {
+      // In a real implementation, we would fetch scheduled programs from the database
+      // For now, we'll simulate a program that's scheduled for today
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0-6 where 0 is Sunday
+      
+      // Check local storage for any scheduled programs
+      const checkTodaysSchedule = async () => {
+        try {
+          // This would normally come from a database query
+          // We'd check if the current date falls within any scheduled program dates
+          // AND if the current day of the week is one of the selected training days
+          
+          // For this demo, we'll just check if there's a program that has the current day
+          // as one of its training days and isn't already selected in the current workout
+          const scheduledProgram = programs.find(program => 
+            // This is a simplified check - in a real app, we'd check the actual schedule
+            program.daysPerWeek && program.daysPerWeek > dayOfWeek && 
+            (!workout?.programId || workout.programId !== program.id)
+          );
+          
+          if (scheduledProgram) {
+            setTodaysScheduledProgram(scheduledProgram);
+          }
+        } catch (error) {
+          console.error("Error checking scheduled programs:", error);
+        }
+      };
+      
+      checkTodaysSchedule();
+    }
+  }, [programs, workout?.programId]);
+  
   // Get the associated program if there is one
   const selectedProgram = workout?.programId 
     ? programs.find(p => p.id === workout.programId) 
-    : null;
+    : todaysScheduledProgram;
   
   const handleAddExercise = (exercise: Exercise) => {
     console.log("handleAddExercise called with exercise:", exercise);
@@ -121,6 +157,25 @@ export default function CurrentWorkout() {
       <Header title="Today's Workout" />
       
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
+        {/* Today's Scheduled Workout Notification */}
+        {todaysScheduledProgram && !workout.programId && (
+          <div className="px-4 py-3 bg-blue-100 border-b border-blue-200">
+            <div className="flex items-center">
+              <span className="material-icons-round text-blue-600 mr-2">event_available</span>
+              <div className="flex-1">
+                <div className="font-medium text-blue-900">Scheduled Workout Today</div>
+                <div className="text-sm text-blue-800">{todaysScheduledProgram.name}</div>
+              </div>
+              <button 
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                onClick={() => handleProgramSelect(todaysScheduledProgram.id)}
+              >
+                Start
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Workout Header */}
         <div className="px-4 py-4 bg-primary-50">
           <div className="flex justify-between items-center mb-1">

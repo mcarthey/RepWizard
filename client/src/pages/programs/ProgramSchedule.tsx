@@ -10,9 +10,11 @@ export default function ProgramSchedule() {
   const [_, params] = useRoute("/programs/:id/schedule");
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [selectedDayNumbers, setSelectedDayNumbers] = useState<number[]>([]);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   
   const programId = params?.id ? parseInt(params.id) : null;
 
@@ -92,25 +94,112 @@ export default function ProgramSchedule() {
     return date.toLocaleString('default', { month: 'long' });
   };
 
+  // Format date for display
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+  
+  // Initialize program
+  useEffect(() => {
+    if (program && !programLoading) {
+      // Make sure we have the right number of days selected
+      const requiredDays = program.daysPerWeek || 0;
+      
+      if (selectedWeekdays.length < requiredDays) {
+        // Initialize with default days (starting from Monday)
+        const defaultDays: number[] = [];
+        for (let i = 0; i < requiredDays; i++) {
+          defaultDays.push((i + 1) % 7); // Start with Monday (1) and wrap around to Sunday (0)
+        }
+        setSelectedWeekdays(defaultDays);
+      }
+    }
+  }, [program, programLoading, selectedWeekdays.length]);
+
+  // Toggle date picker visibility
+  const toggleDatePicker = () => {
+    setShowDatePicker(!showDatePicker);
+  };
+
+  // Handle start date selection
+  const handleDateSelect = (day: number) => {
+    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    setStartDate(newDate);
+    setShowDatePicker(false);
+  };
+
+  // Handle weekday selection
+  const handleWeekdaySelect = (dayIndex: number) => {
+    // If this day is already selected and we're at the minimum required days, prevent deselection
+    if (selectedWeekdays.includes(dayIndex) && selectedWeekdays.length <= (program?.daysPerWeek || 0)) {
+      toast({
+        title: "Cannot Remove Day",
+        description: `This program requires ${program?.daysPerWeek} training days per week`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Toggle selection
+    if (selectedWeekdays.includes(dayIndex)) {
+      setSelectedWeekdays(prev => prev.filter(d => d !== dayIndex));
+    } else {
+      // Check if we're already at the maximum days for this program
+      if (selectedWeekdays.length >= (program?.daysPerWeek || 7)) {
+        toast({
+          title: "Maximum Days Selected",
+          description: `This program is designed for ${program?.daysPerWeek} days per week`,
+          variant: "destructive"
+        });
+        return;
+      }
+      setSelectedWeekdays(prev => [...prev, dayIndex]);
+    }
+  };
+
+  // Generate calendar date for a specific day
+  const getCalendarDate = (dayNumber: number) => {
+    if (!dayNumber) return null;
+    return new Date(currentMonth.getFullYear(), currentMonth.getMonth(), dayNumber);
+  };
+
   // Schedule the program
   const handleScheduleProgram = () => {
-    if (selectedDays.length === 0) {
+    if (selectedWeekdays.length === 0) {
       toast({
         title: "No Days Selected",
-        description: "Please select at least one day to schedule your program",
+        description: "Please select which days of the week you want to train",
         variant: "destructive"
       });
       return;
     }
 
+    if (selectedWeekdays.length < (program?.daysPerWeek || 0)) {
+      toast({
+        title: "Not Enough Days Selected",
+        description: `This program requires ${program?.daysPerWeek} days per week. You've selected ${selectedWeekdays.length}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate the program schedule
+    const scheduleEndDate = new Date(startDate);
+    scheduleEndDate.setDate(scheduleEndDate.getDate() + (program?.weeks || 4) * 7);
+
     // Here we would save the program schedule to the database
     toast({
       title: "Program Scheduled",
-      description: `${program?.name} has been scheduled successfully`,
+      description: `${program?.name} has been scheduled from ${formatDate(startDate)} to ${formatDate(scheduleEndDate)}`,
     });
 
     // Navigate back to the programs page
-    navigate("/programs");
+    navigate("/");
   };
 
   const isLoading = programLoading || templatesLoading;
@@ -210,28 +299,24 @@ export default function ProgramSchedule() {
                       return <div key={`empty-${i}`} className="h-9"></div>;
                     }
                     
-                    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day as number);
                     const today = new Date();
                     const isToday = today.getDate() === day && 
                                   today.getMonth() === currentMonth.getMonth() && 
                                   today.getFullYear() === currentMonth.getFullYear();
                     
-                    const isSelected = selectedDays.includes(day);
+                    const isStartDate = startDate.getDate() === day &&
+                                     startDate.getMonth() === currentMonth.getMonth() &&
+                                     startDate.getFullYear() === currentMonth.getFullYear();
                     
                     return (
                       <div 
                         key={`day-${day}`}
                         className={`h-9 flex items-center justify-center rounded-full cursor-pointer text-sm
                           ${isToday ? 'border border-primary-500' : ''}
-                          ${isSelected ? 'bg-primary-500 text-white' : 'hover:bg-gray-100'}
+                          ${isStartDate ? 'bg-primary-500 text-white' : 'hover:bg-gray-100'}
                         `}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedDays(prev => prev.filter(d => d !== day));
-                          } else {
-                            setSelectedDays(prev => [...prev, day]);
-                          }
-                        }}
+                        onClick={() => handleDateSelect(day as number)}
                       >
                         {day}
                       </div>
@@ -240,10 +325,72 @@ export default function ProgramSchedule() {
                 </div>
               </div>
               
+              {/* Days of the week selection */}
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <h3 className="text-base font-semibold mb-3">Select Training Days</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  This program requires {program.daysPerWeek} days per week. 
+                  Select which days you plan to train:
+                </p>
+                
+                <div className="flex justify-between mb-4">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                    <div 
+                      key={i}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer text-sm
+                        ${selectedWeekdays.includes(i) ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+                      `}
+                      onClick={() => handleWeekdaySelect(i)}
+                    >
+                      {day.charAt(0)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Start Date Selection */}
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <h3 className="text-base font-semibold mb-3">Program Start Date</h3>
+                <div 
+                  className="p-3 border border-gray-200 rounded-lg flex justify-between items-center cursor-pointer"
+                  onClick={toggleDatePicker}
+                >
+                  <div className="flex items-center">
+                    <span className="material-icons-round text-gray-500 mr-2">today</span>
+                    <span>{formatDate(startDate)}</span>
+                  </div>
+                  <span className="material-icons-round text-gray-500">
+                    {showDatePicker ? 'expand_less' : 'expand_more'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Program Summary */}
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <h3 className="text-base font-semibold mb-2">Program Summary</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Start Date:</span>
+                    <span className="font-medium">{formatDate(startDate)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Training Days:</span>
+                    <span className="font-medium">
+                      {selectedWeekdays.map(day => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(', ')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Duration:</span>
+                    <span className="font-medium">{program.weeks} weeks</span>
+                  </div>
+                </div>
+              </div>
+              
               {/* Schedule Button */}
               <button 
                 className="w-full py-3 bg-blue-600 text-white rounded-lg shadow-md flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium"
                 onClick={handleScheduleProgram}
+                disabled={selectedWeekdays.length < (program?.daysPerWeek || 0)}
               >
                 <span className="material-icons-round mr-2">event_available</span>
                 Schedule Program
