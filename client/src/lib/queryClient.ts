@@ -2,8 +2,18 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      // Try to parse as JSON first
+      const data = await res.json();
+      throw new Error(data.message || `${res.status}: ${res.statusText}`);
+    } catch (e) {
+      // If JSON parsing fails, use text or status text
+      if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
+        throw e;
+      }
+      const text = await res.text() || res.statusText;
+      throw new Error(`${res.status}: ${text}`);
+    }
   }
 }
 
@@ -19,6 +29,11 @@ export async function apiRequest(
     credentials: "include",
   });
 
+  // Don't throw for login/auth endpoints - let the mutation handler deal with it
+  if (url === '/api/login' || url === '/api/register') {
+    return res;
+  }
+  
   await throwIfResNotOk(res);
   return res;
 }

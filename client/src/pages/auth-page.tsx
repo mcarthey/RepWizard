@@ -73,12 +73,22 @@ export default function AuthPage() {
 
   // Handle login submission
   const onLoginSubmit = async (data: LoginFormValues) => {
-    await loginMutation.mutateAsync(data);
+    try {
+      await loginMutation.mutateAsync(data);
+    } catch (error) {
+      // Error is already handled in mutation's onError
+      console.log('Login error handled');
+    }
   };
 
   // Handle register submission
   const onRegisterSubmit = async (data: RegisterFormValues) => {
-    await registerMutation.mutateAsync(data);
+    try {
+      await registerMutation.mutateAsync(data);
+    } catch (error) {
+      // Error is already handled in mutation's onError
+      console.log('Registration error handled');
+    }
   };
 
   // Reset forms when switching tabs
