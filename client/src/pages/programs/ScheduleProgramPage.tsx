@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
-import { Program, WorkoutTemplate } from "@shared/schema";
+import { Program, WorkoutTemplate, ProgramSchedule } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useProgramSchedules } from "@/hooks/useProgramSchedules";
 
-export default function ProgramSchedule() {
+export default function ScheduleProgramPage() {
   const [_, params] = useRoute("/programs/:id/schedule");
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -186,6 +187,9 @@ export default function ProgramSchedule() {
     return endDate;
   };
 
+  // Get the addProgramSchedule function from our hook
+  const { addProgramSchedule } = useProgramSchedules();
+  
   // Schedule the program
   const handleScheduleProgram = () => {
     if (selectedWeekdays.length === 0) {
@@ -206,17 +210,57 @@ export default function ProgramSchedule() {
       return;
     }
 
-    // Generate the program schedule
-    const endDate = calculateEndDate();
+    if (!program) {
+      toast({
+        title: "Program Error",
+        description: "Could not find program details",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    // Here we would save the program schedule to the database
-    toast({
-      title: "Program Scheduled",
-      description: `${program?.name} has been scheduled from ${formatDate(startDate)} to ${endDate ? formatDate(endDate) : ''}`,
-    });
+    try {
+      // Generate the program schedule
+      const endDate = calculateEndDate();
+      
+      if (!endDate) {
+        toast({
+          title: "Date Error",
+          description: "Could not calculate program end date",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Create the program schedule object
+      const programSchedule: ProgramSchedule = {
+        id: crypto.randomUUID(), // Generate a unique ID
+        programId: program.id,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        selectedWeekdays: selectedWeekdays,
+        active: true
+      };
+      
+      // Add the schedule using our hook function
+      addProgramSchedule(programSchedule);
+      console.log("Program schedule saved:", programSchedule);
+      
+      toast({
+        title: "Program Scheduled",
+        description: `${program.name} has been scheduled from ${formatDate(startDate)} to ${formatDate(endDate)}`,
+      });
 
-    // Navigate back to the programs page
-    navigate("/");
+      // Navigate to the workout tab to show the scheduled workout
+      navigate("/");
+    } catch (error) {
+      console.error("Error scheduling program:", error);
+      toast({
+        title: "Schedule Error",
+        description: "There was an error scheduling the program",
+        variant: "destructive"
+      });
+    }
   };
 
   const isLoading = programLoading || templatesLoading;

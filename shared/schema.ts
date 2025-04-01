@@ -216,3 +216,13 @@ export type LocalSet = {
   completed: boolean;
   notes: string | null;
 };
+
+// Schema for a scheduled program
+export type ProgramSchedule = {
+  id: string;
+  programId: number;
+  startDate: string;
+  endDate: string;
+  selectedWeekdays: number[]; // Array of weekday indices (0 = Sunday, 6 = Saturday)
+  active: boolean;
+};

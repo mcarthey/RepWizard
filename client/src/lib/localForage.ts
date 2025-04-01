@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   WORKOUT_HISTORY: 'repwizard_workout_history',
   EXERCISES: 'repwizard_exercises',
   PROGRAMS: 'repwizard_programs',
+  PROGRAM_SCHEDULES: 'repwizard_program_schedules',
   USER_SETTINGS: 'repwizard_user_settings',
 };
 

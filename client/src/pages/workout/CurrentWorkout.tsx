@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useCurrentWorkout } from "@/hooks/useStorage";
+import { useScheduleChecks } from "@/hooks/useScheduleChecks";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import ExerciseCard from "@/components/workout/ExerciseCard";
@@ -48,40 +49,32 @@ export default function CurrentWorkout() {
     queryKey: ['/api/programs'],
   });
   
+  // Get schedules for today's date 
+  const { getSchedulesForDate } = useScheduleChecks();
+  
   // Check if there's a program scheduled for today
   useEffect(() => {
     if (programs.length > 0) {
-      // In a real implementation, we would fetch scheduled programs from the database
-      // For now, we'll simulate a program that's scheduled for today
       const today = new Date();
-      const dayOfWeek = today.getDay(); // 0-6 where 0 is Sunday
       
-      // Check local storage for any scheduled programs
-      const checkTodaysSchedule = async () => {
-        try {
-          // This would normally come from a database query
-          // We'd check if the current date falls within any scheduled program dates
-          // AND if the current day of the week is one of the selected training days
-          
-          // For this demo, we'll just check if there's a program that has the current day
-          // as one of its training days and isn't already selected in the current workout
-          const scheduledProgram = programs.find(program => 
-            // This is a simplified check - in a real app, we'd check the actual schedule
-            program.daysPerWeek && program.daysPerWeek > dayOfWeek && 
-            (!workout?.programId || workout.programId !== program.id)
-          );
-          
-          if (scheduledProgram) {
-            setTodaysScheduledProgram(scheduledProgram);
-          }
-        } catch (error) {
-          console.error("Error checking scheduled programs:", error);
+      // Get all schedules for today's date
+      const todaysSchedules = getSchedulesForDate(today);
+      console.log("Today's schedules:", todaysSchedules);
+      
+      // If we have schedules and we don't already have a program selected
+      if (todaysSchedules.length > 0 && (!workout?.programId)) {
+        // Find the corresponding program
+        const scheduledProgram = programs.find(program => 
+          program.id === todaysSchedules[0].programId
+        );
+        
+        if (scheduledProgram) {
+          console.log("Today's scheduled program:", scheduledProgram);
+          setTodaysScheduledProgram(scheduledProgram);
         }
-      };
-      
-      checkTodaysSchedule();
+      }
     }
-  }, [programs, workout?.programId]);
+  }, [programs, workout?.programId, getSchedulesForDate]);
   
   // Get the associated program if there is one
   const selectedProgram = workout?.programId 
