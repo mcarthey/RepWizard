@@ -225,24 +225,7 @@ export default function Programs() {
                           </div>
                         )}
                         
-                        <div className="p-4">
-                          <div className="text-sm text-gray-500 mb-3 flex items-center justify-between">
-                            <div className="flex items-center">
-                              <span className="material-icons-round mr-1 text-gray-400">list</span>
-                              <span>Workouts in this program</span>
-                            </div>
-                            <button 
-                              className="text-blue-600 text-sm flex items-center hover:underline"
-                              onClick={() => handleProgramDetails(program.id)}
-                            >
-                              <span className="material-icons-round text-sm mr-1">settings</span>
-                              Setup Program
-                            </button>
-                          </div>
-                          <div className="text-center py-4 text-gray-500">
-                            <p>Click "Setup Program" to configure workout days</p>
-                          </div>
-                        </div>
+                        {/* Program stats section */}
                         
                         <div className="px-4 py-3 flex flex-wrap gap-2 border-t border-gray-100">
                           <div className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 flex items-center">
@@ -263,9 +246,17 @@ export default function Programs() {
                           </div>
                         </div>
                         
-                        <div className="px-4 py-3 bg-gray-50 flex justify-end">
+                        <div className="p-4 border-t border-gray-100 space-y-3">
                           <button 
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md flex items-center shadow-sm hover:bg-blue-700 transition-colors"
+                            className="w-full py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 active:bg-blue-800 transition-colors"
+                            onClick={() => handleProgramDetails(program.id)}
+                          >
+                            <span className="material-icons-round text-sm mr-1">settings</span>
+                            Setup Program
+                          </button>
+                          
+                          <button 
+                            className="w-full py-2 bg-gray-100 text-blue-600 rounded-lg flex items-center justify-center hover:bg-gray-200 active:bg-gray-300 transition-colors"
                             onClick={() => {
                               navigate(`/programs/${program.id}/schedule`);
                             }}
