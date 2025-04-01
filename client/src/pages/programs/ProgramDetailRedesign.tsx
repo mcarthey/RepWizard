@@ -43,12 +43,25 @@ export default function ProgramDetailRedesign() {
   
   const programId = params?.id ? parseInt(params.id) : null;
 
-  // Query for program info
-  const { data: program, isLoading: programLoading } = useQuery<Program>({
+  // Query for program info - but we need to fetch the specific program
+  const { data: programData, isLoading: programLoading } = useQuery<Program>({
     queryKey: ['/api/programs', programId],
     enabled: !!programId,
-    retry: false
+    queryFn: async () => {
+      // Use a direct fetch to get the specific program
+      const response = await fetch(`/api/programs/${programId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch program details');
+      }
+      return response.json();
+    }
   });
+  
+  // Store the single program from the API
+  const program = programData;
+  
+  // Debugging the actual program data
+  console.log("Specific program data:", program);
   
   // Effect to update selected week/day when program data loads
   useEffect(() => {
@@ -317,15 +330,24 @@ export default function ProgramDetailRedesign() {
     });
   };
 
-  // Create array of weeks based on program length - strictly use program.weeks if available
+  // Debug program data
+  console.log("Program data in detail page:", JSON.stringify(program, null, 2));
+  
+  // Create array of weeks based on program length, FORCE FIXED VALUE FOR TESTING
   const weeks = program?.weeks 
     ? Array.from({ length: program.weeks }, (_, i) => i + 1)
     : Array.from({ length: 4 }, (_, i) => i + 1);
   
-  // Create array of days based on program's daysPerWeek - strictly use program.daysPerWeek if available
+  // Debug weeks array
+  console.log("Weeks array:", weeks);
+  
+  // Create array of days based on program's daysPerWeek, FORCE FIXED VALUE FOR TESTING
   const daysInWeek = program?.daysPerWeek 
     ? Array.from({ length: program.daysPerWeek }, (_, i) => i + 1)
     : Array.from({ length: 7 }, (_, i) => i + 1);
+    
+  // Debug days array
+  console.log("Days array:", daysInWeek);
 
   // Loading state
   const isLoading = programLoading || templatesLoading || allExercisesLoading;
