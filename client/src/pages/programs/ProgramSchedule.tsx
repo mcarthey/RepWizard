@@ -147,6 +147,7 @@ export default function ProgramSchedule() {
     
     // Toggle selection
     if (selectedWeekdays.includes(dayIndex)) {
+      // Allow deselection
       setSelectedWeekdays(prev => prev.filter(d => d !== dayIndex));
     } else {
       // Check if we're already at the maximum days for this program
@@ -158,6 +159,7 @@ export default function ProgramSchedule() {
         });
         return;
       }
+      // Add the selected day
       setSelectedWeekdays(prev => [...prev, dayIndex]);
     }
   };
@@ -237,7 +239,7 @@ export default function ProgramSchedule() {
                 )}
                 <div className="flex items-center text-sm text-gray-500">
                   <span className="material-icons-round text-gray-400 text-sm mr-1">calendar_today</span>
-                  <span>{program.weeks || 4} week program</span>
+                  <span>{program.weeks || 4}-week program</span>
                 </div>
               </div>
               
@@ -298,7 +300,7 @@ export default function ProgramSchedule() {
                           key={`day-${day}`}
                           className={`h-8 flex items-center justify-center rounded-full cursor-pointer text-sm
                             ${isToday ? 'border border-primary-500' : ''}
-                            ${isStartDate ? 'bg-primary-500 text-white' : 'hover:bg-gray-100'}
+                            ${isStartDate ? 'bg-primary-600 text-white hover:bg-primary-700' : 'hover:bg-gray-100'}
                           `}
                           onClick={() => handleDateSelect(day as number)}
                         >
@@ -323,7 +325,12 @@ export default function ProgramSchedule() {
                     <div 
                       key={i}
                       className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer text-sm
-                        ${selectedWeekdays.includes(i) ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+                        ${selectedWeekdays.includes(i) 
+                          ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                          : program?.daysPerWeek && selectedWeekdays.length >= program.daysPerWeek
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }
                       `}
                       onClick={() => handleWeekdaySelect(i)}
                     >
@@ -357,7 +364,7 @@ export default function ProgramSchedule() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Duration:</span>
-                    <span className="font-medium">{program.weeks} weeks</span>
+                    <span className="font-medium">{program.weeks}-week program</span>
                   </div>
                 </div>
               </div>
