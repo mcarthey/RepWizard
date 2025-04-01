@@ -107,20 +107,19 @@ export default function ProgramSchedule() {
     });
   };
   
-  // Initialize program
+  // Initialize program once only
   useEffect(() => {
-    if (program && !programLoading) {
-      // Make sure we have the right number of days selected
+    if (program && !programLoading && selectedWeekdays.length === 0) {
+      // Initialize with default days (starting from Monday) only if we haven't selected any days yet
       const requiredDays = program.daysPerWeek || 0;
+      const defaultDays: number[] = [];
       
-      if (selectedWeekdays.length < requiredDays) {
-        // Initialize with default days (starting from Monday)
-        const defaultDays: number[] = [];
-        for (let i = 0; i < requiredDays; i++) {
-          defaultDays.push((i + 1) % 7); // Start with Monday (1) and wrap around to Sunday (0)
-        }
-        setSelectedWeekdays(defaultDays);
+      for (let i = 0; i < requiredDays; i++) {
+        defaultDays.push((i + 1) % 7); // Start with Monday (1) and wrap around to Sunday (0)
       }
+      
+      console.log('Initializing with default days:', defaultDays);
+      setSelectedWeekdays(defaultDays);
     }
   }, [program, programLoading, selectedWeekdays.length]);
 
@@ -136,28 +135,39 @@ export default function ProgramSchedule() {
     setShowDatePicker(false);
   };
 
-  // Handle weekday selection with ability to swap days
+  // Handle weekday selection - completely simplified approach
   const handleWeekdaySelect = (dayIndex: number) => {
-    const isSelected = selectedWeekdays.includes(dayIndex);
     const daysPerWeek = program?.daysPerWeek || 0;
     
-    // Toggle selection
-    if (isSelected) {
-      // Always allow deselection of days
-      setSelectedWeekdays(prev => prev.filter(d => d !== dayIndex));
+    // Create a copy of the current selection
+    let newSelection = [...selectedWeekdays];
+    
+    // Check if this day is already selected
+    const dayPosition = newSelection.indexOf(dayIndex);
+    
+    if (dayPosition !== -1) {
+      // Day is already selected, so remove it
+      newSelection.splice(dayPosition, 1);
+      console.log(`Removed day ${dayIndex}, new selection:`, newSelection);
     } else {
-      // If adding a day would exceed the limit, show a toast explaining how to swap days
-      if (selectedWeekdays.length >= daysPerWeek) {
+      // Day is not selected, try to add it
+      if (newSelection.length >= daysPerWeek) {
+        // If we're already at max days, show a message
         toast({
-          title: "Day Swapping",
-          description: `To change your training days, first deselect a day and then select a new one.`,
+          title: "Maximum Days Selected",
+          description: `This program requires exactly ${daysPerWeek} ${daysPerWeek === 1 ? 'day' : 'days'} per week. Deselect a day before selecting a new one.`
         });
         return;
       }
       
-      // Add this day to selection (sorted for consistent display)
-      setSelectedWeekdays(prev => [...prev, dayIndex].sort((a, b) => a - b));
+      // Add the day and sort
+      newSelection.push(dayIndex);
+      newSelection.sort((a, b) => a - b);
+      console.log(`Added day ${dayIndex}, new selection:`, newSelection);
     }
+    
+    // Update the state with our new selection
+    setSelectedWeekdays(newSelection);
   };
 
   // Generate calendar date for a specific day
@@ -347,10 +357,9 @@ export default function ProgramSchedule() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
                         }`}
                         onClick={() => {
-                          // Only allow click if not disabled or already selected
-                          if (!isDisabled || isSelected) {
-                            handleWeekdaySelect(i);
-                          }
+                          // Always allow clicking if it's already selected (to deselect)
+                          // Only check disabled state for days that aren't selected
+                          handleWeekdaySelect(i);
                         }}
                       >
                         {day.charAt(0)}
