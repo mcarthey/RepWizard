@@ -217,6 +217,13 @@ export default function ProgramSchedule() {
   };
 
   const isLoading = programLoading || templatesLoading;
+  
+  // Debug log to see program data
+  useEffect(() => {
+    if (program) {
+      console.log('Program data:', program);
+    }
+  }, [program]);
 
   return (
     <>
