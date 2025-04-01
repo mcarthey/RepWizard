@@ -18,12 +18,15 @@ export default function ProgramSchedule() {
   
   const programId = params?.id ? parseInt(params.id) : null;
 
-  // Get program details
-  const { data: program, isLoading: programLoading, error: programError } = useQuery<Program>({
-    queryKey: ['/api/programs', programId],
+  // Get all programs
+  const { data: programsData, isLoading: programLoading, error: programError } = useQuery<Program[]>({
+    queryKey: ['/api/programs'],
     enabled: !!programId,
     retry: false
   });
+  
+  // Find the specific program by ID
+  const program = programsData?.find(p => p.id === programId);
 
   // Get workout templates for this program
   const { data: templates = [], isLoading: templatesLoading } = useQuery<WorkoutTemplate[]>({
@@ -133,11 +136,11 @@ export default function ProgramSchedule() {
     setShowDatePicker(false);
   };
 
-  // Handle weekday selection
+  // Handle weekday selection with proper program limit enforcement
   const handleWeekdaySelect = (dayIndex: number) => {
     const isSelected = selectedWeekdays.includes(dayIndex);
     
-    // If trying to deselect and at minimum days, prevent it
+    // If trying to deselect when at minimum required days
     if (isSelected && program?.daysPerWeek && selectedWeekdays.length <= program.daysPerWeek) {
       toast({
         title: "Cannot Remove Day",
@@ -149,21 +152,22 @@ export default function ProgramSchedule() {
     
     // Toggle selection
     if (isSelected) {
-      // Remove this day from selection
+      // User is removing a day
       setSelectedWeekdays(prev => prev.filter(d => d !== dayIndex));
     } else {
-      // If adding and already at max days, prevent it
+      // User is adding a day - strictly enforce the limit
       if (program?.daysPerWeek && selectedWeekdays.length >= program.daysPerWeek) {
+        // This shouldn't happen due to our UI controls, but as a safeguard:
         toast({
           title: "Maximum Days Selected",
-          description: `This program is designed for ${program.daysPerWeek} ${program.daysPerWeek === 1 ? 'day' : 'days'} per week`,
+          description: `This program is designed for exactly ${program.daysPerWeek} ${program.daysPerWeek === 1 ? 'day' : 'days'} per week`,
           variant: "destructive"
         });
         return;
       }
       
-      // Add this day to selection
-      setSelectedWeekdays(prev => [...prev, dayIndex].sort());
+      // Add this day to selection (sorted for consistent display)
+      setSelectedWeekdays(prev => [...prev, dayIndex].sort((a, b) => a - b));
     }
   };
 
@@ -220,10 +224,12 @@ export default function ProgramSchedule() {
   
   // Debug log to see program data
   useEffect(() => {
-    if (program) {
-      console.log('Program data:', program);
+    if (programsData) {
+      console.log('All programs:', programsData);
+      console.log('Selected program:', program);
+      console.log('Program ID:', programId);
     }
-  }, [program]);
+  }, [programsData, program, programId]);
 
   return (
     <>
@@ -334,9 +340,12 @@ export default function ProgramSchedule() {
                 </p>
                 
                 <div className="flex justify-between mb-4">
+                  {/* Enforce max days per week based on program configuration */}
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => {
                     const isSelected = selectedWeekdays.includes(i);
-                    const isDisabled = !isSelected && program?.daysPerWeek && selectedWeekdays.length >= program.daysPerWeek;
+                    // Disable if not selected AND already have max days selected
+                    const daysPerWeek = program?.daysPerWeek || 0;
+                    const isDisabled = !isSelected && selectedWeekdays.length >= daysPerWeek;
                     
                     return (
                       <div 
@@ -349,6 +358,7 @@ export default function ProgramSchedule() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
                         }`}
                         onClick={() => {
+                          // Only allow click if not disabled or already selected
                           if (!isDisabled || isSelected) {
                             handleWeekdaySelect(i);
                           }
@@ -384,7 +394,7 @@ export default function ProgramSchedule() {
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Duration:</span>
+                    <span className="text-gray-600">Program Length:</span>
                     <span className="font-medium">{program.weeks}-week program</span>
                   </div>
                 </div>
