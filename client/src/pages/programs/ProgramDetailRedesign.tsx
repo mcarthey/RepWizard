@@ -27,7 +27,8 @@ export default function ProgramDetailRedesign() {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [sourceDay, setSourceDay] = useState<{week: number, day: number} | null>(null);
-  const [targetWeek, setTargetWeek] = useState(1);
+  const [targetDay, setTargetDay] = useState<{week: number, day: number}>({week: 1, day: 1});
+  const [copyMode, setCopyMode] = useState<'day' | 'week'>('day');
   
   // State for exercise configuration
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -248,7 +249,7 @@ export default function ProgramDetailRedesign() {
   };
 
   // Function to handle copying a day's workout
-  const handleCopyDay = () => {
+  const handleCopyDay = async () => {
     if (!sourceDay || !programId) return;
     
     // Find template for source day
@@ -265,12 +266,21 @@ export default function ProgramDetailRedesign() {
       return;
     }
     
-    // Find all exercises for source template
-    const sourceExercises = templateExercises.filter(
-      ex => ex.workoutTemplateId === sourceTemplate.id
-    );
+    // Get ALL exercise templates in the program
+    const response = await fetch(`/api/workout-templates/${sourceTemplate.id}/exercises`);
+    if (!response.ok) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch exercises from the source template",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    if (sourceExercises.length === 0) {
+    // Get all source exercises directly from API to ensure we have the latest data
+    const sourceExercises = await response.json();
+    
+    if (!sourceExercises || sourceExercises.length === 0) {
       toast({
         title: "Nothing to Copy",
         description: "The source day has no exercises to copy",
@@ -279,22 +289,24 @@ export default function ProgramDetailRedesign() {
       return;
     }
     
-    // Create target templates for each day of the target week if they don't exist
-    daysInWeek.forEach(day => {
+    // If copy mode is 'day', only copy to the specific target day
+    if (copyMode === 'day') {
+      // Find or create the target template
       const existingTemplate = templates.find(
-        t => t.day === day && t.week === targetWeek
+        t => t.day === targetDay.day && t.week === targetDay.week
       );
       
       if (!existingTemplate) {
+        // Create a new template for the target day
         createTemplateMutation.mutate({
-          name: `${program?.name || "Workout"} - Week ${targetWeek}, Day ${day}`,
-          day,
-          week: targetWeek,
+          name: `${program?.name || "Workout"} - Week ${targetDay.week}, Day ${targetDay.day}`,
+          day: targetDay.day,
+          week: targetDay.week,
           programId
         }, {
           onSuccess: (newTemplate) => {
             // Copy exercises from source template to the new template
-            sourceExercises.forEach(srcEx => {
+            sourceExercises.forEach((srcEx: ExerciseTemplate) => {
               addExerciseMutation.mutate({
                 exerciseId: srcEx.exerciseId || 0,
                 workoutTemplateId: newTemplate.id,
@@ -305,11 +317,16 @@ export default function ProgramDetailRedesign() {
                 targetRpe: srcEx.targetRpe
               });
             });
+            
+            toast({
+              title: "Workout Copied",
+              description: `Copied workout from Week ${sourceDay.week}, Day ${sourceDay.day} to Week ${targetDay.week}, Day ${targetDay.day}`,
+            });
           }
         });
       } else {
         // Copy exercises to existing template
-        sourceExercises.forEach(srcEx => {
+        sourceExercises.forEach((srcEx: ExerciseTemplate) => {
           addExerciseMutation.mutate({
             exerciseId: srcEx.exerciseId || 0,
             workoutTemplateId: existingTemplate.id,
@@ -320,14 +337,66 @@ export default function ProgramDetailRedesign() {
             targetRpe: srcEx.targetRpe
           });
         });
+        
+        toast({
+          title: "Workout Copied",
+          description: `Copied workout from Week ${sourceDay.week}, Day ${sourceDay.day} to Week ${targetDay.week}, Day ${targetDay.day}`,
+        });
       }
-    });
+    } 
+    // If copy mode is 'week', copy to all days in the target week
+    else if (copyMode === 'week') {
+      // Create target templates for each day of the target week if they don't exist
+      daysInWeek.forEach(day => {
+        const existingTemplate = templates.find(
+          t => t.day === day && t.week === targetDay.week
+        );
+        
+        if (!existingTemplate) {
+          createTemplateMutation.mutate({
+            name: `${program?.name || "Workout"} - Week ${targetDay.week}, Day ${day}`,
+            day,
+            week: targetDay.week,
+            programId
+          }, {
+            onSuccess: (newTemplate) => {
+              // Copy exercises from source template to the new template
+              sourceExercises.forEach((srcEx: ExerciseTemplate) => {
+                addExerciseMutation.mutate({
+                  exerciseId: srcEx.exerciseId || 0,
+                  workoutTemplateId: newTemplate.id,
+                  order: srcEx.order,
+                  sets: srcEx.sets,
+                  reps: srcEx.reps,
+                  restTime: srcEx.restTime,
+                  targetRpe: srcEx.targetRpe
+                });
+              });
+            }
+          });
+        } else {
+          // Copy exercises to existing template
+          sourceExercises.forEach((srcEx: ExerciseTemplate) => {
+            addExerciseMutation.mutate({
+              exerciseId: srcEx.exerciseId || 0,
+              workoutTemplateId: existingTemplate.id,
+              order: srcEx.order,
+              sets: srcEx.sets,
+              reps: srcEx.reps,
+              restTime: srcEx.restTime,
+              targetRpe: srcEx.targetRpe
+            });
+          });
+        }
+      });
+      
+      toast({
+        title: "Workout Copied",
+        description: `Copied workout from Week ${sourceDay.week}, Day ${sourceDay.day} to all days in Week ${targetDay.week}`,
+      });
+    }
     
     setShowCopyModal(false);
-    toast({
-      title: "Workout Copied",
-      description: `Copied workout from Week ${sourceDay.week}, Day ${sourceDay.day} to Week ${targetWeek}`,
-    });
   };
 
   // Debug program data
@@ -780,20 +849,56 @@ export default function ProgramDetailRedesign() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Copy To</label>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Week</label>
-                  <select 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    value={targetWeek}
-                    onChange={(e) => setTargetWeek(parseInt(e.target.value))}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Copy Mode</label>
+                <div className="flex gap-3 mb-3">
+                  <button
+                    className={`flex-1 py-2 px-3 rounded-lg ${copyMode === 'day' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}
+                    onClick={() => setCopyMode('day')}
                   >
-                    {weeks.map(week => (
-                      <option key={week} value={week}>Week {week}</option>
-                    ))}
-                  </select>
+                    Copy to Specific Day
+                  </button>
+                  <button
+                    className={`flex-1 py-2 px-3 rounded-lg ${copyMode === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'}`}
+                    onClick={() => setCopyMode('week')}
+                  >
+                    Copy to Entire Week
+                  </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">This will copy the workout to all days in the target week</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Copy To</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Week</label>
+                    <select 
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      value={targetDay.week}
+                      onChange={(e) => setTargetDay(prev => ({ ...prev, week: parseInt(e.target.value) }))}
+                    >
+                      {weeks.map(week => (
+                        <option key={week} value={week}>Week {week}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {copyMode === 'day' && (
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Day</label>
+                      <select 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        value={targetDay.day}
+                        onChange={(e) => setTargetDay(prev => ({ ...prev, day: parseInt(e.target.value) }))}
+                      >
+                        {daysInWeek.map(day => (
+                          <option key={day} value={day}>Day {day}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+                {copyMode === 'week' && (
+                  <p className="text-xs text-gray-500 mt-2">This will copy the workout to all days in the target week</p>
+                )}
               </div>
               
               <div className="pt-2 flex gap-3">
@@ -806,7 +911,7 @@ export default function ProgramDetailRedesign() {
                 <button 
                   className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:hover:bg-blue-600"
                   onClick={handleCopyDay}
-                  disabled={!sourceDay || sourceDay.week === targetWeek}
+                  disabled={!sourceDay || (sourceDay.week === targetDay.week && sourceDay.day === targetDay.day)}
                 >
                   Copy Workout
                 </button>
