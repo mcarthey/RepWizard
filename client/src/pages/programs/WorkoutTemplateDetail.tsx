@@ -52,6 +52,13 @@ export default function WorkoutTemplateDetail() {
   const { data: templateExercises = [], isLoading: exercisesLoading } = useQuery<ExerciseTemplate[]>({
     queryKey: ['/api/workout-templates', templateId, 'exercises'],
     enabled: !!templateId,
+    queryFn: async () => {
+      const response = await fetch(`/api/workout-templates/${templateId}/exercises`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch template exercises');
+      }
+      return response.json();
+    }
   });
   
   // Query for all available exercises

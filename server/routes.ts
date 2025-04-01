@@ -164,7 +164,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Workout Template routes
   app.get('/api/programs/:programId/templates', async (req, res) => {
     try {
-      const templates = await storage.getWorkoutTemplates(Number(req.params.programId));
+      const programId = Number(req.params.programId);
+      if (isNaN(programId)) {
+        return res.status(400).json({ error: 'Invalid program ID' });
+      }
+      
+      const templates = await storage.getWorkoutTemplates(programId);
       res.json(templates);
     } catch (err) {
       const error = handleError(err);
