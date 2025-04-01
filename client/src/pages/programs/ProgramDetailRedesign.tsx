@@ -26,9 +26,17 @@ export default function ProgramDetailRedesign() {
   const [showDayDetail, setShowDayDetail] = useState(false);
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
-  const [sourceDay, setSourceDay] = useState<{week: number, day: number} | null>(null);
+  const [sourceDay, setSourceDay] = useState<{week: number, day: number}>({week: 1, day: 1});
   const [targetDay, setTargetDay] = useState<{week: number, day: number}>({week: 1, day: 1});
   const [copyMode, setCopyMode] = useState<'day' | 'week'>('day');
+  
+  // Handle opening the copy modal
+  const handleOpenCopyModal = () => {
+    // Set initial values based on the currently selected week/day
+    setSourceDay({week: selectedWeek, day: selectedDay});
+    setTargetDay({week: selectedWeek === weeks.length ? 1 : selectedWeek + 1, day: selectedDay});
+    setShowCopyModal(true);
+  };
   
   // State for exercise configuration
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
@@ -451,7 +459,7 @@ export default function ProgramDetailRedesign() {
                 {/* Copy workout button */}
                 <button
                   className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg shadow-sm mb-4 flex items-center justify-center hover:bg-blue-700 active:bg-blue-800"
-                  onClick={() => setShowCopyModal(true)}
+                  onClick={handleOpenCopyModal}
                 >
                   <span className="material-icons-round mr-2">content_copy</span>
                   Copy Workout Between Weeks
@@ -911,7 +919,12 @@ export default function ProgramDetailRedesign() {
                 <button 
                   className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium shadow-sm hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:hover:bg-blue-600"
                   onClick={handleCopyDay}
-                  disabled={!sourceDay || (sourceDay.week === targetDay.week && sourceDay.day === targetDay.day)}
+                  disabled={
+                    // Check if source and target are the same
+                    (copyMode === 'day' && sourceDay.week === targetDay.week && sourceDay.day === targetDay.day) ||
+                    // Check if source has no template
+                    !templates.some(t => t.day === sourceDay.day && t.week === sourceDay.week)
+                  }
                 >
                   Copy Workout
                 </button>
