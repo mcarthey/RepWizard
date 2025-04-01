@@ -13,6 +13,7 @@ import {
   WorkoutTemplate 
 } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import type { QueryKey } from "@tanstack/react-query";
 
 export default function ProgramDetailRedesign() {
   const [_, params] = useRoute("/programs/:id");
@@ -46,19 +47,23 @@ export default function ProgramDetailRedesign() {
   const { data: program, isLoading: programLoading } = useQuery<Program>({
     queryKey: ['/api/programs', programId],
     enabled: !!programId,
-    retry: false,
-    onSuccess: (data) => {
-      // Ensure selected week and day respect program limits
-      if (data) {
-        if (selectedWeek > data.weeks) {
-          setSelectedWeek(1);
-        }
-        if (selectedDay > (data.daysPerWeek || 7)) {
-          setSelectedDay(1);
-        }
+    retry: false
+  });
+  
+  // Effect to update selected week/day when program data loads
+  useEffect(() => {
+    if (program) {
+      // Ensure selected week doesn't exceed program weeks
+      if (program.weeks && selectedWeek > program.weeks) {
+        setSelectedWeek(1);
+      }
+      
+      // Ensure selected day doesn't exceed program days per week
+      if (program.daysPerWeek && selectedDay > program.daysPerWeek) {
+        setSelectedDay(1);
       }
     }
-  });
+  }, [program, selectedWeek, selectedDay]);
 
   // Get workout templates for this program
   const { data: templates = [], isLoading: templatesLoading } = useQuery<WorkoutTemplate[]>({
@@ -312,11 +317,15 @@ export default function ProgramDetailRedesign() {
     });
   };
 
-  // Create array of weeks based on program length
-  const weeks = Array.from({ length: program?.weeks || 4 }, (_, i) => i + 1);
+  // Create array of weeks based on program length - strictly use program.weeks if available
+  const weeks = program?.weeks 
+    ? Array.from({ length: program.weeks }, (_, i) => i + 1)
+    : Array.from({ length: 4 }, (_, i) => i + 1);
   
-  // Create array of days based on program's daysPerWeek
-  const daysInWeek = Array.from({ length: program?.daysPerWeek || 7 }, (_, i) => i + 1);
+  // Create array of days based on program's daysPerWeek - strictly use program.daysPerWeek if available
+  const daysInWeek = program?.daysPerWeek 
+    ? Array.from({ length: program.daysPerWeek }, (_, i) => i + 1)
+    : Array.from({ length: 7 }, (_, i) => i + 1);
 
   // Loading state
   const isLoading = programLoading || templatesLoading || allExercisesLoading;
