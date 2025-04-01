@@ -187,8 +187,8 @@ export default function ScheduleProgramPage() {
     return endDate;
   };
 
-  // Get the addProgramSchedule function from our hook
-  const { addProgramSchedule } = useProgramSchedules();
+  // Get the addSchedule function from our hook
+  const { addSchedule } = useProgramSchedules();
   
   // Schedule the program
   const handleScheduleProgram = () => {
@@ -232,27 +232,32 @@ export default function ScheduleProgramPage() {
         return;
       }
       
-      // Create the program schedule object
-      const programSchedule: ProgramSchedule = {
-        id: crypto.randomUUID(), // Generate a unique ID
+      // Format dates as YYYY-MM-DD strings for storage
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      // Create the program schedule object (without ID - will be added by hook)
+      const programSchedule = {
         programId: program.id,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+        startDate: startDateStr,
+        endDate: endDateStr,
         selectedWeekdays: selectedWeekdays,
         active: true
       };
       
       // Add the schedule using our hook function
-      addProgramSchedule(programSchedule);
-      console.log("Program schedule saved:", programSchedule);
+      const savedSchedule = addSchedule(programSchedule);
+      console.log("Program schedule saved:", savedSchedule);
       
-      toast({
-        title: "Program Scheduled",
-        description: `${program.name} has been scheduled from ${formatDate(startDate)} to ${formatDate(endDate)}`,
-      });
+      if (savedSchedule) {
+        toast({
+          title: "Program Scheduled",
+          description: `${program.name} has been scheduled from ${formatDate(startDate)} to ${formatDate(endDate)}`,
+        });
 
-      // Navigate to the workout tab to show the scheduled workout
-      navigate("/");
+        // Navigate to the workout tab to show the scheduled workout
+        navigate("/");
+      }
     } catch (error) {
       console.error("Error scheduling program:", error);
       toast({

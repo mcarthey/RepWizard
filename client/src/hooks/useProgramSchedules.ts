@@ -1,81 +1,142 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ProgramSchedule } from '@shared/schema';
+import { v4 as uuidv4 } from 'uuid';
+import { PROGRAM_SCHEDULES_STORAGE_KEY } from './useScheduleChecks';
+import { useToast } from './use-toast';
 
-// Simple localStorage-based hook to manage program schedules
+/**
+ * Hook for managing program schedules
+ * This hook provides CRUD operations for program schedules stored in localStorage
+ */
 export function useProgramSchedules() {
   const [schedules, setSchedules] = useState<ProgramSchedule[]>([]);
-  
-  // Load schedules from localStorage on first render
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Load schedules from localStorage
   useEffect(() => {
     try {
-      const storedSchedules = localStorage.getItem('repwizard_program_schedules');
+      const storedSchedules = localStorage.getItem(PROGRAM_SCHEDULES_STORAGE_KEY);
       if (storedSchedules) {
         setSchedules(JSON.parse(storedSchedules));
       }
     } catch (error) {
-      console.error('Error loading schedules from localStorage:', error);
+      console.error('Error loading program schedules:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load program schedules',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-  }, []);
-  
-  // Save schedules to localStorage whenever they change
-  useEffect(() => {
-    if (schedules.length > 0) {
-      try {
-        localStorage.setItem('repwizard_program_schedules', JSON.stringify(schedules));
-      } catch (error) {
-        console.error('Error saving schedules to localStorage:', error);
+  }, [toast]);
+
+  // Save schedules to localStorage
+  const saveSchedules = useCallback((updatedSchedules: ProgramSchedule[]) => {
+    try {
+      localStorage.setItem(PROGRAM_SCHEDULES_STORAGE_KEY, JSON.stringify(updatedSchedules));
+      setSchedules(updatedSchedules);
+      return true;
+    } catch (error) {
+      console.error('Error saving program schedules:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save program schedule',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [toast]);
+
+  // Add a new schedule
+  const addSchedule = useCallback((schedule: Omit<ProgramSchedule, 'id'>) => {
+    try {
+      const newSchedule: ProgramSchedule = {
+        ...schedule, 
+        id: uuidv4() // Generate unique ID
+      };
+      
+      const updatedSchedules = [...schedules, newSchedule];
+      const success = saveSchedules(updatedSchedules);
+      
+      if (success) {
+        console.log('Program schedule added successfully:', newSchedule);
+        toast({
+          title: 'Schedule Added',
+          description: 'Program has been scheduled successfully',
+        });
+        return newSchedule;
       }
+      return null;
+    } catch (error) {
+      console.error('Error adding program schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add program schedule',
+        variant: 'destructive',
+      });
+      return null;
     }
-  }, [schedules]);
-  
-  // Add a new program schedule
-  const addProgramSchedule = useCallback((schedule: ProgramSchedule) => {
-    setSchedules(prev => [...prev, schedule]);
-  }, []);
-  
+  }, [schedules, saveSchedules, toast]);
+
   // Update an existing schedule
-  const updateProgramSchedule = useCallback((id: string, updates: Partial<ProgramSchedule>) => {
-    setSchedules(prev => 
-      prev.map(schedule => 
-        schedule.id === id ? { ...schedule, ...updates } : schedule
-      )
-    );
-  }, []);
-  
+  const updateSchedule = useCallback((id: string, updates: Partial<ProgramSchedule>) => {
+    try {
+      const scheduleIndex = schedules.findIndex((s) => s.id === id);
+      if (scheduleIndex === -1) {
+        console.error('Schedule not found:', id);
+        return false;
+      }
+
+      const updatedSchedules = [...schedules];
+      updatedSchedules[scheduleIndex] = {
+        ...updatedSchedules[scheduleIndex],
+        ...updates,
+      };
+
+      return saveSchedules(updatedSchedules);
+    } catch (error) {
+      console.error('Error updating program schedule:', error);
+      return false;
+    }
+  }, [schedules, saveSchedules]);
+
   // Delete a schedule
-  const deleteProgramSchedule = useCallback((id: string) => {
-    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
-  }, []);
-  
-  // Get all active schedules for a specific date
-  const getSchedulesForDate = useCallback((date: Date) => {
-    const checkDate = new Date(date);
-    checkDate.setHours(12, 0, 0, 0); // Normalize time to noon for comparison
-    
-    return schedules.filter(schedule => {
-      const startDate = new Date(schedule.startDate);
-      const endDate = new Date(schedule.endDate);
-      
-      // Reset time parts for all dates to compare only the date portion
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
-      
-      // Check if the date falls within the schedule's date range
-      const isInDateRange = checkDate >= startDate && checkDate <= endDate;
-      
-      // Check if the day of the week matches one of the selected weekdays
-      const dayOfWeek = checkDate.getDay(); // 0 = Sunday, 6 = Saturday
-      const isDaySelected = schedule.selectedWeekdays.includes(dayOfWeek);
-      
-      return schedule.active && isInDateRange && isDaySelected;
-    });
+  const deleteSchedule = useCallback((id: string) => {
+    try {
+      const updatedSchedules = schedules.filter((s) => s.id !== id);
+      return saveSchedules(updatedSchedules);
+    } catch (error) {
+      console.error('Error deleting program schedule:', error);
+      return false;
+    }
+  }, [schedules, saveSchedules]);
+
+  // Get a specific schedule by ID
+  const getSchedule = useCallback((id: string) => {
+    return schedules.find((s) => s.id === id) || null;
   }, [schedules]);
-  
+
+  // Clear all schedules
+  const clearSchedules = useCallback(() => {
+    try {
+      localStorage.removeItem(PROGRAM_SCHEDULES_STORAGE_KEY);
+      setSchedules([]);
+      return true;
+    } catch (error) {
+      console.error('Error clearing program schedules:', error);
+      return false;
+    }
+  }, []);
+
   return {
     schedules,
-    addProgramSchedule,
-    updateProgramSchedule,
-    deleteProgramSchedule,
-    getSchedulesForDate
+    loading,
+    addSchedule,
+    updateSchedule,
+    deleteSchedule,
+    getSchedule,
+    clearSchedules,
   };
 }

@@ -11,6 +11,7 @@ import ScheduleProgramPage from "@/pages/programs/ScheduleProgramPage";
 import Exercises from "@/pages/exercises/Exercises";
 import Progress from "@/pages/progress/Progress";
 import Settings from "@/pages/settings/Settings";
+import InspectSchedules from "@/pages/debug/InspectSchedules";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/exercises" component={Exercises} />
       <Route path="/progress" component={Progress} />
       <Route path="/settings" component={Settings} />
+      <Route path="/debug/schedules" component={InspectSchedules} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,0 +1,132 @@
+import { useState, useEffect } from "react";
+import Header from "@/components/navigation/Header";
+import BottomNav from "@/components/navigation/BottomNav";
+import { PROGRAM_SCHEDULES_STORAGE_KEY } from "@/hooks/useScheduleChecks";
+import { useProgramSchedules } from "@/hooks/useProgramSchedules";
+import { useToast } from "@/hooks/use-toast";
+
+export default function InspectSchedules() {
+  const { schedules, deleteSchedule, clearSchedules } = useProgramSchedules();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { toast } = useToast();
+
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Format day of week - return day name for a number
+  const formatDay = (day: number) => {
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day];
+  };
+
+  // Handle deleting a schedule
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this schedule?")) {
+      deleteSchedule(id);
+      toast({
+        title: "Schedule Deleted",
+        description: "The program schedule has been removed",
+      });
+    }
+  };
+
+  // Handle clearing all schedules
+  const handleClearAll = () => {
+    if (confirm("Are you sure you want to delete ALL schedules? This cannot be undone.")) {
+      clearSchedules();
+      toast({
+        title: "All Schedules Cleared",
+        description: "All program schedules have been removed",
+      });
+    }
+  };
+
+  return (
+    <>
+      <Header title="Debug Schedules" />
+      
+      <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
+        <div className="px-4 py-4">
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <h2 className="text-lg font-semibold mb-2">Program Schedules</h2>
+            
+            {schedules.length === 0 ? (
+              <p className="text-gray-500 py-4 text-center">No schedules found</p>
+            ) : (
+              <>
+                <div className="mb-3 text-sm text-gray-600">
+                  Found {schedules.length} schedule(s) in localStorage
+                </div>
+                
+                <div className="space-y-4">
+                  {schedules.map((schedule) => (
+                    <div key={schedule.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="font-medium">Program ID: {schedule.programId}</div>
+                          <div className="text-sm">Schedule ID: {schedule.id}</div>
+                        </div>
+                        <button 
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleDelete(schedule.id)}
+                          aria-label="Delete schedule"
+                        >
+                          <span className="material-icons-round text-lg">delete</span>
+                        </button>
+                      </div>
+                      
+                      <div className="text-sm space-y-1">
+                        <div>
+                          <span className="text-gray-600 inline-block w-24">Date Range:</span>
+                          <span>{formatDate(schedule.startDate)} - {formatDate(schedule.endDate)}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 inline-block w-24">Days:</span>
+                          <span>
+                            {schedule.selectedWeekdays.length > 0 
+                              ? schedule.selectedWeekdays.map(day => formatDay(day).substring(0, 3)).join(', ')
+                              : "None"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 inline-block w-24">Status:</span>
+                          <span className={schedule.active ? "text-green-600" : "text-red-600"}>
+                            {schedule.active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6">
+                  <button 
+                    className="w-full py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                    onClick={handleClearAll}
+                  >
+                    Clear All Schedules
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h2 className="text-lg font-semibold mb-2">Raw Data</h2>
+            <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
+              {JSON.stringify(schedules, null, 2)}
+            </pre>
+          </div>
+        </div>
+      </main>
+      
+      <BottomNav />
+    </>
+  );
+}

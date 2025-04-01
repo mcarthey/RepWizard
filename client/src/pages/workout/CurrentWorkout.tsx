@@ -87,29 +87,30 @@ export default function CurrentWorkout() {
     }
   }, [loading, workout, createWorkout, programs, getSchedulesForDate]);
   
-  // Check if there's a program scheduled for today
+  // Update the UI when a workout exists but program isn't set - handles existing workouts
   useEffect(() => {
-    if (programs.length > 0) {
+    if (workout && !workout.programId && programs.length > 0) {
+      // Check for today's scheduled program
       const today = new Date();
-      
-      // Get all schedules for today's date
       const todaysSchedules = getSchedulesForDate(today);
-      console.log("Today's schedules:", todaysSchedules);
+      console.log("Today's schedules for notification:", todaysSchedules);
       
-      // If we have schedules and we don't already have a program selected
-      if (todaysSchedules.length > 0 && (!workout?.programId)) {
+      if (todaysSchedules.length > 0) {
         // Find the corresponding program
         const scheduledProgram = programs.find(program => 
           program.id === todaysSchedules[0].programId
         );
         
         if (scheduledProgram) {
-          console.log("Today's scheduled program:", scheduledProgram);
+          console.log("Today's scheduled program (for notification):", scheduledProgram);
           setTodaysScheduledProgram(scheduledProgram);
         }
       }
+    } else if (workout && workout.programId) {
+      // If the workout already has a program associated, clear the notification
+      setTodaysScheduledProgram(null);
     }
-  }, [programs, workout?.programId, getSchedulesForDate]);
+  }, [programs, workout, getSchedulesForDate]);
   
   // Get the associated program if there is one
   const selectedProgram = workout?.programId 
