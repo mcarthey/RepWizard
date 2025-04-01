@@ -82,7 +82,7 @@ export default function ExerciseDetailPage() {
                 {exercise?.images && exercise.images.length > 0 ? (
                   <>
                     <img 
-                      src={exercise.images[activeImageIndex]} 
+                      src={`https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${exercise.id}/${activeImageIndex}.jpg`}
                       alt={`${exercise.name} - view ${activeImageIndex + 1}`}
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -129,7 +129,7 @@ export default function ExerciseDetailPage() {
                       onClick={() => setActiveImageIndex(index)}
                     >
                       <img 
-                        src={image} 
+                        src={`https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${exercise.id}/${index}.jpg`} 
                         alt={`${exercise.name} thumbnail ${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -199,24 +199,75 @@ export default function ExerciseDetailPage() {
               <Tabs defaultValue="instructions" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="instructions">Instructions</TabsTrigger>
-                  <TabsTrigger value="description">Description</TabsTrigger>
+                  <TabsTrigger value="details">Details</TabsTrigger>
                 </TabsList>
                 <TabsContent value="instructions" className="mt-4 space-y-4">
                   <div className="prose max-w-none">
                     {exercise?.instructions ? (
-                      exercise.instructions.split('\n\n').map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                      ))
+                      // Check if instructions is already an array or a string with paragraphs
+                      Array.isArray(exercise.instructions) ? (
+                        exercise.instructions.map((instruction, index) => (
+                          <p key={index}>{instruction}</p>
+                        ))
+                      ) : (
+                        exercise.instructions.split('\n\n').map((paragraph, index) => (
+                          <p key={index}>{paragraph}</p>
+                        ))
+                      )
                     ) : (
                       <p>No instructions available for this exercise.</p>
                     )}
                   </div>
                 </TabsContent>
-                <TabsContent value="description" className="mt-4">
+                <TabsContent value="details" className="mt-4">
                   <Card className="p-4 bg-muted/50">
-                    <div className="flex items-start gap-2">
-                      <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <p>{exercise?.description || "No description available for this exercise."}</p>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start gap-2">
+                        <Info className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h3 className="font-medium text-sm">Exercise Details</h3>
+                          <div className="mt-1 space-y-2">
+                            {exercise?.force && (
+                              <div className="text-sm"><span className="font-medium">Force Type:</span> {exercise.force}</div>
+                            )}
+                            {exercise?.level && (
+                              <div className="text-sm"><span className="font-medium">Level:</span> {exercise.level}</div>
+                            )}
+                            {exercise?.mechanic && (
+                              <div className="text-sm"><span className="font-medium">Mechanic:</span> {exercise.mechanic}</div>
+                            )}
+                            {exercise?.equipment && (
+                              <div className="text-sm"><span className="font-medium">Equipment:</span> {exercise.equipment}</div>
+                            )}
+                            {exercise?.category && (
+                              <div className="text-sm"><span className="font-medium">Category:</span> {exercise.category}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1 mt-2">
+                        <div className="font-medium text-sm">Primary Muscles</div>
+                        <div className="flex flex-wrap gap-1">
+                          {exercise?.primaryMuscles && exercise.primaryMuscles.length > 0 ? 
+                            exercise.primaryMuscles.map(muscle => (
+                              <Badge key={muscle} variant="secondary" className="text-xs">{muscle}</Badge>
+                            )) : 
+                            <span className="text-muted-foreground text-sm">None</span>
+                          }
+                        </div>
+                      </div>
+                      
+                      {exercise?.secondaryMuscles && exercise.secondaryMuscles.length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          <div className="font-medium text-sm">Secondary Muscles</div>
+                          <div className="flex flex-wrap gap-1">
+                            {exercise.secondaryMuscles.map(muscle => (
+                              <Badge key={muscle} variant="outline" className="text-xs">{muscle}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 </TabsContent>
