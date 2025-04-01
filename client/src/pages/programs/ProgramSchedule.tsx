@@ -150,10 +150,10 @@ export default function ProgramSchedule() {
       setSelectedWeekdays(prev => prev.filter(d => d !== dayIndex));
     } else {
       // Check if we're already at the maximum days for this program
-      if (selectedWeekdays.length >= (program?.daysPerWeek || 7)) {
+      if (program?.daysPerWeek && selectedWeekdays.length >= program.daysPerWeek) {
         toast({
           title: "Maximum Days Selected",
-          description: `This program is designed for ${program?.daysPerWeek} days per week`,
+          description: `This program is designed for ${program.daysPerWeek} days per week`,
           variant: "destructive"
         });
         return;
@@ -166,6 +166,16 @@ export default function ProgramSchedule() {
   const getCalendarDate = (dayNumber: number) => {
     if (!dayNumber) return null;
     return new Date(currentMonth.getFullYear(), currentMonth.getMonth(), dayNumber);
+  };
+
+  // Calculate end date for display
+  const calculateEndDate = () => {
+    if (!program?.weeks) return null;
+    
+    const endDate = new Date(startDate);
+    // Program length in weeks * 7 days - 1 day (to show the last day of the program)
+    endDate.setDate(endDate.getDate() + (program.weeks * 7) - 1);
+    return endDate;
   };
 
   // Schedule the program
@@ -189,13 +199,12 @@ export default function ProgramSchedule() {
     }
 
     // Generate the program schedule
-    const scheduleEndDate = new Date(startDate);
-    scheduleEndDate.setDate(scheduleEndDate.getDate() + (program?.weeks || 4) * 7);
+    const endDate = calculateEndDate();
 
     // Here we would save the program schedule to the database
     toast({
       title: "Program Scheduled",
-      description: `${program?.name} has been scheduled from ${formatDate(startDate)} to ${formatDate(scheduleEndDate)}`,
+      description: `${program?.name} has been scheduled from ${formatDate(startDate)} to ${endDate ? formatDate(endDate) : ''}`,
     });
 
     // Navigate back to the programs page
@@ -232,96 +241,72 @@ export default function ProgramSchedule() {
                 </div>
               </div>
               
-              {/* Workout Templates List */}
-              <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-                <h3 className="text-base font-semibold mb-3">Workout Templates</h3>
-                {templates.length > 0 ? (
-                  <div className="space-y-2">
-                    {templates.map(template => (
-                      <div 
-                        key={template.id}
-                        className="flex items-center p-2 border border-gray-200 rounded-lg"
-                      >
-                        <div className="h-7 w-7 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mr-2">
-                          <span className="material-icons-round text-xs">fitness_center</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{template.name}</div>
-                          <div className="text-xs text-gray-500">
-                            Day {template.day}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+              {/* Start Date Selection */}
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <h3 className="text-base font-semibold mb-3">Program Start Date</h3>
+                <div className="p-3 border border-gray-200 rounded-lg flex justify-between items-center">
+                  <div className="flex items-center">
+                    <span className="material-icons-round text-gray-500 mr-2">today</span>
+                    <span>{formatDate(startDate)}</span>
                   </div>
-                ) : (
-                  <div className="text-center py-3 text-gray-500 text-sm">
-                    <p>No workout templates created yet</p>
+                </div>
+                
+                {/* Inline calendar */}
+                <div className="mt-3">
+                  <div className="flex justify-between items-center mb-2">
                     <button 
-                      className="mt-2 text-blue-600 hover:underline text-sm"
-                      onClick={() => navigate(`/programs/${programId}`)}
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded-full"
+                      onClick={() => handleMonthChange('prev')}
                     >
-                      Add Workout Templates
+                      <span className="material-icons-round">chevron_left</span>
+                    </button>
+                    <h3 className="text-sm font-medium">
+                      {getMonthName(currentMonth)} {currentMonth.getFullYear()}
+                    </h3>
+                    <button 
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded-full"
+                      onClick={() => handleMonthChange('next')}
+                    >
+                      <span className="material-icons-round">chevron_right</span>
                     </button>
                   </div>
-                )}
-              </div>
-              
-              {/* Calendar */}
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <button 
-                    className="p-1 text-gray-600 hover:bg-gray-100 rounded-full"
-                    onClick={() => handleMonthChange('prev')}
-                  >
-                    <span className="material-icons-round">chevron_left</span>
-                  </button>
-                  <h3 className="font-medium">
-                    {getMonthName(currentMonth)} {currentMonth.getFullYear()}
-                  </h3>
-                  <button 
-                    className="p-1 text-gray-600 hover:bg-gray-100 rounded-full"
-                    onClick={() => handleMonthChange('next')}
-                  >
-                    <span className="material-icons-round">chevron_right</span>
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-xs font-medium text-gray-500">{day}</div>
-                  ))}
-                </div>
-                
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarDays().map((day, i) => {
-                    if (day === null) {
-                      return <div key={`empty-${i}`} className="h-9"></div>;
-                    }
-                    
-                    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day as number);
-                    const today = new Date();
-                    const isToday = today.getDate() === day && 
-                                  today.getMonth() === currentMonth.getMonth() && 
-                                  today.getFullYear() === currentMonth.getFullYear();
-                    
-                    const isStartDate = startDate.getDate() === day &&
-                                     startDate.getMonth() === currentMonth.getMonth() &&
-                                     startDate.getFullYear() === currentMonth.getFullYear();
-                    
-                    return (
-                      <div 
-                        key={`day-${day}`}
-                        className={`h-9 flex items-center justify-center rounded-full cursor-pointer text-sm
-                          ${isToday ? 'border border-primary-500' : ''}
-                          ${isStartDate ? 'bg-primary-500 text-white' : 'hover:bg-gray-100'}
-                        `}
-                        onClick={() => handleDateSelect(day as number)}
-                      >
-                        {day}
-                      </div>
-                    );
-                  })}
+                  
+                  <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                      <div key={i} className="text-xs font-medium text-gray-500">{day}</div>
+                    ))}
+                  </div>
+                  
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarDays().map((day, i) => {
+                      if (day === null) {
+                        return <div key={`empty-${i}`} className="h-8"></div>;
+                      }
+                      
+                      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day as number);
+                      const today = new Date();
+                      const isToday = today.getDate() === day && 
+                                    today.getMonth() === currentMonth.getMonth() && 
+                                    today.getFullYear() === currentMonth.getFullYear();
+                      
+                      const isStartDate = startDate.getDate() === day &&
+                                      startDate.getMonth() === currentMonth.getMonth() &&
+                                      startDate.getFullYear() === currentMonth.getFullYear();
+                      
+                      return (
+                        <div 
+                          key={`day-${day}`}
+                          className={`h-8 flex items-center justify-center rounded-full cursor-pointer text-sm
+                            ${isToday ? 'border border-primary-500' : ''}
+                            ${isStartDate ? 'bg-primary-500 text-white' : 'hover:bg-gray-100'}
+                          `}
+                          onClick={() => handleDateSelect(day as number)}
+                        >
+                          {day}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
               
@@ -329,7 +314,7 @@ export default function ProgramSchedule() {
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <h3 className="text-base font-semibold mb-3">Select Training Days</h3>
                 <p className="text-sm text-gray-600 mb-3">
-                  This program requires {program.daysPerWeek} days per week. 
+                  This program requires <span className="font-medium">{program.daysPerWeek}</span> days per week. 
                   Select which days you plan to train:
                 </p>
                 
@@ -348,23 +333,6 @@ export default function ProgramSchedule() {
                 </div>
               </div>
               
-              {/* Start Date Selection */}
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <h3 className="text-base font-semibold mb-3">Program Start Date</h3>
-                <div 
-                  className="p-3 border border-gray-200 rounded-lg flex justify-between items-center cursor-pointer"
-                  onClick={toggleDatePicker}
-                >
-                  <div className="flex items-center">
-                    <span className="material-icons-round text-gray-500 mr-2">today</span>
-                    <span>{formatDate(startDate)}</span>
-                  </div>
-                  <span className="material-icons-round text-gray-500">
-                    {showDatePicker ? 'expand_less' : 'expand_more'}
-                  </span>
-                </div>
-              </div>
-              
               {/* Program Summary */}
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <h3 className="text-base font-semibold mb-2">Program Summary</h3>
@@ -373,10 +341,18 @@ export default function ProgramSchedule() {
                     <span className="text-gray-600">Start Date:</span>
                     <span className="font-medium">{formatDate(startDate)}</span>
                   </div>
+                  {calculateEndDate() && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">End Date:</span>
+                      <span className="font-medium">{formatDate(calculateEndDate()!)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Training Days:</span>
                     <span className="font-medium">
-                      {selectedWeekdays.map(day => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(', ')}
+                      {selectedWeekdays.length > 0 
+                        ? selectedWeekdays.map(day => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(', ')
+                        : "None selected"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
