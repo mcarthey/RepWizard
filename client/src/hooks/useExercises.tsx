@@ -12,10 +12,16 @@ export function useExercises() {
 
 // Get exercise by ID
 export function useExercise(id: number | undefined) {
-  return useQuery<Exercise>({
-    queryKey: ["/api/exercises", id],
+  const { data: exercises, isLoading, error } = useQuery<Exercise[]>({
+    queryKey: ["/api/exercises"],
     enabled: !!id, // Only run the query if id is provided
   });
+  
+  return {
+    data: id && exercises ? exercises.find(exercise => exercise.id === id) : undefined,
+    isLoading,
+    error
+  };
 }
 
 // Get exercises by muscle group
