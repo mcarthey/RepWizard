@@ -46,7 +46,18 @@ export default function ProgramDetailRedesign() {
   const { data: program, isLoading: programLoading } = useQuery<Program>({
     queryKey: ['/api/programs', programId],
     enabled: !!programId,
-    retry: false
+    retry: false,
+    onSuccess: (data) => {
+      // Ensure selected week and day respect program limits
+      if (data) {
+        if (selectedWeek > data.weeks) {
+          setSelectedWeek(1);
+        }
+        if (selectedDay > (data.daysPerWeek || 7)) {
+          setSelectedDay(1);
+        }
+      }
+    }
   });
 
   // Get workout templates for this program
