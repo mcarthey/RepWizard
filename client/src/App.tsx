@@ -2,7 +2,10 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/auth-page";
 import CurrentWorkout from "@/pages/workout/CurrentWorkout";
 import WorkoutHistory from "@/pages/workout/WorkoutHistory";
 import Programs from "@/pages/programs/Programs";
@@ -16,15 +19,21 @@ import InspectSchedules from "@/pages/debug/InspectSchedules";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={CurrentWorkout} />
-      <Route path="/history" component={WorkoutHistory} />
-      <Route path="/programs" component={Programs} />
-      <Route path="/programs/:id" component={ProgramDetailRedesign} />
-      <Route path="/programs/:id/schedule" component={ScheduleProgramPage} />
-      <Route path="/exercises" component={Exercises} />
-      <Route path="/progress" component={Progress} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/debug/schedules" component={InspectSchedules} />
+      {/* Public Routes */}
+      <Route path="/auth" component={AuthPage} />
+      
+      {/* Protected Routes - Require Authentication */}
+      <ProtectedRoute path="/" component={CurrentWorkout} />
+      <ProtectedRoute path="/history" component={WorkoutHistory} />
+      <ProtectedRoute path="/programs" component={Programs} />
+      <ProtectedRoute path="/programs/:id" component={ProgramDetailRedesign} />
+      <ProtectedRoute path="/programs/:id/schedule" component={ScheduleProgramPage} />
+      <ProtectedRoute path="/exercises" component={Exercises} />
+      <ProtectedRoute path="/progress" component={Progress} />
+      <ProtectedRoute path="/settings" component={Settings} />
+      <ProtectedRoute path="/debug/schedules" component={InspectSchedules} />
+      
+      {/* Not Found */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -33,10 +42,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app-height flex flex-col bg-gray-50 text-gray-800 overflow-hidden">
-        <Router />
-        <Toaster />
-      </div>
+      <AuthProvider>
+        <div className="app-height flex flex-col bg-gray-50 text-gray-800 overflow-hidden">
+          <Router />
+          <Toaster />
+        </div>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

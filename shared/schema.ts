@@ -2,16 +2,25 @@ import { pgTable, text, serial, integer, jsonb, timestamp, boolean, real } from 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User Role enum
+export const UserRoleEnum = z.enum(['admin', 'trainer', 'member']);
+export type UserRole = z.infer<typeof UserRoleEnum>;
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull().default('member'), // admin, trainer, member
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -217,8 +226,48 @@ export type LocalSet = {
   notes: string | null;
 };
 
-// Schema for a scheduled program
-export type ProgramSchedule = {
+// Program assignment table
+export const programAssignments = pgTable("program_assignments", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id").references(() => programs.id),
+  userId: integer("user_id").references(() => users.id),
+  assignedById: integer("assigned_by_id").references(() => users.id),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertProgramAssignmentSchema = createInsertSchema(programAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProgramAssignment = z.infer<typeof insertProgramAssignmentSchema>;
+export type ProgramAssignment = typeof programAssignments.$inferSelect;
+
+// Program schedules table (migrating from localStorage to database)
+export const programSchedules = pgTable("program_schedules", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id").references(() => programs.id),
+  userId: integer("user_id").references(() => users.id),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  selectedWeekdays: integer("selected_weekdays").array(),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertProgramScheduleSchema = createInsertSchema(programSchedules).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProgramSchedule = z.infer<typeof insertProgramScheduleSchema>;
+export type ProgramSchedule = typeof programSchedules.$inferSelect;
+
+// Legacy schema for localStorage program schedule - keeping for compatibility during transition
+export type LocalProgramSchedule = {
   id: string;
   programId: number;
   startDate: string;

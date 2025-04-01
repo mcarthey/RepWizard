@@ -1,6 +1,7 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth } from "./auth";
 import { ZodError } from "zod";
 import {
   insertExerciseSchema,
@@ -11,10 +12,40 @@ import {
   insertWorkoutExerciseSchema,
   insertSetSchema,
   insertGoalSchema,
-  SetTypeEnum
+  insertProgramAssignmentSchema,
+  insertProgramScheduleSchema,
+  SetTypeEnum,
+  UserRoleEnum
 } from "@shared/schema";
 
+// Auth middleware
+const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(401).json({ error: "Unauthorized - Please login" });
+};
+
+// Role-based middleware
+const ensureRole = (allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized - Please login" });
+    }
+    
+    if (!req.user?.role || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: "Forbidden - Insufficient permissions" });
+    }
+    
+    next();
+  };
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  // Set up authentication
+  setupAuth(app);
   // Error handling helper
   const handleError = (err: unknown) => {
     if (err instanceof ZodError) {
@@ -23,8 +54,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return { status: 500, message: 'Internal server error' };
   };
 
-  // Exercise routes
-  app.get('/api/exercises', async (req, res) => {
+  // Exercise routes - Available to all authenticated users
+  app.get('/api/exercises', ensureAuthenticated, async (req, res) => {
     try {
       const exercises = await storage.getExercises();
       res.json(exercises);
@@ -408,6 +439,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Goal not found' });
       }
       res.status(204).send();
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  // Program Assignment routes - Role-based access control
+  app.get('/api/program-assignments', ensureAuthenticated, async (req, res) => {
+    try {
+      // Use logged-in user's ID or provided ID for admin/trainer
+      let userId = (req.user as any).id;
+      
+      // If admin or trainer and a specific userId is provided, use that instead
+      if ((req.user as any).role === 'admin' || (req.user as any).role === 'trainer') {
+        if (req.query.userId) {
+          userId = Number(req.query.userId);
+        }
+      }
+      
+      const assignments = await storage.getProgramAssignments(userId);
+      res.json(assignments);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/program-assignments', ensureRole(['admin', 'trainer']), async (req, res) => {
+    try {
+      const assignmentData = insertProgramAssignmentSchema.parse(req.body);
+      const assignment = await storage.createProgramAssignment(assignmentData);
+      res.status(201).json(assignment);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/program-assignments/:id', ensureRole(['admin', 'trainer']), async (req, res) => {
+    try {
+      const success = await storage.deleteProgramAssignment(Number(req.params.id));
+      if (!success) {
+        return res.status(404).json({ error: 'Program assignment not found' });
+      }
+      res.status(204).send();
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  // Program Schedule routes
+  app.get('/api/program-schedules', ensureAuthenticated, async (req, res) => {
+    try {
+      // Use logged-in user's ID 
+      const userId = (req.user as any).id;
+      const schedules = await storage.getProgramSchedules(userId);
+      res.json(schedules);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/program-schedules/:id', ensureAuthenticated, async (req, res) => {
+    try {
+      const schedule = await storage.getProgramSchedule(Number(req.params.id));
+      
+      if (!schedule) {
+        return res.status(404).json({ error: 'Program schedule not found' });
+      }
+      
+      // Check if user is authorized to view this schedule
+      if (schedule.userId !== (req.user as any).id && 
+          (req.user as any).role !== 'admin' && 
+          (req.user as any).role !== 'trainer') {
+        return res.status(403).json({ error: 'Unauthorized to access this schedule' });
+      }
+      
+      res.json(schedule);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/program-schedules', ensureAuthenticated, async (req, res) => {
+    try {
+      // Ensure the user ID in the request matches the logged-in user's ID
+      // unless the user is an admin or trainer
+      const scheduleData = { 
+        ...req.body,
+        userId: (req.user as any).id 
+      };
+      
+      const parsedData = insertProgramScheduleSchema.parse(scheduleData);
+      const schedule = await storage.createProgramSchedule(parsedData);
+      res.status(201).json(schedule);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.put('/api/program-schedules/:id', ensureAuthenticated, async (req, res) => {
+    try {
+      const scheduleId = Number(req.params.id);
+      const existingSchedule = await storage.getProgramSchedule(scheduleId);
+      
+      if (!existingSchedule) {
+        return res.status(404).json({ error: 'Program schedule not found' });
+      }
+      
+      // Check if user is authorized to update this schedule
+      if (existingSchedule.userId !== (req.user as any).id && 
+          (req.user as any).role !== 'admin' && 
+          (req.user as any).role !== 'trainer') {
+        return res.status(403).json({ error: 'Unauthorized to update this schedule' });
+      }
+      
+      const schedule = await storage.updateProgramSchedule(scheduleId, req.body);
+      res.json(schedule);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/program-schedules/:id', ensureAuthenticated, async (req, res) => {
+    try {
+      const scheduleId = Number(req.params.id);
+      const existingSchedule = await storage.getProgramSchedule(scheduleId);
+      
+      if (!existingSchedule) {
+        return res.status(404).json({ error: 'Program schedule not found' });
+      }
+      
+      // Check if user is authorized to delete this schedule
+      if (existingSchedule.userId !== (req.user as any).id && 
+          (req.user as any).role !== 'admin' && 
+          (req.user as any).role !== 'trainer') {
+        return res.status(403).json({ error: 'Unauthorized to delete this schedule' });
+      }
+      
+      const success = await storage.deleteProgramSchedule(scheduleId);
+      res.status(204).send();
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  // User management routes (admin only)
+  app.get('/api/users', ensureRole(['admin']), async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      
+      // Remove password fields for security
+      const sanitizedUsers = users.map(user => {
+        const { password, ...sanitizedUser } = user;
+        return sanitizedUser;
+      });
+      
+      res.json(sanitizedUsers);
+    } catch (err) {
+      const error = handleError(err);
+      res.status(error.status).json({ error: error.message });
+    }
+  });
+
+  app.put('/api/users/:id', ensureRole(['admin']), async (req, res) => {
+    try {
+      // Do not allow password updates through this endpoint
+      const { password, ...userData } = req.body;
+      
+      const user = await storage.updateUser(Number(req.params.id), userData);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Remove password before sending response
+      const { password: _, ...sanitizedUser } = user;
+      res.json(sanitizedUser);
     } catch (err) {
       const error = handleError(err);
       res.status(error.status).json({ error: error.message });
