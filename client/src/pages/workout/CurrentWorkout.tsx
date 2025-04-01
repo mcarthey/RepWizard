@@ -34,16 +34,6 @@ export default function CurrentWorkout() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
-  // Create a default workout if none exists
-  useEffect(() => {
-    if (!loading && !workout) {
-      console.log("Creating new workout because none exists");
-      createWorkout(createNewWorkout());
-    } else {
-      console.log("Current workout state:", { loading, workout });
-    }
-  }, [loading, workout, createWorkout]);
-  
   // Get program data
   const { data: programs = [] } = useQuery<Program[]>({
     queryKey: ['/api/programs'],
@@ -51,6 +41,51 @@ export default function CurrentWorkout() {
   
   // Get schedules for today's date 
   const { getSchedulesForDate } = useScheduleChecks();
+  
+  // Check if there's a program scheduled for today and create a workout if needed
+  useEffect(() => {
+    if (!loading && !workout) {
+      console.log("Creating new workout because none exists");
+      
+      // Default to creating a regular workout
+      let shouldCreateDefaultWorkout = true;
+      
+      // Only check for scheduled programs if we have program data loaded
+      if (programs.length > 0) {
+        // Check for today's scheduled program
+        const today = new Date();
+        const todaysSchedules = getSchedulesForDate(today);
+        console.log("Today's schedules:", todaysSchedules);
+        
+        if (todaysSchedules.length > 0) {
+          // Find the corresponding program
+          const programId = todaysSchedules[0].programId;
+          const scheduledProgram = programs.find(program => program.id === programId);
+          
+          if (scheduledProgram) {
+            console.log("Creating workout with scheduled program:", scheduledProgram.name);
+            shouldCreateDefaultWorkout = false;
+            
+            // Create workout with the program already selected
+            const newWorkout = createNewWorkout(scheduledProgram.name);
+            newWorkout.programId = scheduledProgram.id;
+            createWorkout(newWorkout);
+            
+            // Also set for the UI
+            setTodaysScheduledProgram(scheduledProgram);
+          }
+        }
+      }
+      
+      // Create default workout if needed
+      if (shouldCreateDefaultWorkout) {
+        console.log("Creating default workout");
+        createWorkout(createNewWorkout());
+      }
+    } else {
+      console.log("Current workout state:", { loading, workout });
+    }
+  }, [loading, workout, createWorkout, programs, getSchedulesForDate]);
   
   // Check if there's a program scheduled for today
   useEffect(() => {
