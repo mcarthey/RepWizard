@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRoute } from "wouter";
 import { useExercise } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Dumbbell, ChevronRight, Info } from "lucide-react";
 import { Link } from "wouter";
+import { Exercise } from "@shared/schema";
 
 export default function ExerciseDetailPage() {
   const [_, params] = useRoute("/exercises/:id");
@@ -16,6 +17,31 @@ export default function ExerciseDetailPage() {
   const { data: exercise, isLoading, error } = useExercise(exerciseId);
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  
+  // Format the image URL correctly based on the exercise data
+  const getExerciseImageUrl = useMemo(() => {
+    if (!exercise?.id) return '';
+    
+    // First check if we have images in the right format from the database
+    if (exercise.images && exercise.images.length > 0) {
+      // Check if image paths are already absolute URLs
+      if (exercise.images[0].startsWith('http')) {
+        return exercise.images[0].substring(0, exercise.images[0].lastIndexOf('/'));
+      }
+      
+      // Handle the special name format cases like "3_4_Sit-Up"
+      const specialCases: Record<number, string> = {
+        93: "3_4_Sit-Up",
+        // Add more special cases as needed
+      };
+      
+      const exerciseDir = specialCases[exercise.id] || exercise.id.toString();
+      return `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises/${exerciseDir}`;
+    }
+    
+    // Fallback to the default path format
+    return `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises/${exercise.id}`;
+  }, [exercise?.id, exercise?.images]);
   
   // Reset image index when exercise changes
   useEffect(() => {
@@ -82,7 +108,9 @@ export default function ExerciseDetailPage() {
                 {exercise?.images && exercise.images.length > 0 ? (
                   <>
                     <img 
-                      src={`https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${exercise.id}/${activeImageIndex}.jpg`}
+                      src={exercise.images && exercise.images.length > activeImageIndex
+                        ? `${getExerciseImageUrl}/${activeImageIndex}.jpg`
+                        : '/assets/placeholder-exercise.svg'}
                       alt={`${exercise.name} - view ${activeImageIndex + 1}`}
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -129,7 +157,7 @@ export default function ExerciseDetailPage() {
                       onClick={() => setActiveImageIndex(index)}
                     >
                       <img 
-                        src={`https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${exercise.id}/${index}.jpg`} 
+                        src={`${getExerciseImageUrl}/${index}.jpg`} 
                         alt={`${exercise.name} thumbnail ${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
