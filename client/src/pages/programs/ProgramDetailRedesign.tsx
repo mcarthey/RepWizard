@@ -251,7 +251,7 @@ export default function ProgramDetailRedesign() {
     }
     
     // Create target templates for each day of the target week if they don't exist
-    [1, 2, 3, 4, 5, 6, 7].forEach(day => {
+    daysInWeek.forEach(day => {
       const existingTemplate = templates.find(
         t => t.day === day && t.week === targetWeek
       );
@@ -303,6 +303,9 @@ export default function ProgramDetailRedesign() {
 
   // Create array of weeks based on program length
   const weeks = Array.from({ length: program?.weeks || 4 }, (_, i) => i + 1);
+  
+  // Create array of days based on program's daysPerWeek
+  const daysInWeek = Array.from({ length: program?.daysPerWeek || 7 }, (_, i) => i + 1);
 
   // Loading state
   const isLoading = programLoading || templatesLoading || allExercisesLoading;
@@ -366,7 +369,7 @@ export default function ProgramDetailRedesign() {
 
                 {/* Days grid */}
                 <div className="grid grid-cols-1 gap-3 mb-4">
-                  {[1, 2, 3, 4, 5, 6, 7].map(day => {
+                  {daysInWeek.map(day => {
                     const dayTemplate = templates.find(t => t.day === day && t.week === selectedWeek);
                     const hasExercises = !!dayTemplate;
                     
@@ -726,7 +729,7 @@ export default function ProgramDetailRedesign() {
                       value={sourceDay?.day || 1}
                       onChange={(e) => setSourceDay(prev => ({ ...prev || {day: 1, week: 1}, day: parseInt(e.target.value) }))}
                     >
-                      {[1, 2, 3, 4, 5, 6, 7].map(day => (
+                      {daysInWeek.map(day => (
                         <option key={day} value={day}>Day {day}</option>
                       ))}
                     </select>

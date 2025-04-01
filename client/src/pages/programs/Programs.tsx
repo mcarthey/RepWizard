@@ -235,25 +235,12 @@ export default function Programs() {
                               className="text-blue-600 text-sm flex items-center hover:underline"
                               onClick={() => handleProgramDetails(program.id)}
                             >
-                              <span className="material-icons-round text-sm mr-1">add</span>
-                              Add Workout
+                              <span className="material-icons-round text-sm mr-1">settings</span>
+                              Setup Program
                             </button>
                           </div>
-                          <div className="space-y-3">
-                            {/* Workout items would be dynamically generated here */}
-                            <div className="flex items-center border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                                 onClick={() => handleProgramDetails(program.id)}>
-                              <div className="h-8 w-8 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center mr-3">
-                                <span className="material-icons-round text-sm">fitness_center</span>
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-medium">Day 1</div>
-                                <div className="text-xs text-gray-500">Configure your workout</div>
-                              </div>
-                              <button className="text-primary-600">
-                                <span className="material-icons-round">chevron_right</span>
-                              </button>
-                            </div>
+                          <div className="text-center py-4 text-gray-500">
+                            <p>Click "Setup Program" to configure workout days</p>
                           </div>
                         </div>
                         
