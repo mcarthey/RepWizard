@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { useExercise } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, Dumbbell, ChevronRight, Info } from "lucide-react";
 import { Link } from "wouter";
 import { Exercise } from "@shared/schema";
+import { 
+  getExerciseImageUrl, 
+  getExerciseInstructions,
+  getExerciseImageCount 
+} from "@/lib/exerciseUtils";
 
 export default function ExerciseDetailPage() {
   const [_, params] = useRoute("/exercises/:id");
@@ -18,31 +23,6 @@ export default function ExerciseDetailPage() {
   
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   
-  // Format the image URL correctly based on the exercise data
-  const getExerciseImageUrl = useMemo(() => {
-    if (!exercise?.id) return '';
-    
-    // First check if we have images in the right format from the database
-    if (exercise.images && exercise.images.length > 0) {
-      // Check if image paths are already absolute URLs
-      if (exercise.images[0].startsWith('http')) {
-        return exercise.images[0].substring(0, exercise.images[0].lastIndexOf('/'));
-      }
-      
-      // Handle the special name format cases like "3_4_Sit-Up"
-      const specialCases: Record<number, string> = {
-        93: "3_4_Sit-Up",
-        // Add more special cases as needed
-      };
-      
-      const exerciseDir = specialCases[exercise.id] || exercise.id.toString();
-      return `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises/${exerciseDir}`;
-    }
-    
-    // Fallback to the default path format
-    return `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises/${exercise.id}`;
-  }, [exercise?.id, exercise?.images]);
-  
   // Reset image index when exercise changes
   useEffect(() => {
     setActiveImageIndex(0);
@@ -50,13 +30,17 @@ export default function ExerciseDetailPage() {
   
   // Handle image navigation
   const nextImage = () => {
-    if (!exercise?.images) return;
-    setActiveImageIndex((prev) => (prev + 1) % exercise.images.length);
+    if (!exercise) return;
+    const imageCount = getExerciseImageCount(exercise);
+    if (imageCount === 0) return;
+    setActiveImageIndex((prev) => (prev + 1) % imageCount);
   };
   
   const prevImage = () => {
-    if (!exercise?.images) return;
-    setActiveImageIndex((prev) => (prev === 0 ? exercise.images.length - 1 : prev - 1));
+    if (!exercise) return;
+    const imageCount = getExerciseImageCount(exercise);
+    if (imageCount === 0) return;
+    setActiveImageIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
   };
   
   if (error) {
@@ -105,12 +89,10 @@ export default function ExerciseDetailPage() {
             {/* Image Gallery */}
             <div className="space-y-4">
               <div className="relative h-64 md:h-80 bg-gray-100 rounded-lg overflow-hidden">
-                {exercise?.images && exercise.images.length > 0 ? (
+                {exercise && getExerciseImageCount(exercise) > 0 ? (
                   <>
                     <img 
-                      src={exercise.images && exercise.images.length > activeImageIndex
-                        ? `${getExerciseImageUrl}/${activeImageIndex}.jpg`
-                        : '/assets/placeholder-exercise.svg'}
+                      src={getExerciseImageUrl(exercise, activeImageIndex)}
                       alt={`${exercise.name} - view ${activeImageIndex + 1}`}
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -118,7 +100,7 @@ export default function ExerciseDetailPage() {
                       }}
                     />
                     
-                    {exercise.images.length > 1 && (
+                    {getExerciseImageCount(exercise) > 1 && (
                       <>
                         <Button 
                           size="icon" 
@@ -146,9 +128,9 @@ export default function ExerciseDetailPage() {
                 )}
               </div>
               
-              {exercise?.images && exercise.images.length > 1 && (
+              {exercise && getExerciseImageCount(exercise) > 1 && (
                 <div className="flex justify-center gap-2 overflow-x-auto py-2">
-                  {exercise.images.map((image, index) => (
+                  {Array.from({ length: getExerciseImageCount(exercise) }).map((_, index) => (
                     <button
                       key={index}
                       className={`h-16 w-16 rounded-md overflow-hidden border-2 ${
@@ -157,7 +139,7 @@ export default function ExerciseDetailPage() {
                       onClick={() => setActiveImageIndex(index)}
                     >
                       <img 
-                        src={`${getExerciseImageUrl}/${index}.jpg`} 
+                        src={getExerciseImageUrl(exercise, index)} 
                         alt={`${exercise.name} thumbnail ${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -231,16 +213,14 @@ export default function ExerciseDetailPage() {
                 </TabsList>
                 <TabsContent value="instructions" className="mt-4 space-y-4">
                   <div className="prose max-w-none">
-                    {exercise?.instructions ? (
-                      // Check if instructions is already an array or a string with paragraphs
-                      Array.isArray(exercise.instructions) ? (
-                        exercise.instructions.map((instruction, index) => (
+                    {exercise ? (
+                      // Use our utility function to handle different instruction formats
+                      getExerciseInstructions(exercise).length > 0 ? (
+                        getExerciseInstructions(exercise).map((instruction, index) => (
                           <p key={index}>{instruction}</p>
                         ))
                       ) : (
-                        exercise.instructions.split('\n\n').map((paragraph, index) => (
-                          <p key={index}>{paragraph}</p>
-                        ))
+                        <p>No instructions available for this exercise.</p>
                       )
                     ) : (
                       <p>No instructions available for this exercise.</p>
