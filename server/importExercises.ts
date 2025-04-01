@@ -19,7 +19,7 @@ interface GitHubExercise {
 }
 
 const GITHUB_EXERCISES_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
-const GITHUB_IMAGE_BASE_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/images/';
+const GITHUB_IMAGE_BASE_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 const LOCAL_IMAGE_DIR = path.join(process.cwd(), 'client/public/assets/exercises');
 
 async function downloadImage(imageUrl: string, localPath: string): Promise<boolean> {
@@ -75,9 +75,10 @@ async function importExercises() {
 
         // Download images
         const localImages: string[] = [];
-        for (const imagePath of githubExercise.images) {
-          const imageUrl = `${GITHUB_IMAGE_BASE_URL}${imagePath}`;
-          const fileName = path.basename(imagePath);
+        for (let i = 0; i < githubExercise.images.length; i++) {
+          // The image paths in the GitHub data are inconsistent, we need to use the ID and image index
+          const imageUrl = `${GITHUB_IMAGE_BASE_URL}${githubExercise.id}/${i}.jpg`;
+          const fileName = `${i}.jpg`;
           const localImagePath = path.join(exerciseDir, fileName);
           
           // Download the image and only add to localImages if successful

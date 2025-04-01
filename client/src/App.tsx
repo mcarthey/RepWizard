@@ -12,6 +12,8 @@ import Programs from "@/pages/programs/Programs";
 import ProgramDetailRedesign from "@/pages/programs/ProgramDetailRedesign";
 import ScheduleProgramPage from "@/pages/programs/ScheduleProgramPage";
 import Exercises from "@/pages/exercises/Exercises";
+import ExercisesPage from "@/pages/exercises/ExercisesPage";
+import ExerciseDetailPage from "@/pages/exercises/ExerciseDetailPage";
 import Progress from "@/pages/progress/Progress";
 import Settings from "@/pages/settings/Settings";
 import InspectSchedules from "@/pages/debug/InspectSchedules";
@@ -28,7 +30,9 @@ function Router() {
       <ProtectedRoute path="/programs" component={Programs} />
       <ProtectedRoute path="/programs/:id" component={ProgramDetailRedesign} />
       <ProtectedRoute path="/programs/:id/schedule" component={ScheduleProgramPage} />
-      <ProtectedRoute path="/exercises" component={Exercises} />
+      <ProtectedRoute path="/exercises" component={ExercisesPage} />
+      <ProtectedRoute path="/exercises/:id" component={ExerciseDetailPage} />
+      <ProtectedRoute path="/exercises-old" component={Exercises} />
       <ProtectedRoute path="/progress" component={Progress} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/debug/schedules" component={InspectSchedules} />
