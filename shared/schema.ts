@@ -35,6 +35,15 @@ export const exercises = pgTable("exercises", {
   muscleGroups: text("muscle_groups").array(),
   videoUrl: text("video_url"),
   userId: integer("user_id").references(() => users.id),
+  // Additional fields from the GitHub exercise database
+  force: text("force"), // push, pull, static
+  level: text("level"), // beginner, intermediate, advanced
+  mechanic: text("mechanic"), // isolation, compound
+  equipment: text("equipment"), // type of equipment used
+  category: text("category"), // strength, stretching, etc.
+  primaryMuscles: text("primary_muscles").array(),
+  secondaryMuscles: text("secondary_muscles").array(),
+  images: text("images").array(), // Array of image URLs
 });
 
 export const insertExerciseSchema = createInsertSchema(exercises).omit({
