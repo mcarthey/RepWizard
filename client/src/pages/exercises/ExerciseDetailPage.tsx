@@ -86,6 +86,14 @@ export default function ExerciseDetailPage() {
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">{exercise?.name}</h1>
           
+          {/* Debug section */}
+          <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-md mb-4 overflow-auto max-h-96">
+            <h3 className="text-lg font-bold mb-2">Debug Data</h3>
+            <pre className="text-xs whitespace-pre-wrap">
+              {JSON.stringify(exercise, null, 2)}
+            </pre>
+          </div>
+          
           {exercise && exercise.description && (
             <div className="text-muted-foreground text-base">
               {getExerciseDescription(exercise)}
