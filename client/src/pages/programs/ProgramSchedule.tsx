@@ -136,32 +136,21 @@ export default function ProgramSchedule() {
     setShowDatePicker(false);
   };
 
-  // Handle weekday selection with proper program limit enforcement
+  // Handle weekday selection with ability to swap days
   const handleWeekdaySelect = (dayIndex: number) => {
     const isSelected = selectedWeekdays.includes(dayIndex);
-    
-    // If trying to deselect when at minimum required days
-    if (isSelected && program?.daysPerWeek && selectedWeekdays.length <= program.daysPerWeek) {
-      toast({
-        title: "Cannot Remove Day",
-        description: `This program requires ${program.daysPerWeek} ${program.daysPerWeek === 1 ? 'day' : 'days'} per week`,
-        variant: "destructive"
-      });
-      return;
-    }
+    const daysPerWeek = program?.daysPerWeek || 0;
     
     // Toggle selection
     if (isSelected) {
-      // User is removing a day
+      // Always allow deselection of days
       setSelectedWeekdays(prev => prev.filter(d => d !== dayIndex));
     } else {
-      // User is adding a day - strictly enforce the limit
-      if (program?.daysPerWeek && selectedWeekdays.length >= program.daysPerWeek) {
-        // This shouldn't happen due to our UI controls, but as a safeguard:
+      // If adding a day would exceed the limit, show a toast explaining how to swap days
+      if (selectedWeekdays.length >= daysPerWeek) {
         toast({
-          title: "Maximum Days Selected",
-          description: `This program is designed for exactly ${program.daysPerWeek} ${program.daysPerWeek === 1 ? 'day' : 'days'} per week`,
-          variant: "destructive"
+          title: "Day Swapping",
+          description: `To change your training days, first deselect a day and then select a new one.`,
         });
         return;
       }
@@ -411,7 +400,7 @@ export default function ProgramSchedule() {
                 disabled={selectedWeekdays.length < (program?.daysPerWeek || 0)}
               >
                 <span className="material-icons-round mr-2">event_available</span>
-                Schedule Program
+                Save Schedule & Start Program
               </button>
             </div>
           ) : (
