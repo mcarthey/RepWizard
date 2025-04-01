@@ -13,7 +13,8 @@ import { Exercise } from "@shared/schema";
 import { 
   getExerciseImageUrl, 
   getExerciseInstructions,
-  getExerciseImageCount 
+  getExerciseImageCount,
+  getExerciseDescription
 } from "@/lib/exerciseUtils";
 
 export default function ExerciseDetailPage() {
@@ -84,6 +85,12 @@ export default function ExerciseDetailPage() {
       ) : (
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">{exercise?.name}</h1>
+          
+          {exercise && exercise.description && (
+            <div className="text-muted-foreground text-base">
+              {getExerciseDescription(exercise)}
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Image Gallery */}
