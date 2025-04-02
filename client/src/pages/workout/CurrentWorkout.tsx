@@ -504,8 +504,8 @@ export default function CurrentWorkout() {
             </div>
           </div>
           
-          {/* Program selection area - only show if no program is selected or not collapsed */}
-          {(!selectedProgram || !collapsedSections[`program-${selectedProgram.id}`]) && (
+          {/* Program selection area - only show if no program is selected */}
+          {!selectedProgram && (
             <div className="flex items-center mt-1 justify-between">
               {/* Program indicator/selector */}
               <div className="flex items-center">
@@ -520,18 +520,16 @@ export default function CurrentWorkout() {
                     <span>Scheduled today: <strong>{todaysScheduledProgram.name}</strong></span>
                   </div>
                 ) : (
-                  /* Normal program badge */
+                  /* Select program button */
                   <span 
-                    className={`text-sm ${selectedProgram ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'} px-2 py-0.5 rounded flex items-center ${!selectedProgram ? 'cursor-pointer' : ''}`}
+                    className="text-sm bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex items-center cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent collapsing when clicking this
-                      if (!selectedProgram) setShowProgramModal(true);
+                      setShowProgramModal(true);
                     }}
                   >
-                    <span className="material-icons-round text-xs mr-1">
-                      {selectedProgram ? "fitness_center" : "add"}
-                    </span>
-                    {selectedProgram ? "Program Active" : "Select Program"}
+                    <span className="material-icons-round text-xs mr-1">add</span>
+                    Select Program
                   </span>
                 )}
               </div>
@@ -548,19 +546,6 @@ export default function CurrentWorkout() {
                     }}
                   >
                     Start
-                  </button>
-                )}
-                
-                {/* Show "Change" button only if program is NOT scheduled for today */}
-                {workout.programId && (!todaysScheduledProgram || workout.programId !== todaysScheduledProgram.id) && (
-                  <button 
-                    className="ml-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent collapsing when clicking this
-                      setShowProgramModal(true);
-                    }}
-                  >
-                    Change
                   </button>
                 )}
               </div>
@@ -674,41 +659,12 @@ export default function CurrentWorkout() {
                     </div>
                   ))}
                   
-                  {/* Only show "Use No Program" if the current program is not scheduled for today */}
-                  {(!todaysScheduledProgram || (workout.programId !== todaysScheduledProgram.id)) && (
-                    <button 
-                      className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-300 transition-colors"
-                      onClick={() => {
-                        // Remove program association
-                        if (workout) {
-                          updateWorkout({
-                            ...workout,
-                            programId: null
-                          });
-                          toast({
-                            title: "Program Removed",
-                            description: "Workout is no longer associated with any program",
-                          });
-                        }
-                        setShowProgramModal(false);
-                      }}
-                    >
-                      <span className="material-icons-round text-sm mr-1">clear</span>
-                      Use No Program
-                    </button>
-                  )}
-                  
-                  {/* Show disabled button with explanation if program is scheduled for today */}
-                  {todaysScheduledProgram && workout.programId === todaysScheduledProgram.id && (
-                    <div className="w-full">
-                      <button 
-                        className="w-full py-3 bg-gray-100 text-gray-400 rounded-lg flex items-center justify-center cursor-not-allowed"
-                        disabled
-                      >
-                        <span className="material-icons-round text-sm mr-1">event_busy</span>
-                        Cannot Remove Scheduled Program
-                      </button>
-                      <p className="text-xs text-gray-500 mt-1 text-center">This program is scheduled for today</p>
+                  {/* If a program is already selected, show info message that programs can only be added, not removed */}
+                  {workout.programId && (
+                    <div className="w-full text-center py-2">
+                      <p className="text-xs text-gray-500">
+                        Select a different program to change
+                      </p>
                     </div>
                   )}
                 </>
