@@ -31,6 +31,7 @@ export default function CurrentWorkout() {
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
   const [todaysScheduledProgram, setTodaysScheduledProgram] = useState<Program | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -44,6 +45,88 @@ export default function CurrentWorkout() {
   
   // Check if there's a program scheduled for today and create a workout if needed
   useEffect(() => {
+    const createWorkoutWithProgramAndExercises = async (programId: number, programName: string) => {
+      try {
+        console.log(`Creating workout with scheduled program: ${programName}`);
+        const newWorkout = createNewWorkout(programName);
+        newWorkout.programId = programId;
+        
+        // Create the workout first so we have an ID to work with
+        createWorkout(newWorkout);
+        
+        // Now load the exercises for this program
+        // First, get the workout templates for this program
+        const response = await fetch(`/api/programs/${programId}/templates`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch workout templates');
+        }
+        
+        const templates = await response.json();
+        console.log("Retrieved templates for program:", templates);
+        
+        if (templates && templates.length > 0) {
+          // Get the first template (we can make this smarter later)
+          const templateId = templates[0].id;
+          
+          // Update the new workout with template ID
+          updateWorkout({
+            ...newWorkout,
+            templateId
+          });
+          
+          // Get the exercises for this template
+          const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+          if (!exercisesResponse.ok) {
+            throw new Error('Failed to fetch template exercises');
+          }
+          
+          const templateExercises = await exercisesResponse.json();
+          console.log("Retrieved template exercises:", templateExercises);
+          
+          // Add exercises from the template
+          if (templateExercises && templateExercises.length > 0) {
+            // Fetch full exercise details for each template exercise
+            for (const templateExercise of templateExercises) {
+              const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
+              if (exerciseResponse.ok) {
+                const exercise = await exerciseResponse.json();
+                
+                // Create a new workout exercise
+                const newExercise = createWorkoutExercise(
+                  newWorkout.id,
+                  exercise,
+                  templateExercise.order
+                );
+                
+                // Add it to the workout
+                addExercise(newExercise);
+                
+                // Add some default sets based on the template
+                for (let i = 0; i < templateExercise.sets; i++) {
+                  const setType = i === 0 ? "warmup" : "working";
+                  const newSet: LocalSet = {
+                    id: uuidv4(),
+                    workoutExerciseId: newExercise.id,
+                    setNumber: i + 1,
+                    weight: 0, // User will fill in
+                    reps: 0,  // User will fill in
+                    rpe: null,
+                    setType,
+                    completed: false,
+                    notes: null
+                  };
+                  
+                  addSet(newExercise.id, newSet);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error creating workout with program exercises:", error);
+      }
+    };
+    
     if (!loading && !workout) {
       console.log("Creating new workout because none exists");
       
@@ -63,15 +146,10 @@ export default function CurrentWorkout() {
           const scheduledProgram = programs.find(program => program.id === programId);
           
           if (scheduledProgram) {
-            console.log("Creating workout with scheduled program:", scheduledProgram.name);
             shouldCreateDefaultWorkout = false;
-            
-            // Create workout with the program already selected
-            const newWorkout = createNewWorkout(scheduledProgram.name);
-            newWorkout.programId = scheduledProgram.id;
-            createWorkout(newWorkout);
-            
-            // Also set for the UI
+            // Create workout with program and exercises all loaded at once
+            createWorkoutWithProgramAndExercises(scheduledProgram.id, scheduledProgram.name);
+            // Set for the UI
             setTodaysScheduledProgram(scheduledProgram);
           }
         }
@@ -85,7 +163,7 @@ export default function CurrentWorkout() {
     } else {
       console.log("Current workout state:", { loading, workout });
     }
-  }, [loading, workout, createWorkout, programs, getSchedulesForDate]);
+  }, [loading, workout, createWorkout, updateWorkout, addExercise, addSet, programs, getSchedulesForDate]);
   
   // Update the UI when a workout exists but program isn't set - handles existing workouts
   useEffect(() => {
@@ -127,6 +205,14 @@ export default function CurrentWorkout() {
   const selectedProgram = workout?.programId 
     ? programs.find(p => p.id === workout.programId) 
     : todaysScheduledProgram;
+    
+  // Handle collapsing/expanding program sections
+  const toggleProgramCollapse = (programId: number) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [`program-${programId}`]: !prev[`program-${programId}`]
+    }));
+  };
   
   const handleAddExercise = (exercise: Exercise) => {
     console.log("handleAddExercise called with exercise:", exercise);
@@ -395,105 +481,134 @@ export default function CurrentWorkout() {
       
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
 
-        {/* Workout Header */}
-        <div className="px-4 py-4 bg-primary-50">
-          <div className="flex justify-between items-center mb-1">
-            <div className="font-medium text-primary-700">
-              {selectedProgram 
-                ? selectedProgram.name 
-                : workout.name || "Today's Workout"}
+        {/* Program Header - Make it collapsible */}
+        <div 
+          className="px-4 py-4 bg-primary-50 border-b border-gray-200"
+          onClick={() => selectedProgram && toggleProgramCollapse(selectedProgram.id)}
+        >
+          <div className="flex justify-between items-center">
+            <div className="font-medium text-primary-700 flex items-center">
+              {selectedProgram && (
+                <span className="material-icons-round mr-1 text-primary-500">
+                  {collapsedSections[`program-${selectedProgram.id}`] ? 'expand_more' : 'expand_less'}
+                </span>
+              )}
+              <span>
+                {selectedProgram 
+                  ? selectedProgram.name 
+                  : workout.name || "Today's Workout"}
+              </span>
             </div>
             <div className="text-sm text-gray-500">
               {format(new Date(workout.date), "MMMM d, yyyy")}
             </div>
           </div>
           
-          {/* Program selection area */}
-          <div className="flex items-center mt-1 justify-between">
-            {/* Program indicator/selector */}
-            <div className="flex items-center">
-              {/* If no program is selected but a scheduled one exists, show notice */}
-              {todaysScheduledProgram && !workout.programId ? (
-                <div className="flex items-center text-sm text-blue-600">
-                  <span className="material-icons-round text-xs mr-1">event_available</span>
-                  <span>Scheduled today: <strong>{todaysScheduledProgram.name}</strong></span>
-                </div>
-              ) : (
-                /* Normal program badge */
-                <span className={`text-sm ${selectedProgram ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'} px-2 py-0.5 rounded flex items-center ${!selectedProgram ? 'cursor-pointer' : ''}`}
-                      onClick={() => !selectedProgram && setShowProgramModal(true)}>
-                  <span className="material-icons-round text-xs mr-1">
-                    {selectedProgram ? "fitness_center" : "add"}
+          {/* Program selection area - only show if no program is selected or not collapsed */}
+          {(!selectedProgram || !collapsedSections[`program-${selectedProgram.id}`]) && (
+            <div className="flex items-center mt-1 justify-between">
+              {/* Program indicator/selector */}
+              <div className="flex items-center">
+                {/* If no program is selected but a scheduled one exists, show notice */}
+                {todaysScheduledProgram && !workout.programId ? (
+                  <div className="flex items-center text-sm text-blue-600"
+                       onClick={(e) => {
+                         e.stopPropagation(); // Prevent collapsing when clicking this
+                         handleScheduledProgramSelect(todaysScheduledProgram.id);
+                       }}>
+                    <span className="material-icons-round text-xs mr-1">event_available</span>
+                    <span>Scheduled today: <strong>{todaysScheduledProgram.name}</strong></span>
+                  </div>
+                ) : (
+                  /* Normal program badge */
+                  <span 
+                    className={`text-sm ${selectedProgram ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'} px-2 py-0.5 rounded flex items-center ${!selectedProgram ? 'cursor-pointer' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent collapsing when clicking this
+                      if (!selectedProgram) setShowProgramModal(true);
+                    }}
+                  >
+                    <span className="material-icons-round text-xs mr-1">
+                      {selectedProgram ? "fitness_center" : "add"}
+                    </span>
+                    {selectedProgram ? "Program Active" : "Select Program"}
                   </span>
-                  {selectedProgram ? "Program Active" : "Select Program"}
-                </span>
-              )}
-            </div>
-            
-            {/* Action buttons */}
-            <div className="flex items-center">
-              {/* Show "Start" button if no program is selected but there's a scheduled one */}
-              {todaysScheduledProgram && !workout.programId && (
-                <button 
-                  className="ml-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                  onClick={() => handleScheduledProgramSelect(todaysScheduledProgram.id)}
-                >
-                  Start
-                </button>
-              )}
+                )}
+              </div>
               
-              {/* Show "Change" button only if program is NOT scheduled for today */}
-              {workout.programId && (!todaysScheduledProgram || workout.programId !== todaysScheduledProgram.id) && (
-                <button 
-                  className="ml-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
-                  onClick={() => setShowProgramModal(true)}
-                >
-                  Change
-                </button>
-              )}
+              {/* Action buttons */}
+              <div className="flex items-center">
+                {/* Show "Start" button if no program is selected but there's a scheduled one */}
+                {todaysScheduledProgram && !workout.programId && (
+                  <button 
+                    className="ml-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent collapsing when clicking this
+                      handleScheduledProgramSelect(todaysScheduledProgram.id);
+                    }}
+                  >
+                    Start
+                  </button>
+                )}
+                
+                {/* Show "Change" button only if program is NOT scheduled for today */}
+                {workout.programId && (!todaysScheduledProgram || workout.programId !== todaysScheduledProgram.id) && (
+                  <button 
+                    className="ml-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent collapsing when clicking this
+                      setShowProgramModal(true);
+                    }}
+                  >
+                    Change
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
         
-        {/* Workout Content */}
+        {/* Workout Exercises Content - Hide if collapsed */}
         <div className="px-4 pt-4">
-          {workout.exercises.length === 0 ? (
-            <div className="py-16 text-center bg-white rounded-lg shadow-sm">
-              <p className="text-gray-500 mb-6 text-lg">No exercises added yet</p>
-              <button
-                className="py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-lg shadow-md flex items-center justify-center mx-auto transition-colors"
-                onClick={() => {
-                  console.log("Add First Exercise button clicked");
-                  setShowAddModal(true);
-                }}
-                id="add-first-exercise-btn"
-              >
-                <span className="material-icons-round text-xl mr-2">add_circle</span>
-                Add Your First Exercise
-              </button>
-            </div>
-          ) : (
-            <>
-              {workout.exercises.map((exercise) => (
-                <ExerciseCard
-                  key={exercise.id}
-                  exercise={exercise}
-                  onAddSet={handleAddSet}
-                  onUpdateSet={handleUpdateSet}
-                  onRemoveSet={handleRemoveSet}
-                />
-              ))}
-            
-              {/* Add Exercise Button */}
-              <button 
-                className="w-full py-3 mb-6 bg-white text-primary-600 rounded-lg shadow-sm flex items-center justify-center hover:bg-primary-50 transition-colors"
-                onClick={() => setShowAddModal(true)}
-                id="add-exercise-btn"
-              >
-                <span className="material-icons-round text-sm mr-1">add</span>
-                Add Exercise
-              </button>
-            </>
+          {(!selectedProgram || !collapsedSections[`program-${selectedProgram.id}`]) && (
+            workout.exercises.length === 0 ? (
+              <div className="py-16 text-center bg-white rounded-lg shadow-sm">
+                <p className="text-gray-500 mb-6 text-lg">No exercises added yet</p>
+                <button
+                  className="py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-lg shadow-md flex items-center justify-center mx-auto transition-colors"
+                  onClick={() => {
+                    console.log("Add First Exercise button clicked");
+                    setShowAddModal(true);
+                  }}
+                  id="add-first-exercise-btn"
+                >
+                  <span className="material-icons-round text-xl mr-2">add_circle</span>
+                  Add Your First Exercise
+                </button>
+              </div>
+            ) : (
+              <>
+                {workout.exercises.map((exercise) => (
+                  <ExerciseCard
+                    key={exercise.id}
+                    exercise={exercise}
+                    onAddSet={handleAddSet}
+                    onUpdateSet={handleUpdateSet}
+                    onRemoveSet={handleRemoveSet}
+                  />
+                ))}
+              
+                {/* Add Exercise Button */}
+                <button 
+                  className="w-full py-3 mb-6 bg-white text-primary-600 rounded-lg shadow-sm flex items-center justify-center hover:bg-primary-50 transition-colors"
+                  onClick={() => setShowAddModal(true)}
+                  id="add-exercise-btn"
+                >
+                  <span className="material-icons-round text-sm mr-1">add</span>
+                  Add Exercise
+                </button>
+              </>
+            )
           )}
         </div>
       </main>
