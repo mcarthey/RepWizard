@@ -26,24 +26,25 @@ export function useCurrentWorkout() {
     loadWorkout();
   }, []);
 
-  // Save workout to storage whenever it changes
+  // Save workout to storage whenever it changes - with debouncing
   useEffect(() => {
-    const saveWorkout = async () => {
-      if (workout) {
-        try {
-          console.log("Saving workout to storage:", workout);
-          const localForage = await getLocalForage();
-          await localForage.setItem(STORAGE_KEYS.CURRENT_WORKOUT, workout);
-          console.log("Workout saved successfully");
-        } catch (error) {
-          console.error('Error saving workout:', error);
-        }
+    // Skip if we're still loading initial data
+    if (loading || !workout) return;
+    
+    // Use a debounced save to reduce storage operations
+    const saveWorkoutDebounced = setTimeout(async () => {
+      try {
+        console.log("Saving workout to storage:", workout);
+        const localForage = await getLocalForage();
+        await localForage.setItem(STORAGE_KEYS.CURRENT_WORKOUT, workout);
+        console.log("Workout saved successfully");
+      } catch (error) {
+        console.error('Error saving workout:', error);
       }
-    };
-
-    if (!loading) {
-      saveWorkout();
-    }
+    }, 300); // 300ms debounce time
+    
+    // Clean up timeout on unmount or before next update
+    return () => clearTimeout(saveWorkoutDebounced);
   }, [workout, loading]);
 
   // Create a new workout - stable reference

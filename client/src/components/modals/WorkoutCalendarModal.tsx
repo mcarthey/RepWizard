@@ -23,6 +23,24 @@ export default function WorkoutCalendarModal({
     return schedules.length > 0;
   };
   
+  // Handle date selection with proper confirmation
+  const handleDateSelection = (date: Date | undefined) => {
+    if (!date) return;
+    
+    // Format the date for display
+    const formattedDate = format(date, "MMMM d, yyyy");
+    
+    // Check if there are schedules for this date
+    const schedules = getSchedulesForDate(date);
+    const hasSchedules = schedules.length > 0;
+    
+    // Call the provided onDateSelect with the selected date
+    onDateSelect(date);
+    
+    // Close the modal after selection
+    onClose();
+  };
+  
   // If not visible, don't render anything
   if (!isVisible) return null;
   
@@ -48,12 +66,7 @@ export default function WorkoutCalendarModal({
           <Calendar
             mode="single"
             selected={currentDate}
-            onSelect={(date) => {
-              if (date) {
-                onDateSelect(date);
-                onClose();
-              }
-            }}
+            onSelect={handleDateSelection}
             className="rounded-md border"
             modifiers={{
               booked: (date) => hasScheduledWorkout(date),
