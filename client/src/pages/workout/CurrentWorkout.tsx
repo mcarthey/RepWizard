@@ -159,23 +159,124 @@ export default function CurrentWorkout() {
     removeSet(exerciseId, setId);
   };
   
+  // Function to load template exercises for a program
+  const loadProgramTemplate = async (programId: number) => {
+    if (!workout) return;
+    
+    try {
+      // First, get the workout templates for this program
+      const response = await fetch(`/api/programs/${programId}/templates`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch workout templates');
+      }
+      
+      const templates = await response.json();
+      console.log("Retrieved templates for program:", templates);
+      
+      if (templates && templates.length > 0) {
+        // Get the first template (we can make this smarter later)
+        const templateId = templates[0].id;
+        
+        // Get the exercises for this template
+        const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+        if (!exercisesResponse.ok) {
+          throw new Error('Failed to fetch template exercises');
+        }
+        
+        const templateExercises = await exercisesResponse.json();
+        console.log("Retrieved template exercises:", templateExercises);
+        
+        // Clear existing exercises
+        const updatedWorkout = {
+          ...workout,
+          programId,
+          templateId,
+          name: programs.find(p => p.id === programId)?.name || workout.name,
+          exercises: [] // Clear existing exercises
+        };
+        
+        // Update the workout first
+        updateWorkout(updatedWorkout);
+        
+        // Add exercises from the template
+        if (templateExercises && templateExercises.length > 0) {
+          // Fetch full exercise details for each template exercise
+          for (const templateExercise of templateExercises) {
+            const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
+            if (exerciseResponse.ok) {
+              const exercise = await exerciseResponse.json();
+              
+              // Create a new workout exercise
+              const newExercise = createWorkoutExercise(
+                workout.id,
+                exercise,
+                templateExercise.order
+              );
+              
+              // Add it to the workout
+              addExercise(newExercise);
+              
+              // Add some default sets based on the template
+              for (let i = 0; i < templateExercise.sets; i++) {
+                const setType = i === 0 ? "warmup" : "working";
+                const newSet: LocalSet = {
+                  id: uuidv4(),
+                  workoutExerciseId: newExercise.id,
+                  setNumber: i + 1,
+                  weight: 0, // User will fill in
+                  reps: 0,  // User will fill in
+                  rpe: null,
+                  setType,
+                  completed: false,
+                  notes: null
+                };
+                
+                addSet(newExercise.id, newSet);
+              }
+            }
+          }
+        }
+        
+        toast({
+          title: "Workout loaded",
+          description: `Loaded template for ${programs.find(p => p.id === programId)?.name}`,
+        });
+      } else {
+        // No templates found, just update the program ID
+        updateWorkout({
+          ...workout,
+          programId,
+          name: programs.find(p => p.id === programId)?.name || workout.name
+        });
+        
+        toast({
+          title: "Program Selected",
+          description: `Workout is now associated with ${programs.find(p => p.id === programId)?.name}`,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading program template:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load program template. See console for details.",
+        variant: "destructive"
+      });
+      
+      // Still update the program ID even if template loading fails
+      updateWorkout({
+        ...workout,
+        programId,
+        name: programs.find(p => p.id === programId)?.name || workout.name
+      });
+    }
+    
+    setShowProgramModal(false);
+  };
+
   // Handle program selection
   const handleProgramSelect = (programId: number) => {
     if (!workout) return;
-    
-    // Update the workout with the selected program
-    updateWorkout({
-      ...workout,
-      programId,
-      name: programs.find(p => p.id === programId)?.name || workout.name
-    });
-    
-    toast({
-      title: "Program Selected",
-      description: `Workout is now associated with ${programs.find(p => p.id === programId)?.name}`,
-    });
-    
-    setShowProgramModal(false);
+    loadProgramTemplate(programId);
   };
   
   // Loading state
