@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { ZodError } from "zod";
+import express from "express";
+import path from "path";
 import {
   insertExerciseSchema,
   insertProgramSchema,
