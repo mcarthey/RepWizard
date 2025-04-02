@@ -59,12 +59,37 @@ export function useProgramSchedules() {
     }
   }, []);
   
-  // Load schedules on mount
+  // Load schedules on mount and handle potential migration from old key
   useEffect(() => {
+    // Check if we need to migrate data from old storage key
+    const OLD_STORAGE_KEY = 'programSchedules';
+    try {
+      const oldData = localStorage.getItem(OLD_STORAGE_KEY);
+      if (oldData) {
+        console.log('Found data in old storage key, attempting migration...');
+        const parsedOldData = JSON.parse(oldData);
+        if (Array.isArray(parsedOldData) && parsedOldData.length > 0) {
+          // Save the old data to the new key
+          console.log('Migrating schedules from old key to new key', parsedOldData);
+          localStorage.setItem(STORAGE_KEY, oldData);
+          // Clear the old data to avoid future migrations
+          localStorage.removeItem(OLD_STORAGE_KEY);
+          console.log('Migration completed successfully');
+          toast({
+            title: 'Data Migration',
+            description: 'Program schedules have been migrated to the new storage format',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during storage migration:', error);
+    }
+    
+    // Now load from the correct storage key
     const loadedSchedules = loadSchedulesFromStorage();
     setSchedules(loadedSchedules);
     setLoading(false);
-  }, [loadSchedulesFromStorage]);
+  }, [loadSchedulesFromStorage, toast]);
   
   // Save schedules whenever they change
   useEffect(() => {
