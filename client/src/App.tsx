@@ -20,6 +20,7 @@ import InspectSchedules from "@/pages/debug/InspectSchedules";
 import LocalStorageDebug from "@/pages/debug/LocalStorageDebug";
 import WorkoutDebug from "@/pages/debug/WorkoutDebug";
 import WorkoutRefreshDebug from "@/pages/debug/WorkoutRefreshDebug";
+import TestRunner from "@/pages/debug/TestRunner";
 import WorkoutFunctionalityTests from "@/test/WorkoutFunctionalityTests";
 
 function Router() {
@@ -43,6 +44,7 @@ function Router() {
       <ProtectedRoute path="/debug/local-storage" component={LocalStorageDebug} />
       <ProtectedRoute path="/debug/workout" component={WorkoutDebug} />
       <ProtectedRoute path="/debug/refresh" component={WorkoutRefreshDebug} />
+      <ProtectedRoute path="/debug/test-runner" component={TestRunner} />
       <ProtectedRoute path="/debug/functional-tests" component={WorkoutFunctionalityTests} />
       
       {/* Not Found */}
