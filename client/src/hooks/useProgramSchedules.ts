@@ -107,88 +107,175 @@ export function useProgramSchedules() {
       id: uuidv4()
     };
     
-    setSchedules(prev => {
-      const updatedSchedules = [...prev, newSchedule];
+    console.log('Adding new schedule:', newSchedule);
+    
+    try {
+      // First try to load current state directly from localStorage
+      // This helps avoid race conditions or stale state
+      const currentSchedules = loadSchedulesFromStorage();
+      
+      // Add new schedule to the current schedules
+      const updatedSchedules = [...currentSchedules, newSchedule];
       
       // Immediately save to localStorage
       const saved = saveSchedulesToStorage(updatedSchedules);
       
       if (saved) {
-        console.log('Successfully added and saved new schedule:', newSchedule);
+        console.log('Successfully added and saved new schedule to localStorage:', newSchedule);
+        
+        // Update local state to match what's in localStorage
+        setSchedules(updatedSchedules);
+        
+        toast({
+          title: 'Schedule created',
+          description: 'Program has been scheduled successfully'
+        });
+        
+        return newSchedule;
       } else {
         console.error('Failed to save new schedule to localStorage');
+        toast({
+          title: 'Error',
+          description: 'Failed to save schedule. Please try again.',
+          variant: 'destructive'
+        });
+        return null;
       }
-      
-      return updatedSchedules;
-    });
-    
-    toast({
-      title: 'Schedule created',
-      description: 'Program has been scheduled successfully'
-    });
-    
-    return newSchedule;
-  }, [toast, saveSchedulesToStorage]);
+    } catch (error) {
+      console.error('Error adding schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive'
+      });
+      return null;
+    }
+  }, [toast, saveSchedulesToStorage, loadSchedulesFromStorage]);
   
   /**
    * Update an existing program schedule
    */
   const updateSchedule = useCallback((id: string, updatedSchedule: Partial<LocalProgramSchedule>) => {
-    setSchedules(prev => {
-      const updated = prev.map(schedule => 
+    try {
+      // First try to load current state directly from localStorage
+      const currentSchedules = loadSchedulesFromStorage();
+      
+      const updated = currentSchedules.map(schedule => 
         schedule.id === id
           ? { ...schedule, ...updatedSchedule }
           : schedule
       );
       
       // Immediately save to localStorage
-      saveSchedulesToStorage(updated);
+      const saved = saveSchedulesToStorage(updated);
       
-      return updated;
-    });
-    
-    toast({
-      title: 'Schedule updated',
-      description: 'Program schedule has been updated'
-    });
-  }, [toast, saveSchedulesToStorage]);
+      if (saved) {
+        // Update local state to match what's in localStorage
+        setSchedules(updated);
+        
+        toast({
+          title: 'Schedule updated',
+          description: 'Program schedule has been updated'
+        });
+      } else {
+        console.error('Failed to update schedule in localStorage');
+        toast({
+          title: 'Error',
+          description: 'Failed to update schedule. Please try again.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while updating the schedule.',
+        variant: 'destructive'
+      });
+    }
+  }, [toast, saveSchedulesToStorage, loadSchedulesFromStorage]);
   
   /**
    * Remove a program schedule
    */
   const removeSchedule = useCallback((id: string) => {
-    setSchedules(prev => {
-      const updated = prev.filter(schedule => schedule.id !== id);
+    try {
+      // First try to load current state directly from localStorage
+      const currentSchedules = loadSchedulesFromStorage();
+      
+      const updated = currentSchedules.filter(schedule => schedule.id !== id);
       
       // Immediately save to localStorage
-      saveSchedulesToStorage(updated);
+      const saved = saveSchedulesToStorage(updated);
       
-      return updated;
-    });
-    
-    toast({
-      title: 'Schedule removed',
-      description: 'Program schedule has been removed'
-    });
-  }, [toast, saveSchedulesToStorage]);
+      if (saved) {
+        // Update local state to match what's in localStorage
+        setSchedules(updated);
+        
+        toast({
+          title: 'Schedule removed',
+          description: 'Program schedule has been removed'
+        });
+      } else {
+        console.error('Failed to remove schedule from localStorage');
+        toast({
+          title: 'Error',
+          description: 'Failed to remove schedule. Please try again.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error removing schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while removing the schedule.',
+        variant: 'destructive'
+      });
+    }
+  }, [toast, saveSchedulesToStorage, loadSchedulesFromStorage]);
   
   /**
    * Toggle the active state of a schedule
    */
   const toggleScheduleActive = useCallback((id: string) => {
-    setSchedules(prev => {
-      const updated = prev.map(schedule => 
+    try {
+      // First try to load current state directly from localStorage
+      const currentSchedules = loadSchedulesFromStorage();
+      
+      const updated = currentSchedules.map(schedule => 
         schedule.id === id
           ? { ...schedule, active: !schedule.active }
           : schedule
       );
       
       // Immediately save to localStorage
-      saveSchedulesToStorage(updated);
+      const saved = saveSchedulesToStorage(updated);
       
-      return updated;
-    });
-  }, [saveSchedulesToStorage]);
+      if (saved) {
+        // Update local state to match what's in localStorage
+        setSchedules(updated);
+        
+        toast({
+          title: 'Schedule toggled',
+          description: `Schedule has been ${updated.find(s => s.id === id)?.active ? 'activated' : 'deactivated'}`
+        });
+      } else {
+        console.error('Failed to toggle schedule in localStorage');
+        toast({
+          title: 'Error',
+          description: 'Failed to toggle schedule status. Please try again.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling schedule:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while toggling the schedule.',
+        variant: 'destructive'
+      });
+    }
+  }, [toast, saveSchedulesToStorage, loadSchedulesFromStorage]);
   
   /**
    * Create a default schedule for a program
