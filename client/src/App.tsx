@@ -5,6 +5,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './hooks/use-auth';
 import CurrentWorkout from './pages/workout/CurrentWorkout';
+import Programs from './pages/programs/Programs';
+import ProgramDetailRedesign from './pages/programs/ProgramDetailRedesign';
+import ExercisesPage from './pages/exercises/ExercisesPage';
+import ExerciseDetailPage from './pages/exercises/ExerciseDetailPage';
 
 // Protected route wrapper
 const ProtectedRoute = ({ component: Component, ...rest }: any) => {
@@ -47,7 +51,10 @@ const App: React.FC = () => {
             <Switch>
               <Route path="/" component={() => <div>Home Page</div>} />
               <ProtectedRoute path="/workout" component={CurrentWorkout} />
-              <Route path="/programs" component={() => <div>Programs Page</div>} />
+              <Route path="/programs" component={Programs} />
+              <Route path="/programs/:id" component={ProgramDetailRedesign} />
+              <Route path="/exercises" component={ExercisesPage} />
+              <Route path="/exercises/:id" component={ExerciseDetailPage} />
               <Route path="/profile" component={() => <div>Profile Page</div>} />
               <Route>
                 <div className="container py-8 text-center">
