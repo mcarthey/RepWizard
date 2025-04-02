@@ -727,6 +727,13 @@ export default function CurrentWorkout() {
     } else if (workout && workout.programId) {
       // If the workout already has a program associated, clear the notification
       setTodaysScheduledProgram(null);
+      
+      // Make sure to load exercises for the program
+      // This handles the case where workout has programId but no exercises
+      if (workout.exercises.length === 0) {
+        console.log("Workout has program but no exercises, loading exercises...");
+        reloadProgramExercises(workout.programId);
+      }
     }
   }, [programs, workout]); // Removed getSchedulesForDate dependency
   
