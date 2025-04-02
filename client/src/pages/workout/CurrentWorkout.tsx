@@ -159,8 +159,117 @@ export default function CurrentWorkout() {
     removeSet(exerciseId, setId);
   };
   
-  // Function to load template exercises for a program
-  const loadProgramTemplate = async (programId: number) => {
+  // Function to create a new workout for a scheduled program
+  const handleScheduledProgramSelect = async (programId: number) => {
+    try {
+      // Create a brand new workout with today's date
+      const programName = programs.find(p => p.id === programId)?.name || "Today's Workout";
+      console.log(`Creating new workout for scheduled program: ${programName}`);
+      
+      // Create the new workout
+      const newWorkout = createNewWorkout(programName);
+      
+      // First, get the workout templates for this program
+      const response = await fetch(`/api/programs/${programId}/templates`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch workout templates');
+      }
+      
+      const templates = await response.json();
+      console.log("Retrieved templates for program:", templates);
+      
+      if (templates && templates.length > 0) {
+        // Get the first template (we can make this smarter later)
+        const templateId = templates[0].id;
+        
+        // Update the new workout with program and template IDs
+        const updatedWorkout = {
+          ...newWorkout,
+          programId,
+          templateId,
+          name: programName,
+        };
+        
+        // Update it in storage
+        updateWorkout(updatedWorkout);
+        
+        // Get the exercises for this template
+        const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+        if (!exercisesResponse.ok) {
+          throw new Error('Failed to fetch template exercises');
+        }
+        
+        const templateExercises = await exercisesResponse.json();
+        console.log("Retrieved template exercises:", templateExercises);
+        
+        // Add exercises from the template
+        if (templateExercises && templateExercises.length > 0) {
+          // Fetch full exercise details for each template exercise
+          for (const templateExercise of templateExercises) {
+            const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
+            if (exerciseResponse.ok) {
+              const exercise = await exerciseResponse.json();
+              
+              // Create a new workout exercise
+              const newExercise = createWorkoutExercise(
+                updatedWorkout.id,
+                exercise,
+                templateExercise.order
+              );
+              
+              // Add it to the workout
+              addExercise(newExercise);
+              
+              // Add some default sets based on the template
+              for (let i = 0; i < templateExercise.sets; i++) {
+                const setType = i === 0 ? "warmup" : "working";
+                const newSet: LocalSet = {
+                  id: uuidv4(),
+                  workoutExerciseId: newExercise.id,
+                  setNumber: i + 1,
+                  weight: 0, // User will fill in
+                  reps: 0,  // User will fill in
+                  rpe: null,
+                  setType,
+                  completed: false,
+                  notes: null
+                };
+                
+                addSet(newExercise.id, newSet);
+              }
+            }
+          }
+        }
+        
+        toast({
+          title: "Workout loaded",
+          description: `Loaded template for ${programName}`,
+        });
+      } else {
+        // No templates found, just update the program ID
+        updateWorkout({
+          ...newWorkout,
+          programId,
+          name: programName
+        });
+        
+        toast({
+          title: "Program Selected",
+          description: `Created new workout for ${programName}`,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating workout from scheduled program:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create workout. See console for details.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle program selection from the program modal
+  const handleProgramSelect = async (programId: number) => {
     if (!workout) return;
     
     try {
@@ -177,16 +286,7 @@ export default function CurrentWorkout() {
         // Get the first template (we can make this smarter later)
         const templateId = templates[0].id;
         
-        // Get the exercises for this template
-        const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
-        if (!exercisesResponse.ok) {
-          throw new Error('Failed to fetch template exercises');
-        }
-        
-        const templateExercises = await exercisesResponse.json();
-        console.log("Retrieved template exercises:", templateExercises);
-        
-        // Clear existing exercises
+        // Update the current workout with program and template IDs
         const updatedWorkout = {
           ...workout,
           programId,
@@ -195,8 +295,17 @@ export default function CurrentWorkout() {
           exercises: [] // Clear existing exercises
         };
         
-        // Update the workout first
+        // Update it in storage
         updateWorkout(updatedWorkout);
+        
+        // Get the exercises for this template
+        const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+        if (!exercisesResponse.ok) {
+          throw new Error('Failed to fetch template exercises');
+        }
+        
+        const templateExercises = await exercisesResponse.json();
+        console.log("Retrieved template exercises:", templateExercises);
         
         // Add exercises from the template
         if (templateExercises && templateExercises.length > 0) {
@@ -261,22 +370,9 @@ export default function CurrentWorkout() {
         description: "Failed to load program template. See console for details.",
         variant: "destructive"
       });
-      
-      // Still update the program ID even if template loading fails
-      updateWorkout({
-        ...workout,
-        programId,
-        name: programs.find(p => p.id === programId)?.name || workout.name
-      });
     }
     
     setShowProgramModal(false);
-  };
-
-  // Handle program selection
-  const handleProgramSelect = (programId: number) => {
-    if (!workout) return;
-    loadProgramTemplate(programId);
   };
   
   // Loading state
@@ -309,7 +405,7 @@ export default function CurrentWorkout() {
               </div>
               <button 
                 className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                onClick={() => handleProgramSelect(todaysScheduledProgram.id)}
+                onClick={() => handleScheduledProgramSelect(todaysScheduledProgram.id)}
               >
                 Start
               </button>
