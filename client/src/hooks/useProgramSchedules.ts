@@ -7,7 +7,7 @@ import { LocalProgramSchedule } from '@/lib/workout';
 /**
  * Storage key for program schedules
  */
-const STORAGE_KEY = 'programSchedules';
+const STORAGE_KEY = 'repwizard_program_schedules';
 
 /**
  * Hook for managing program schedules
