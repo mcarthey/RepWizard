@@ -1,122 +1,65 @@
-import React, { useState } from 'react';
-import { Switch, Route, Link, useLocation } from 'wouter';
-import { BellRing, Dumbbell, Home, ListTree, Settings, Zap } from 'lucide-react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/queryClient';
-import { AuthProvider } from './hooks/use-auth';
-import CurrentWorkout from './pages/workout/CurrentWorkout';
-import ExercisesPage from './pages/exercises/ExercisesPage';
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/lib/protected-route";
+import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/auth-page";
+import CurrentWorkout from "@/pages/workout/CurrentWorkout";
+import WorkoutHistory from "@/pages/workout/WorkoutHistory";
+import Programs from "@/pages/programs/Programs";
+import ProgramDetailRedesign from "@/pages/programs/ProgramDetailRedesign";
+import ScheduleProgramPage from "@/pages/programs/ScheduleProgramPage";
+import Exercises from "@/pages/exercises/Exercises";
+import ExercisesPage from "@/pages/exercises/ExercisesPage";
+import ExerciseDetailPage from "@/pages/exercises/ExerciseDetailPage";
+import Progress from "@/pages/progress/Progress";
+import Settings from "@/pages/settings/Settings";
+import InspectSchedules from "@/pages/debug/InspectSchedules";
+import LocalStorageDebug from "@/pages/debug/LocalStorageDebug";
+import WorkoutDebug from "@/pages/debug/WorkoutDebug";
+import WorkoutRefreshDebug from "@/pages/debug/WorkoutRefreshDebug";
 
-// Protected route wrapper
-const ProtectedRoute = ({ component: Component, ...rest }: any) => {
-  // In a real app, check if user is authenticated
-  // For now, we'll just render the component
-  return <Component {...rest} />;
-};
-
-// Navigation item component
-interface NavItemProps {
-  icon: React.ReactNode;
-  label: string;
-  href: string;
-  isActive: boolean;
-  onClick: () => void;
+function Router() {
+  return (
+    <Switch>
+      {/* Public Routes */}
+      <Route path="/auth" component={AuthPage} />
+      
+      {/* Protected Routes - Require Authentication */}
+      <ProtectedRoute path="/" component={CurrentWorkout} />
+      <ProtectedRoute path="/history" component={WorkoutHistory} />
+      <ProtectedRoute path="/programs" component={Programs} />
+      <ProtectedRoute path="/programs/:id" component={ProgramDetailRedesign} />
+      <ProtectedRoute path="/programs/:id/schedule" component={ScheduleProgramPage} />
+      <ProtectedRoute path="/exercises" component={ExercisesPage} />
+      <ProtectedRoute path="/exercises/:id" component={ExerciseDetailPage} />
+      <ProtectedRoute path="/exercises-old" component={Exercises} />
+      <ProtectedRoute path="/progress" component={Progress} />
+      <ProtectedRoute path="/settings" component={Settings} />
+      <ProtectedRoute path="/debug/schedules" component={InspectSchedules} />
+      <ProtectedRoute path="/debug/local-storage" component={LocalStorageDebug} />
+      <ProtectedRoute path="/debug/workout" component={WorkoutDebug} />
+      <ProtectedRoute path="/debug/refresh" component={WorkoutRefreshDebug} />
+      
+      {/* Not Found */}
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon, label, href, isActive, onClick }) => {
-  return (
-    <button 
-      className={`flex flex-col items-center justify-center h-full w-full ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
-      onClick={onClick}
-    >
-      <div className="text-xl">{icon}</div>
-      <div className="text-xs mt-1">{label}</div>
-    </button>
-  );
-};
-
-// Main app component
-const App: React.FC = () => {
-  const [location, navigate] = useLocation();
-  
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
-          {/* Main content */}
-          <main className="flex-1 pb-16">
-            <Switch>
-              <Route path="/">
-                <div>Home Page</div>
-              </Route>
-              <Route path="/workout">
-                <CurrentWorkout />
-              </Route>
-              <Route path="/exercises">
-                <ExercisesPage />
-              </Route>
-              <Route path="/programs">
-                <div>Programs Page</div>
-              </Route>
-              <Route path="/profile">
-                <div>Profile Page</div>
-              </Route>
-              <Route>
-                <div className="container py-8 text-center">
-                  <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
-                  <p className="mb-6">The page you are looking for doesn't exist.</p>
-                  <Link href="/">
-                    <a className="text-primary hover:underline">Go to Home</a>
-                  </Link>
-                </div>
-              </Route>
-            </Switch>
-          </main>
-          
-          {/* Bottom navigation for mobile */}
-          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-10">
-            <div className="grid grid-cols-5 h-full">
-              <NavItem 
-                icon={<Home />} 
-                label="Home" 
-                href="/" 
-                isActive={location === '/'} 
-                onClick={() => navigate('/')}
-              />
-              <NavItem 
-                icon={<Dumbbell />} 
-                label="Workout" 
-                href="/workout" 
-                isActive={location === '/workout'} 
-                onClick={() => navigate('/workout')}
-              />
-              <NavItem 
-                icon={<ListTree />} 
-                label="Exercises" 
-                href="/exercises" 
-                isActive={location === '/exercises'} 
-                onClick={() => navigate('/exercises')}
-              />
-              <NavItem 
-                icon={<Zap />} 
-                label="Programs" 
-                href="/programs" 
-                isActive={location === '/programs'} 
-                onClick={() => navigate('/programs')}
-              />
-              <NavItem 
-                icon={<Settings />} 
-                label="Settings" 
-                href="/profile" 
-                isActive={location === '/profile'} 
-                onClick={() => navigate('/profile')}
-              />
-            </div>
-          </nav>
+        <div className="app-height flex flex-col bg-gray-50 text-gray-800 overflow-hidden">
+          <Router />
+          <Toaster />
         </div>
       </AuthProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;
