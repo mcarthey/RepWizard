@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
@@ -46,6 +46,10 @@ export default function CurrentWorkout() {
   const reloadProgramExercises = async (programId: number) => {
     if (!workout || workout.programId !== programId) return;
     
+    // Create a unique key for this operation to prevent duplicate calls
+    const operationId = `reload-${Date.now()}`;
+    console.log(`Starting program exercise reload operation: ${operationId}`);
+    
     try {
       // Get the workout templates for this program
       const response = await fetch(`/api/programs/${programId}/templates`);
@@ -54,7 +58,7 @@ export default function CurrentWorkout() {
       }
       
       const templates = await response.json();
-      console.log("Retrieved updated templates for program:", templates);
+      console.log(`[${operationId}] Retrieved updated templates for program:`, templates);
       
       if (templates && templates.length > 0) {
         // Get the first template or find the one currently being used
@@ -69,16 +73,25 @@ export default function CurrentWorkout() {
         }
         
         const templateExercises = await exercisesResponse.json();
-        console.log("Retrieved updated template exercises:", templateExercises);
+        console.log(`[${operationId}] Retrieved updated template exercises:`, templateExercises);
         
         // Only continue if there are exercises in the template
         if (templateExercises && templateExercises.length > 0) {
-          // Remove existing exercises
+          // Create a new workout with no exercises to replace the current one
+          // This prevents React from reusing exercise components
           const updatedWorkout = {
             ...workout,
-            exercises: []
+            exercises: [],
+            templateId
           };
-          updateWorkout(updatedWorkout);
+          
+          // Update the workout first to clear existing exercises
+          await new Promise<void>(resolve => {
+            updateWorkout(updatedWorkout);
+            setTimeout(resolve, 100); // Small delay to ensure state is updated
+          });
+          
+          console.log(`[${operationId}] Cleared existing exercises, now adding updated ones`);
           
           // Fetch and add the updated exercises
           for (const templateExercise of templateExercises) {
@@ -111,10 +124,15 @@ export default function CurrentWorkout() {
                   notes: null
                 };
                 
-                addSet(newExercise.id, newSet);
+                await new Promise<void>(resolve => {
+                  addSet(newExercise.id, newSet);
+                  setTimeout(resolve, 50); // Small delay to ensure state is updated
+                });
               }
             }
           }
+          
+          console.log(`[${operationId}] Exercise update completed successfully`);
           
           toast({
             title: "Workout Updated",
@@ -123,7 +141,7 @@ export default function CurrentWorkout() {
         }
       }
     } catch (error) {
-      console.error("Error updating workout with program changes:", error);
+      console.error(`[${operationId}] Error updating workout with program changes:`, error);
       toast({
         title: "Update Failed",
         description: "Failed to update workout with program changes",
@@ -132,19 +150,56 @@ export default function CurrentWorkout() {
     }
   };
   
-  // Add listener to automatically update workout when programs are modified
-  useEffect(() => {
-    if (workout?.programId && programs.length > 0) {
-      // Find the program in the latest data
-      const currentProgram = programs.find(p => p.id === workout.programId);
-      
-      // If program exists, check for updates or changes
-      if (currentProgram) {
-        // If the template exercises have been changed, we need to reload them
-        reloadProgramExercises(currentProgram.id);
-      }
+  // Reference for tracking program updates to prevent infinite loops
+  const lastProgramUpdateRef = useRef<string>("");
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Single point for updating workouts (to prevent duplications)
+  const executeProgramUpdate = (programId: number) => {
+    // Only allow one update at a time
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+      updateTimerRef.current = null;
     }
-  }, [programs, workout]);
+    
+    // Perform the update after a delay
+    updateTimerRef.current = setTimeout(() => {
+      reloadProgramExercises(programId);
+      updateTimerRef.current = null;
+    }, 1000);
+  };
+  
+  // Add listener to automatically update workout when programs are modified - with update tracking
+  useEffect(() => {
+    // Skip if no workout or no program assigned or no programs loaded
+    if (!workout?.programId || programs.length === 0) return;
+    
+    // Calculate a hash of the current program state to detect real changes
+    const currentProgram = programs.find(p => p.id === workout.programId);
+    if (!currentProgram) return;
+    
+    // Create a unique signature for the current program state (without timestamp to prevent endless updates)
+    const programSignature = `${currentProgram.id}-${currentProgram.name}`;
+    
+    // Only reload if we haven't processed this update already
+    if (programSignature !== lastProgramUpdateRef.current) {
+      console.log(`Program state changed from "${lastProgramUpdateRef.current}" to "${programSignature}"`);
+      
+      // Store this update signature
+      lastProgramUpdateRef.current = programSignature;
+      
+      // Execute the update
+      executeProgramUpdate(currentProgram.id);
+    }
+    
+    // Clean up on unmount
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = null;
+      }
+    };
+  }, [programs, workout?.programId]);
   
   // Get schedules for today's date 
   const { getSchedulesForDate } = useScheduleChecks();
