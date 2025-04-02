@@ -155,57 +155,6 @@ export default function ExerciseDetailPage() {
             
             {/* Exercise Information */}
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {exercise?.level && (
-                  <Badge variant="outline">
-                    Level: {exercise.level.charAt(0).toUpperCase() + exercise.level.slice(1)}
-                  </Badge>
-                )}
-                {exercise?.equipment && (
-                  <Badge variant="outline">
-                    Equipment: {exercise.equipment}
-                  </Badge>
-                )}
-                {exercise?.mechanic && (
-                  <Badge variant="outline">
-                    Mechanic: {exercise.mechanic}
-                  </Badge>
-                )}
-                {exercise?.force && (
-                  <Badge variant="outline">
-                    Force: {exercise.force}
-                  </Badge>
-                )}
-                {exercise?.category && (
-                  <Badge variant="outline">
-                    Category: {exercise.category}
-                  </Badge>
-                )}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Target Muscles</h3>
-                <div className="flex flex-wrap gap-2">
-                  {exercise?.primaryMuscles?.map(muscle => (
-                    <Badge key={muscle} variant="secondary">{muscle}</Badge>
-                  ))}
-                  {exercise?.secondaryMuscles?.map(muscle => (
-                    <Badge key={muscle} variant="outline">{muscle}</Badge>
-                  ))}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  <span className="font-medium">Primary: </span> 
-                  {exercise?.primaryMuscles?.join(', ') || 'None'} 
-                  {exercise?.secondaryMuscles && exercise.secondaryMuscles.length > 0 && (
-                    <>
-                      <span className="font-medium ml-2">Secondary: </span>
-                      {exercise.secondaryMuscles.join(', ')}
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              <Separator />
               
               <Tabs defaultValue="description" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
