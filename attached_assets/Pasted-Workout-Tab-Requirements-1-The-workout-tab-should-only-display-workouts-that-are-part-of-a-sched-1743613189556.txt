@@ -1,0 +1,11 @@
+Workout Tab Requirements
+
+1. The workout tab should only display workouts that are part of a scheduled program.
+2. The program should be identified in a collapsible header, under which are listed the scheduled exercises.
+3. The exercises should allow the user to add their results from the current exercise session.
+4. The date should also be listed in the header.  Tapping the date will open a calendar picker to allow the user to select another day.  The dates with scheduled exercises will be highlighted, and changing to another day will load that day of exercises instead.  This will allow the user to perform exercises for a day that might have been missed.
+5. The user can add sets or exercises to the workout for the day.  They will be tracked for the current day and exercise, but it does not modify the existing program.
+6. If the user wishes to perform a completely ad hoc workout, they can click the three dots in the upper right corner to create a new daily workout.  This will create a new collapsible header with the title of "Ad Hoc Workout" under which they can add exercises as normal.  The exercise results are tracked and can be seen in their exercise history, but it is not automatically saved as a program unless the user chooses to do so.
+7. If there are no workouts scheduled for the day, the page will be blank except for a sentence advising the user to either schedule a program or perform an ad hoc workout.
+8. If the program scheduled is modified, the workout page should notify the user that the workout  has been modified and advise they refresh via a toast notification.  The user can use the built-in refresh by pulling down on the screen, or the gear icon to refresh (see #8).
+9. Add a gear icon to the header of all programs (ad hoc or scheduled) that will allow for refresh and also to save as program.  Always prompt for a new name for the program and do not allow overwriting existing programs.  This is because not all programs assigned to the user will be modifiable by the user depending upon authorization.

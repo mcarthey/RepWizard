@@ -1,88 +1,82 @@
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { useScheduleChecks } from "@/hooks/useScheduleChecks";
+import React, { useState } from 'react';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
-interface CalendarModalProps {
+interface WorkoutCalendarModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onDateSelect: (date: Date) => void;
+  onDateChange: (date: Date) => void;
   currentDate: Date;
 }
 
-export default function WorkoutCalendarModal({
+// Modal for selecting a date from the calendar
+const WorkoutCalendarModal = ({
   isVisible,
   onClose,
-  onDateSelect,
+  onDateChange,
   currentDate
-}: CalendarModalProps) {
-  const { getSchedulesForDate } = useScheduleChecks();
+}: WorkoutCalendarModalProps) => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(currentDate);
   
-  // Function to determine if there are workouts scheduled for a given date
-  const hasScheduledWorkout = (date: Date) => {
-    const schedules = getSchedulesForDate(date);
-    return schedules.length > 0;
-  };
-  
-  // Handle date selection with proper confirmation
-  const handleDateSelection = (date: Date | undefined) => {
-    if (!date) return;
-    
-    // Format the date for display
-    const formattedDate = format(date, "MMMM d, yyyy");
-    
-    // Check if there are schedules for this date
-    const schedules = getSchedulesForDate(date);
-    const hasSchedules = schedules.length > 0;
-    
-    // Call the provided onDateSelect with the selected date
-    onDateSelect(date);
-    
-    // Close the modal after selection
+  const handleClose = () => {
     onClose();
   };
   
-  // If not visible, don't render anything
-  if (!isVisible) return null;
+  const handleChange = (date: Date | undefined) => {
+    setSelectedDate(date);
+  };
+  
+  const handleSelectDate = () => {
+    if (selectedDate) {
+      onDateChange(selectedDate);
+      onClose();
+    }
+  };
   
   return (
-    <div className="fixed inset-0 z-20">
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      ></div>
-      <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-2xl p-4 pb-8 slide-up max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Select Date</h2>
-          <button 
-            className="p-1" 
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <span className="material-icons-round">close</span>
-          </button>
-        </div>
+    <Dialog open={isVisible} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Select Workout Date</DialogTitle>
+          <DialogDescription>
+            Choose a date to view or create a workout
+          </DialogDescription>
+        </DialogHeader>
         
-        <div className="flex justify-center">
+        <div className="py-4">
           <Calendar
             mode="single"
-            selected={currentDate}
-            onSelect={handleDateSelection}
-            className="rounded-md border"
-            modifiers={{
-              booked: (date) => hasScheduledWorkout(date),
-            }}
-            modifiersClassNames={{
-              booked: "bg-blue-100 font-bold text-blue-600 hover:bg-blue-200",
-            }}
-            today={new Date()}
+            selected={selectedDate}
+            onSelect={handleChange}
+            initialFocus
           />
         </div>
         
-        <div className="mt-4 text-center text-sm text-gray-500">
-          <p>Dates with scheduled workouts are highlighted in blue</p>
-          <p className="mt-2">Current workout date: {format(currentDate, "MMMM d, yyyy")}</p>
-        </div>
-      </div>
-    </div>
+        <DialogFooter className="flex justify-between">
+          <div className="text-sm text-muted-foreground">
+            {selectedDate && `Selected: ${format(selectedDate, 'MMMM d, yyyy')}`}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSelectDate} disabled={!selectedDate}>
+              Select Date
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+export default WorkoutCalendarModal;

@@ -1,153 +1,214 @@
-import { LocalSet } from "@shared/schema";
-import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
+import React, { useState } from 'react';
+import { Minus, Check, CheckCircle2, Edit, Trash2, CircleSlash, BookOpenCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { LocalSet } from '@/lib/workout';
 
 interface SetRowProps {
   set: LocalSet;
-  onSetClick: () => void;
-  onUpdateSet: (updates: Partial<LocalSet>) => void;
+  onRemove: () => void;
+  onUpdate: (updates: Partial<LocalSet>) => void;
 }
 
-export default function SetRow({ set, onSetClick, onUpdateSet }: SetRowProps) {
-  // Initialize local state with props
-  const [weight, setWeight] = useState(set.weight);
-  const [reps, setReps] = useState(set.reps);
+// Component for each set row in an exercise
+const SetRow = ({ set, onRemove, onUpdate }: SetRowProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [weight, setWeight] = useState(set.weight.toString());
+  const [reps, setReps] = useState(set.reps.toString());
+  const [rpe, setRpe] = useState(set.rpe?.toString() || '');
   
-  // Update local state when the prop changes
-  useEffect(() => {
-    console.log("SetRow: Set prop updated:", set);
-    setWeight(set.weight);
-    setReps(set.reps);
-  }, [set]);
-
-  const handleWeightChange = (delta: number) => {
-    const newWeight = Math.max(0, set.weight + delta);
-    setWeight(newWeight);
-    onUpdateSet({ weight: newWeight });
+  const toggleComplete = () => {
+    onUpdate({ completed: !set.completed });
   };
-
-  const handleRepsChange = (delta: number) => {
-    const newReps = Math.max(0, set.reps + delta);
-    setReps(newReps);
-    onUpdateSet({ reps: newReps });
+  
+  const handleEdit = () => {
+    setIsEditing(true);
   };
-
-  const handleToggleComplete = () => {
-    onUpdateSet({ completed: !set.completed });
+  
+  const handleSave = () => {
+    onUpdate({
+      weight: parseFloat(weight) || 0,
+      reps: parseInt(reps) || 0,
+      rpe: rpe ? parseFloat(rpe) : null
+    });
+    setIsEditing(false);
   };
-
-  const getSetTypeBadge = (type: string) => {
-    switch (type) {
-      case 'warmup':
-        return <Badge variant="warmup">Warm-up</Badge>;
-      case 'working':
-        return <Badge variant="working">Working</Badge>;
-      case 'dropset':
-        return <Badge variant="dropset">Drop Set</Badge>;
-      case 'failure':
-        return <Badge variant="failure">Failure</Badge>;
-      case 'backoff':
-        return <Badge variant="backoff">Back-off</Badge>;
-      default:
-        return <Badge variant="working">Working</Badge>;
+  
+  const handleCancel = () => {
+    setWeight(set.weight.toString());
+    setReps(set.reps.toString());
+    setRpe(set.rpe?.toString() || '');
+    setIsEditing(false);
+  };
+  
+  // Handle Enter key for quick saving
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
     }
   };
-
+  
   return (
-    <div className={`flex items-center text-sm px-2 py-2 border-t border-gray-100 first:border-0 ${set.completed ? 'bg-gray-50' : ''}`}>
-      <div className="w-10 font-medium">{set.setNumber}</div>
-      
-      <div className="w-24 text-center">
-        <div className="inline-flex items-center">
-          <button 
-            className="text-gray-400 hover:text-gray-600"
-            onClick={() => handleWeightChange(-5)}
-            aria-label="Decrease weight"
-          >
-            <span className="material-icons-round text-sm">remove</span>
-          </button>
-          <input 
-            type="number" 
-            value={weight} 
-            className="w-12 mx-1 text-center bg-transparent"
-            onChange={(e) => {
-              const newValue = Number(e.target.value);
-              if (!isNaN(newValue)) {
-                setWeight(newValue);
-                onUpdateSet({ weight: newValue });
-              }
-            }}
-            title={`Previous weight: ${set.weight} lbs`}
-          />
-          <button 
-            className="text-gray-400 hover:text-gray-600"
-            onClick={() => handleWeightChange(5)}
-            aria-label="Increase weight"
-          >
-            <span className="material-icons-round text-sm">add</span>
-          </button>
-        </div>
-      </div>
-      
-      <div className="w-16 text-center">
-        <div className="inline-flex items-center">
-          <button 
-            className="text-gray-400 hover:text-gray-600"
-            onClick={() => handleRepsChange(-1)}
-            aria-label="Decrease reps"
-          >
-            <span className="material-icons-round text-sm">remove</span>
-          </button>
-          <input 
-            type="number" 
-            value={reps} 
-            className="w-8 text-center bg-transparent"
-            onChange={(e) => {
-              const newValue = Number(e.target.value);
-              if (!isNaN(newValue)) {
-                setReps(newValue);
-                onUpdateSet({ reps: newValue });
-              }
-            }}
-            title={`Previous reps: ${set.reps}`}
-          />
-          <button 
-            className="text-gray-400 hover:text-gray-600"
-            onClick={() => handleRepsChange(1)}
-            aria-label="Increase reps"
-          >
-            <span className="material-icons-round text-sm">add</span>
-          </button>
-        </div>
-      </div>
-      
-      <div className="w-16 text-center text-primary-500">
-        {set.rpe || '-'}
-      </div>
-      
-      <div className="flex-1 text-center">
-        {getSetTypeBadge(set.setType)}
-      </div>
-      
-      <div className="w-8 text-center">
-        {set.completed ? (
-          <button 
-            className="text-green-500 hover:text-gray-600"
-            onClick={handleToggleComplete}
-            aria-label="Mark as incomplete"
-          >
-            <span className="material-icons-round text-base">check</span>
-          </button>
-        ) : (
-          <button 
-            className="text-gray-400 hover:text-gray-600"
-            onClick={onSetClick}
-            aria-label="Edit set"
-          >
-            <span className="material-icons-round text-base">more_horiz</span>
-          </button>
-        )}
-      </div>
+    <div 
+      className={cn(
+        "flex items-center p-2 rounded-md gap-2 text-sm",
+        set.completed ? "bg-primary/5" : "bg-card",
+        set.setType === "warmup" ? "opacity-80" : ""
+      )}
+    >
+      {!isEditing ? (
+        // View mode
+        <>
+          <div className="flex items-center justify-center w-6 font-medium text-xs">
+            {set.setNumber}
+          </div>
+          
+          <div className="flex-1 grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Weight</div>
+              <div className="font-medium">{set.weight || '-'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Reps</div>
+              <div className="font-medium">{set.reps || '-'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">RPE</div>
+              <div className="font-medium">{set.rpe || '-'}</div>
+            </div>
+          </div>
+          
+          <TooltipProvider>
+            <div className="flex gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7"
+                    onClick={toggleComplete}
+                  >
+                    {set.completed ? (
+                      <CheckCircle2 size={16} className="text-primary" />
+                    ) : (
+                      <CircleSlash size={16} className="text-muted-foreground" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {set.completed ? 'Mark as incomplete' : 'Mark as complete'}
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7"
+                    onClick={handleEdit}
+                  >
+                    <Edit size={16} className="text-muted-foreground" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit set</TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7"
+                    onClick={onRemove}
+                  >
+                    <Trash2 size={16} className="text-muted-foreground" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Remove set</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        </>
+      ) : (
+        // Edit mode
+        <>
+          <div className="flex items-center justify-center w-6 font-medium text-xs">
+            {set.setNumber}
+          </div>
+          
+          <div className="flex-1 grid grid-cols-3 gap-1">
+            <div>
+              <Input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="h-8"
+                placeholder="Weight"
+                min="0"
+                step="2.5"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Input
+                type="number"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="h-8"
+                placeholder="Reps"
+                min="0"
+                step="1"
+              />
+            </div>
+            <div>
+              <Input
+                type="number"
+                value={rpe}
+                onChange={(e) => setRpe(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="h-8"
+                placeholder="RPE"
+                min="0"
+                max="10"
+                step="0.5"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7"
+              onClick={handleSave}
+            >
+              <Check size={16} className="text-primary" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7"
+              onClick={handleCancel}
+            >
+              <Minus size={16} className="text-muted-foreground" />
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
-}
+};
+
+export default SetRow;
