@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { format } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
+import { useQuery } from "@tanstack/react-query";
+
+import { useToast } from "@/hooks/use-toast";
 import { useCurrentWorkout } from "@/hooks/useStorage";
 import { useScheduleChecks } from "@/hooks/useScheduleChecks";
+import { Program, LocalSet, Exercise } from "@shared/schema";
+import { createNewWorkout, createWorkoutExercise } from "@/lib/workout";
+
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import ExerciseCard from "@/components/workout/ExerciseCard";
 import QuickAddModal from "@/components/modals/QuickAddModal";
-import { createNewWorkout, createWorkoutExercise, createSet } from "@/lib/workout";
-import { Exercise, LocalExercise, LocalSet, Program } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
-import { v4 as uuidv4 } from "uuid";
-import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import WorkoutCalendarModal from "@/components/modals/WorkoutCalendarModal";
 
 export default function CurrentWorkout() {
   const { 
@@ -19,16 +22,15 @@ export default function CurrentWorkout() {
     loading, 
     createWorkout, 
     addExercise, 
-    updateExercise,
-    removeExercise,
-    addSet,
-    updateSet,
+    addSet, 
+    updateSet, 
     removeSet,
     updateWorkout 
   } = useCurrentWorkout();
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showProgramModal, setShowProgramModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
   const [todaysScheduledProgram, setTodaysScheduledProgram] = useState<Program | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<{[key: string]: boolean}>({});
@@ -39,6 +41,110 @@ export default function CurrentWorkout() {
   const { data: programs = [] } = useQuery<Program[]>({
     queryKey: ['/api/programs'],
   });
+  
+  // Define the reload function
+  const reloadProgramExercises = async (programId: number) => {
+    if (!workout || workout.programId !== programId) return;
+    
+    try {
+      // Get the workout templates for this program
+      const response = await fetch(`/api/programs/${programId}/templates`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch workout templates');
+      }
+      
+      const templates = await response.json();
+      console.log("Retrieved updated templates for program:", templates);
+      
+      if (templates && templates.length > 0) {
+        // Get the first template or find the one currently being used
+        const templateId = workout.templateId && 
+          templates.find((t: any) => t.id === workout.templateId) ? 
+          workout.templateId : templates[0].id;
+        
+        // Get the exercises for this template
+        const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+        if (!exercisesResponse.ok) {
+          throw new Error('Failed to fetch template exercises');
+        }
+        
+        const templateExercises = await exercisesResponse.json();
+        console.log("Retrieved updated template exercises:", templateExercises);
+        
+        // Only continue if there are exercises in the template
+        if (templateExercises && templateExercises.length > 0) {
+          // Remove existing exercises
+          const updatedWorkout = {
+            ...workout,
+            exercises: []
+          };
+          updateWorkout(updatedWorkout);
+          
+          // Fetch and add the updated exercises
+          for (const templateExercise of templateExercises) {
+            const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
+            if (exerciseResponse.ok) {
+              const exercise = await exerciseResponse.json();
+              
+              // Create a new workout exercise
+              const newExercise = createWorkoutExercise(
+                workout.id,
+                exercise,
+                templateExercise.order
+              );
+              
+              // Add it to the workout
+              addExercise(newExercise);
+              
+              // Add some default sets based on the template
+              for (let i = 0; i < templateExercise.sets; i++) {
+                const setType = i === 0 ? "warmup" : "working";
+                const newSet: LocalSet = {
+                  id: uuidv4(),
+                  workoutExerciseId: newExercise.id,
+                  setNumber: i + 1,
+                  weight: 0,
+                  reps: 0,
+                  rpe: null,
+                  setType,
+                  completed: false,
+                  notes: null
+                };
+                
+                addSet(newExercise.id, newSet);
+              }
+            }
+          }
+          
+          toast({
+            title: "Workout Updated",
+            description: "Workout exercises have been updated to match the latest program changes",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating workout with program changes:", error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update workout with program changes",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Add listener to automatically update workout when programs are modified
+  useEffect(() => {
+    if (workout?.programId && programs.length > 0) {
+      // Find the program in the latest data
+      const currentProgram = programs.find(p => p.id === workout.programId);
+      
+      // If program exists, check for updates or changes
+      if (currentProgram) {
+        // If the template exercises have been changed, we need to reload them
+        reloadProgramExercises(currentProgram.id);
+      }
+    }
+  }, [programs, workout]);
   
   // Get schedules for today's date 
   const { getSchedulesForDate } = useScheduleChecks();
@@ -499,7 +605,14 @@ export default function CurrentWorkout() {
                   : workout.name || "Today's Workout"}
               </span>
             </div>
-            <div className="text-sm text-gray-500">
+            <div 
+              className="text-sm text-gray-500 flex items-center cursor-pointer hover:text-primary-600"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent collapsing when clicking this
+                setShowCalendarModal(true);
+              }}
+            >
+              <span className="material-icons-round text-xs mr-1">calendar_today</span>
               {format(new Date(workout.date), "MMMM d, yyyy")}
             </div>
           </div>
@@ -680,6 +793,27 @@ export default function CurrentWorkout() {
         onSelectExercise={(exercise) => {
           console.log("Exercise selected from modal:", exercise);
           handleAddExercise(exercise);
+        }}
+      />
+      
+      {/* Calendar Date Selection Modal */}
+      <WorkoutCalendarModal
+        isVisible={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        currentDate={new Date(workout.date)}
+        onDateSelect={(selectedDate) => {
+          if (workout) {
+            // Update the workout with the new date
+            updateWorkout({
+              ...workout,
+              date: selectedDate.toISOString()
+            });
+            
+            toast({
+              title: "Date Updated",
+              description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
+            });
+          }
         }}
       />
     </>
