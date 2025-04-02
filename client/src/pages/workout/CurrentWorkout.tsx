@@ -515,6 +515,11 @@ export default function CurrentWorkout() {
     // Track that we've checked schedules for today
     lastScheduleCheckRef.current = todayDateString;
     
+    // Check if there's a scheduled program for today
+    const today = new Date();
+    const todaysSchedules = getSchedulesForDate(today);
+    console.log("Today's schedules when creating new workout:", todaysSchedules);
+    
     // Use the workoutFunctionsRef to maintain stable references across renders
     const createWorkoutWithProgramAndExercises = async (programId: number, programName: string) => {
       try {

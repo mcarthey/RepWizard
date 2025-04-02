@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import { useProgramSchedules } from "@/hooks/useProgramSchedules";
@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function InspectSchedules() {
   const { schedules, removeSchedule } = useProgramSchedules();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate] = useState(new Date());
   const { toast } = useToast();
 
   // Format date for display
@@ -117,10 +117,17 @@ export default function InspectSchedules() {
             )}
           </div>
           
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h2 className="text-lg font-semibold mb-2">Raw Data</h2>
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <h2 className="text-lg font-semibold mb-2">Schedules Data (From State)</h2>
             <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
               {JSON.stringify(schedules, null, 2)}
+            </pre>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h2 className="text-lg font-semibold mb-2">Raw LocalStorage Data</h2>
+            <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
+              {localStorage.getItem('programSchedules') || 'No data found'}
             </pre>
           </div>
         </div>
