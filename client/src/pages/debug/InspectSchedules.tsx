@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
-import { PROGRAM_SCHEDULES_STORAGE_KEY } from "@/hooks/useScheduleChecks";
 import { useProgramSchedules } from "@/hooks/useProgramSchedules";
 import { useToast } from "@/hooks/use-toast";
 
 export default function InspectSchedules() {
-  const { schedules, deleteSchedule, clearSchedules } = useProgramSchedules();
+  const { schedules, removeSchedule } = useProgramSchedules();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { toast } = useToast();
 
@@ -28,7 +27,7 @@ export default function InspectSchedules() {
   // Handle deleting a schedule
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this schedule?")) {
-      deleteSchedule(id);
+      removeSchedule(id);
       toast({
         title: "Schedule Deleted",
         description: "The program schedule has been removed",
@@ -39,7 +38,8 @@ export default function InspectSchedules() {
   // Handle clearing all schedules
   const handleClearAll = () => {
     if (confirm("Are you sure you want to delete ALL schedules? This cannot be undone.")) {
-      clearSchedules();
+      // Clear all schedules by removing each one
+      schedules.forEach(schedule => removeSchedule(schedule.id));
       toast({
         title: "All Schedules Cleared",
         description: "All program schedules have been removed",
