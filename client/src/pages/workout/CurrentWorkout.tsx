@@ -282,11 +282,8 @@ export default function CurrentWorkout() {
       executeProgramUpdate(currentProgram.id);
     } else {
       // If we're returning to this page and program signature hasn't changed
-      // We'll check for template changes, but only once during initial render
-      if (isInitialRenderRef.current) {
-        console.log("Initial render check for program updates");
-        executeProgramUpdate(currentProgram.id);
-      }
+      // We don't need to do anything - this prevents reloading on page return
+      console.log("Program signature unchanged, skipping update");
     }
     
     // Clean up on unmount
@@ -953,18 +950,55 @@ export default function CurrentWorkout() {
         isVisible={showCalendarModal}
         onClose={() => setShowCalendarModal(false)}
         currentDate={new Date(workout.date)}
-        onDateSelect={(selectedDate) => {
+        onDateSelect={async (selectedDate) => {
           if (workout) {
+            // Check if there's a scheduled program for the selected date
+            const schedulesForDate = getSchedulesForDate(selectedDate);
+            console.log(`Schedules for selected date (${format(selectedDate, "yyyy-MM-dd")}):`, schedulesForDate);
+            
             // Update the workout with the new date
-            updateWorkout({
+            const updatedWorkout = {
               ...workout,
               date: selectedDate.toISOString()
-            });
+            };
             
-            toast({
-              title: "Date Updated",
-              description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
-            });
+            updateWorkout(updatedWorkout);
+            
+            // If we have schedules for this date and no program is currently selected
+            if (schedulesForDate.length > 0 && !workout.programId) {
+              const programId = schedulesForDate[0].programId;
+              const scheduledProgram = programs.find(p => p.id === programId);
+              
+              if (scheduledProgram) {
+                console.log(`Found scheduled program for selected date: ${scheduledProgram.name}`);
+                setTodaysScheduledProgram(scheduledProgram);
+                
+                toast({
+                  title: "Date Updated",
+                  description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}. Program ${scheduledProgram.name} is scheduled for this date.`,
+                });
+                
+                // Ask if user wants to load the program for this date
+                const shouldLoadProgram = window.confirm(
+                  `Program "${scheduledProgram.name}" is scheduled for this date. Would you like to load it?`
+                );
+                
+                if (shouldLoadProgram) {
+                  // Load the program exercises
+                  await handleScheduledProgramSelect(scheduledProgram.id);
+                }
+              } else {
+                toast({
+                  title: "Date Updated",
+                  description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
+                });
+              }
+            } else {
+              toast({
+                title: "Date Updated",
+                description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
+              });
+            }
           }
         }}
       />
