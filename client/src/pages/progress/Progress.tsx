@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useWorkoutHistory } from "@/hooks/useStorage";
+import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import WorkoutProgressChart from "@/components/charts/WorkoutProgressChart";

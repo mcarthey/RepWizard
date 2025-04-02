@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useCurrentWorkout } from "@/hooks/useStorage";
+import { useCurrentWorkout } from "@/hooks/useCurrentWorkout";
 import { useScheduleChecks } from "@/hooks/useScheduleChecks";
 import { format } from "date-fns";
 

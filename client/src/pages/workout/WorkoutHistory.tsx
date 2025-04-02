@@ -1,4 +1,4 @@
-import { useWorkoutHistory } from "@/hooks/useStorage";
+import { useWorkoutHistory } from "@/hooks/useWorkoutHistory";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import { format, parseISO } from "date-fns";

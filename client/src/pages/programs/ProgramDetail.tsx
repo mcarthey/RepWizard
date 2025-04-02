@@ -6,7 +6,7 @@ import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import { InsertWorkoutTemplate, Program, WorkoutTemplate } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { useCurrentWorkout } from "@/hooks/useStorage";
+import { useCurrentWorkout } from "@/hooks/useCurrentWorkout";
 import { createNewWorkout } from "@/lib/workout";
 
 export default function ProgramDetail() {

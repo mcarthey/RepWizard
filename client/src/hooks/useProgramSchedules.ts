@@ -1,142 +1,139 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ProgramSchedule } from '@shared/schema';
+import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { PROGRAM_SCHEDULES_STORAGE_KEY } from './useScheduleChecks';
-import { useToast } from './use-toast';
+import { addDays, addWeeks, format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { useStorage } from '@/hooks/useStorage';
+import { LocalProgramSchedule } from '@/lib/workout';
 
 /**
  * Hook for managing program schedules
- * This hook provides CRUD operations for program schedules stored in localStorage
  */
 export function useProgramSchedules() {
-  const [schedules, setSchedules] = useState<ProgramSchedule[]>([]);
+  const [schedules, setSchedules] = useState<LocalProgramSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  // Load schedules from localStorage
+  const { saveToStorage, loadFromStorage } = useStorage();
+  
+  // Load schedules on mount
   useEffect(() => {
-    try {
-      const storedSchedules = localStorage.getItem(PROGRAM_SCHEDULES_STORAGE_KEY);
-      if (storedSchedules) {
-        setSchedules(JSON.parse(storedSchedules));
-      }
-    } catch (error) {
-      console.error('Error loading program schedules:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load program schedules',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  // Save schedules to localStorage
-  const saveSchedules = useCallback((updatedSchedules: ProgramSchedule[]) => {
-    try {
-      localStorage.setItem(PROGRAM_SCHEDULES_STORAGE_KEY, JSON.stringify(updatedSchedules));
-      setSchedules(updatedSchedules);
-      return true;
-    } catch (error) {
-      console.error('Error saving program schedules:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save program schedule',
-        variant: 'destructive',
-      });
-      return false;
-    }
-  }, [toast]);
-
-  // Add a new schedule
-  const addSchedule = useCallback((schedule: Omit<ProgramSchedule, 'id'>) => {
-    try {
-      const newSchedule: ProgramSchedule = {
-        ...schedule, 
-        id: uuidv4() // Generate unique ID
-      };
-      
-      const updatedSchedules = [...schedules, newSchedule];
-      const success = saveSchedules(updatedSchedules);
-      
-      if (success) {
-        console.log('Program schedule added successfully:', newSchedule);
+    const loadSchedules = async () => {
+      try {
+        const savedSchedules = await loadFromStorage<LocalProgramSchedule[]>('programSchedules');
+        if (savedSchedules) {
+          setSchedules(savedSchedules);
+        }
+      } catch (error) {
+        console.error('Error loading schedules:', error);
         toast({
-          title: 'Schedule Added',
-          description: 'Program has been scheduled successfully',
+          title: 'Error',
+          description: 'Failed to load program schedules',
+          variant: 'destructive'
         });
-        return newSchedule;
+      } finally {
+        setLoading(false);
       }
-      return null;
-    } catch (error) {
-      console.error('Error adding program schedule:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add program schedule',
-        variant: 'destructive',
-      });
-      return null;
-    }
-  }, [schedules, saveSchedules, toast]);
-
-  // Update an existing schedule
-  const updateSchedule = useCallback((id: string, updates: Partial<ProgramSchedule>) => {
-    try {
-      const scheduleIndex = schedules.findIndex((s) => s.id === id);
-      if (scheduleIndex === -1) {
-        console.error('Schedule not found:', id);
-        return false;
-      }
-
-      const updatedSchedules = [...schedules];
-      updatedSchedules[scheduleIndex] = {
-        ...updatedSchedules[scheduleIndex],
-        ...updates,
-      };
-
-      return saveSchedules(updatedSchedules);
-    } catch (error) {
-      console.error('Error updating program schedule:', error);
-      return false;
-    }
-  }, [schedules, saveSchedules]);
-
-  // Delete a schedule
-  const deleteSchedule = useCallback((id: string) => {
-    try {
-      const updatedSchedules = schedules.filter((s) => s.id !== id);
-      return saveSchedules(updatedSchedules);
-    } catch (error) {
-      console.error('Error deleting program schedule:', error);
-      return false;
-    }
-  }, [schedules, saveSchedules]);
-
-  // Get a specific schedule by ID
-  const getSchedule = useCallback((id: string) => {
-    return schedules.find((s) => s.id === id) || null;
-  }, [schedules]);
-
-  // Clear all schedules
-  const clearSchedules = useCallback(() => {
-    try {
-      localStorage.removeItem(PROGRAM_SCHEDULES_STORAGE_KEY);
-      setSchedules([]);
-      return true;
-    } catch (error) {
-      console.error('Error clearing program schedules:', error);
-      return false;
-    }
+    };
+    
+    loadSchedules();
   }, []);
-
+  
+  // Save schedules whenever they change
+  useEffect(() => {
+    if (!loading) {
+      saveToStorage('programSchedules', schedules);
+    }
+  }, [schedules, loading, saveToStorage]);
+  
+  /**
+   * Add a new program schedule
+   */
+  const addSchedule = useCallback((schedule: Omit<LocalProgramSchedule, 'id'>) => {
+    const newSchedule: LocalProgramSchedule = {
+      ...schedule,
+      id: uuidv4()
+    };
+    
+    setSchedules(prev => [...prev, newSchedule]);
+    toast({
+      title: 'Schedule created',
+      description: 'Program has been scheduled successfully'
+    });
+    
+    return newSchedule;
+  }, [toast]);
+  
+  /**
+   * Update an existing program schedule
+   */
+  const updateSchedule = useCallback((id: string, updatedSchedule: Partial<LocalProgramSchedule>) => {
+    setSchedules(prev => 
+      prev.map(schedule => 
+        schedule.id === id
+          ? { ...schedule, ...updatedSchedule }
+          : schedule
+      )
+    );
+    
+    toast({
+      title: 'Schedule updated',
+      description: 'Program schedule has been updated'
+    });
+  }, [toast]);
+  
+  /**
+   * Remove a program schedule
+   */
+  const removeSchedule = useCallback((id: string) => {
+    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+    
+    toast({
+      title: 'Schedule removed',
+      description: 'Program schedule has been removed'
+    });
+  }, [toast]);
+  
+  /**
+   * Toggle the active state of a schedule
+   */
+  const toggleScheduleActive = useCallback((id: string) => {
+    setSchedules(prev => 
+      prev.map(schedule => 
+        schedule.id === id
+          ? { ...schedule, active: !schedule.active }
+          : schedule
+      )
+    );
+  }, []);
+  
+  /**
+   * Create a default schedule for a program
+   */
+  const createDefaultSchedule = useCallback((programId: number, programName: string) => {
+    const today = new Date();
+    const startDate = format(today, 'yyyy-MM-dd');
+    const endDate = format(addWeeks(today, 8), 'yyyy-MM-dd');
+    
+    // Default to Mon, Wed, Fri
+    const selectedWeekdays = [1, 3, 5]; 
+    
+    const newSchedule = {
+      programId,
+      startDate,
+      endDate,
+      selectedWeekdays,
+      active: true
+    };
+    
+    return addSchedule(newSchedule);
+  }, [addSchedule]);
+  
   return {
     schedules,
     loading,
     addSchedule,
     updateSchedule,
-    deleteSchedule,
-    getSchedule,
-    clearSchedules,
+    removeSchedule,
+    toggleScheduleActive,
+    createDefaultSchedule
   };
 }

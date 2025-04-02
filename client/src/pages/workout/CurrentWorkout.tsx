@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useQuery } from "@tanstack/react-query";
 
 import { useToast } from "@/hooks/use-toast";
-import { useCurrentWorkout } from "@/hooks/useStorage";
+import { useCurrentWorkout } from "@/hooks/useCurrentWorkout";
 import { useScheduleChecks } from "@/hooks/useScheduleChecks";
 import { Program, LocalSet, Exercise } from "@shared/schema";
 import { createNewWorkout, createWorkoutExercise } from "@/lib/workout";

@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
 import { useQuery } from '@tanstack/react-query';
-import { useCurrentWorkout } from '@/hooks/useStorage';
+import { useCurrentWorkout } from '@/hooks/useCurrentWorkout';
 import { useScheduleChecks } from '@/hooks/useScheduleChecks';
 import { Program, LocalProgramSchedule, WorkoutTemplate } from '@shared/schema';
 import { Button } from '@/components/ui/button';
