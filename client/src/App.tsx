@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Switch, Route, Link, useLocation } from 'wouter';
-import { BellRing, Dumbbell, Home, Settings, Zap } from 'lucide-react';
+import { BellRing, Dumbbell, Home, ListTree, Settings, Zap } from 'lucide-react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './hooks/use-auth';
 import CurrentWorkout from './pages/workout/CurrentWorkout';
+import ExercisesPage from './pages/exercises/ExercisesPage';
 
 // Protected route wrapper
 const ProtectedRoute = ({ component: Component, ...rest }: any) => {
@@ -51,6 +52,9 @@ const App: React.FC = () => {
               <Route path="/workout">
                 <CurrentWorkout />
               </Route>
+              <Route path="/exercises">
+                <ExercisesPage />
+              </Route>
               <Route path="/programs">
                 <div>Programs Page</div>
               </Route>
@@ -87,18 +91,18 @@ const App: React.FC = () => {
                 onClick={() => navigate('/workout')}
               />
               <NavItem 
+                icon={<ListTree />} 
+                label="Exercises" 
+                href="/exercises" 
+                isActive={location === '/exercises'} 
+                onClick={() => navigate('/exercises')}
+              />
+              <NavItem 
                 icon={<Zap />} 
                 label="Programs" 
                 href="/programs" 
                 isActive={location === '/programs'} 
                 onClick={() => navigate('/programs')}
-              />
-              <NavItem 
-                icon={<BellRing />} 
-                label="Updates" 
-                href="/updates" 
-                isActive={location === '/updates'} 
-                onClick={() => navigate('/updates')}
               />
               <NavItem 
                 icon={<Settings />} 
