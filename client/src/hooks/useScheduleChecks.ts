@@ -7,37 +7,74 @@ export const PROGRAM_SCHEDULES_STORAGE_KEY = 'repwizard_program_schedules';
 // Simple hook to check for schedules
 export function useScheduleChecks() {
   const [schedules, setSchedules] = useState<LocalProgramSchedule[]>([]);
+  // Use a ref to maintain a stable reference to the schedules array
   const schedulesRef = useRef<LocalProgramSchedule[]>([]);
   
-  // Load schedules from localStorage
+  // Cache of schedule check results to avoid redundant calculations
+  const scheduleCheckCacheRef = useRef<Map<string, LocalProgramSchedule[]>>(new Map());
+  
+  // Load schedules from localStorage only once on mount
   useEffect(() => {
-    try {
-      // Try to get stored schedules
-      const storedSchedules = localStorage.getItem(PROGRAM_SCHEDULES_STORAGE_KEY);
-      if (storedSchedules) {
-        const parsedSchedules = JSON.parse(storedSchedules);
-        setSchedules(parsedSchedules);
-        schedulesRef.current = parsedSchedules;
+    const loadSchedules = () => {
+      try {
+        // Try to get stored schedules
+        const storedSchedules = localStorage.getItem(PROGRAM_SCHEDULES_STORAGE_KEY);
+        if (storedSchedules) {
+          const parsedSchedules = JSON.parse(storedSchedules);
+          setSchedules(parsedSchedules);
+          schedulesRef.current = parsedSchedules;
+          // Clear cache when schedules are loaded
+          scheduleCheckCacheRef.current.clear();
+        }
+      } catch (error) {
+        console.error('Error loading schedules:', error);
       }
-    } catch (error) {
-      console.error('Error loading schedules:', error);
-    }
+    };
+    
+    loadSchedules();
+    
+    // Setup storage event listener for updates from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === PROGRAM_SCHEDULES_STORAGE_KEY) {
+        loadSchedules();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
   
   // Update ref when schedules change
   useEffect(() => {
     schedulesRef.current = schedules;
+    // Clear cache when schedules change
+    scheduleCheckCacheRef.current.clear();
   }, [schedules]);
   
-  // Get schedules for a specific date - stable reference using ref instead of state
+  // Function to get a unique cache key for a date
+  const getDateCacheKey = useCallback((date: Date) => {
+    // Format as YYYY-MM-DD for cache key
+    return date.toISOString().split('T')[0];
+  }, []);
+  
+  // Get schedules for a specific date - stable reference with memoization
   const getSchedulesForDate = useCallback((date: Date) => {
+    // Create a cache key for this date
+    const cacheKey = getDateCacheKey(date);
+    
+    // Check cache first
+    if (scheduleCheckCacheRef.current.has(cacheKey)) {
+      return scheduleCheckCacheRef.current.get(cacheKey) || [];
+    }
+    
     const currentSchedules = schedulesRef.current;
     if (currentSchedules.length === 0) {
       return [];
     }
     
     console.log("Getting schedules for date:", date.toISOString());
-    console.log("All available schedules:", currentSchedules);
     
     // Return schedules that include this date and day of the week
     const matchingSchedules = currentSchedules.filter(schedule => {
@@ -54,28 +91,12 @@ export function useScheduleChecks() {
         const checkDate = new Date(date);
         checkDate.setHours(12, 0, 0, 0);
         
-        // Print debug information
-        console.log("Checking schedule:", {
-          programId: schedule.programId,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          checkDate: checkDate.toISOString(),
-          selectedWeekdays: schedule.selectedWeekdays,
-          checkDateDay: checkDate.getDay()
-        });
-        
         // Check if the date falls within the schedule's date range
         const isInDateRange = checkDate >= startDate && checkDate <= endDate;
         
         // Check if the day of the week matches one of the selected weekdays
         const dayOfWeek = checkDate.getDay(); // 0 = Sunday, 6 = Saturday
         const isDaySelected = schedule.selectedWeekdays ? schedule.selectedWeekdays.includes(dayOfWeek) : false;
-        
-        console.log("Schedule check results:", {
-          isInDateRange,
-          isDaySelected,
-          isActive: schedule.active
-        });
         
         // Must be active, in date range, and on a selected weekday
         return schedule.active && isInDateRange && isDaySelected;
@@ -85,9 +106,11 @@ export function useScheduleChecks() {
       }
     });
     
-    console.log("Matching schedules:", matchingSchedules);
+    // Cache the result for future calls
+    scheduleCheckCacheRef.current.set(cacheKey, matchingSchedules);
+    
     return matchingSchedules;
-  }, []); // Empty dependency array for stable reference
+  }, [getDateCacheKey]); // Only depends on the stable getDateCacheKey function
   
   return {
     schedules,

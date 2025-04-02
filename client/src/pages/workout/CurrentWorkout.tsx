@@ -984,22 +984,16 @@ export default function CurrentWorkout() {
         currentDate={new Date(workout.date)}
         onDateSelect={async (selectedDate) => {
           if (workout) {
+            console.log(`Calendar date changed to: ${format(selectedDate, "yyyy-MM-dd")}`);
+            
             // Check if there's a scheduled program for the selected date
-            const schedulesForDate = getSchedulesForDate(selectedDate);
-            console.log(`Schedules for selected date (${format(selectedDate, "yyyy-MM-dd")}):`, schedulesForDate);
+            const schedulesForDate = workoutFunctionsRef.current.getSchedulesForDate(selectedDate);
+            console.log(`Schedules for selected date:`, schedulesForDate);
             
-            // Update the workout with the new date
-            const updatedWorkout = {
-              ...workout,
-              date: selectedDate.toISOString()
-            };
-            
-            updateWorkout(updatedWorkout);
-            
-            // If we have schedules for this date and no program is currently selected
-            if (schedulesForDate.length > 0 && !workout.programId) {
+            // If we have schedules for this date, create a new workout with the program
+            if (schedulesForDate.length > 0) {
               const programId = schedulesForDate[0].programId;
-              const scheduledProgram = programs.find(p => p.id === programId);
+              const scheduledProgram = workoutFunctionsRef.current.programs.find(p => p.id === programId);
               
               if (scheduledProgram) {
                 console.log(`Found scheduled program for selected date: ${scheduledProgram.name}`);
@@ -1016,21 +1010,34 @@ export default function CurrentWorkout() {
                 );
                 
                 if (shouldLoadProgram) {
-                  // Load the program exercises
+                  // First update the date on the existing workout
+                  const updatedWorkout = {
+                    ...workout,
+                    date: selectedDate.toISOString(),
+                    exercises: [] // Clear exercises to load from program
+                  };
+                  workoutFunctionsRef.current.updateWorkout(updatedWorkout);
+                  
+                  // Then load the program exercises
                   await handleScheduledProgramSelect(scheduledProgram.id);
+                  return;
                 }
-              } else {
-                toast({
-                  title: "Date Updated",
-                  description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
-                });
               }
-            } else {
-              toast({
-                title: "Date Updated",
-                description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
-              });
             }
+            
+            // If we're here, either there's no scheduled program or user didn't want to load it
+            // Update just the date, preserving all other workout data
+            const updatedWorkout = {
+              ...workout,
+              date: selectedDate.toISOString()
+            };
+            
+            workoutFunctionsRef.current.updateWorkout(updatedWorkout);
+            
+            toast({
+              title: "Date Updated",
+              description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
+            });
           }
         }}
       />
