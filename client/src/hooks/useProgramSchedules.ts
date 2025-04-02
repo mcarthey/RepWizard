@@ -299,6 +299,21 @@ export function useProgramSchedules() {
     return addSchedule(newSchedule);
   }, [addSchedule]);
   
+  /**
+   * Force refresh schedules from localStorage
+   */
+  const refreshSchedules = useCallback(() => {
+    try {
+      const refreshedSchedules = loadSchedulesFromStorage();
+      setSchedules(refreshedSchedules);
+      console.log('Manually refreshed schedules from localStorage:', refreshedSchedules);
+      return true;
+    } catch (error) {
+      console.error('Error refreshing schedules:', error);
+      return false;
+    }
+  }, [loadSchedulesFromStorage]);
+
   return {
     schedules,
     loading,
@@ -306,6 +321,7 @@ export function useProgramSchedules() {
     updateSchedule,
     removeSchedule,
     toggleScheduleActive,
-    createDefaultSchedule
+    createDefaultSchedule,
+    refreshSchedules
   };
 }

@@ -146,10 +146,27 @@ export default function InspectSchedules() {
                       title: "Old Data Cleaned",
                       description: "Obsolete data has been removed from localStorage",
                     });
+                    window.location.reload();
                   }
                 }}
               >
                 Clean Old Data
+              </button>
+              <button 
+                className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                onClick={() => {
+                  if (confirm("WARNING: This will remove ALL schedule data. Are you sure you want to continue?")) {
+                    localStorage.removeItem('repwizard_program_schedules');
+                    localStorage.removeItem('programSchedules'); // Also remove the old key for safety
+                    toast({
+                      title: "Schedule Data Reset",
+                      description: "All program schedule data has been removed",
+                    });
+                    window.location.reload();
+                  }
+                }}
+              >
+                Reset ALL Schedules
               </button>
               <button 
                 className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"

@@ -17,6 +17,7 @@ import ExerciseDetailPage from "@/pages/exercises/ExerciseDetailPage";
 import Progress from "@/pages/progress/Progress";
 import Settings from "@/pages/settings/Settings";
 import InspectSchedules from "@/pages/debug/InspectSchedules";
+import ScheduleManager from "@/pages/debug/ScheduleManager";
 import LocalStorageDebug from "@/pages/debug/LocalStorageDebug";
 import LocalStorageTest from "@/pages/debug/LocalStorageTest";
 import IsolatedStorageTest from "@/pages/debug/IsolatedStorageTest";
@@ -43,6 +44,7 @@ function Router() {
       <ProtectedRoute path="/progress" component={Progress} />
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/debug/schedules" component={InspectSchedules} />
+      <ProtectedRoute path="/debug/schedule-manager" component={ScheduleManager} />
       <ProtectedRoute path="/debug/local-storage" component={LocalStorageDebug} />
       <ProtectedRoute path="/debug/local-storage-test" component={LocalStorageTest} />
       <ProtectedRoute path="/debug/isolated-storage-test" component={IsolatedStorageTest} />

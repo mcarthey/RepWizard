@@ -498,19 +498,17 @@ export default function CurrentWorkout() {
 
   // Check if there's a program scheduled for today and create a workout if needed
   useEffect(() => {
-    // Skip processing if we're loading or a workout already exists
-    if (loading || workout) {
-      console.log("Current workout state:", { loading, workout });
+    // Skip processing if we're still loading
+    if (loading) {
+      console.log("Still loading current workout, skipping schedule check");
       return;
     }
     
-    // Skip if we've already checked schedules for today
+    // Skip if we've already checked schedules for today to prevent infinite loops
     if (lastScheduleCheckRef.current === todayDateString) {
       console.log(`Already checked schedules for ${todayDateString}, skipping`);
       return;
     }
-    
-    console.log("Creating new workout because none exists");
     
     // Track that we've checked schedules for today
     lastScheduleCheckRef.current = todayDateString;
@@ -518,10 +516,49 @@ export default function CurrentWorkout() {
     // Check if there's a scheduled program for today
     const today = new Date();
     const todaysSchedules = getSchedulesForDate(today);
-    console.log("Today's schedules when creating new workout:", todaysSchedules);
+    console.log("Today's schedules for notification:", todaysSchedules);
     
-    // Use the workoutFunctionsRef to maintain stable references across renders
-    const createWorkoutWithProgramAndExercises = async (programId: number, programName: string) => {
+    // If we find schedules for today and user doesn't already have a workout with a program
+    if (todaysSchedules.length > 0) {
+      const programId = todaysSchedules[0].programId;
+      const scheduledProgram = programs.find(p => p.id === programId);
+      
+      if (scheduledProgram) {
+        console.log("Scheduled program for notification:", scheduledProgram);
+        setTodaysScheduledProgram(scheduledProgram);
+        
+        // If we don't have a workout yet, create one with the program
+        if (!workout) {
+          console.log("Creating new workout with scheduled program");
+          createWorkoutWithProgramAndExercises(programId, scheduledProgram.name);
+          return;
+        }
+        
+        // If we already have a workout but it doesn't have a program assigned, ask user
+        if (workout && !workout.programId) {
+          // Only ask once per session to avoid annoying the user
+          const hasAskedAboutProgram = sessionStorage.getItem('hasAskedAboutProgram');
+          if (!hasAskedAboutProgram) {
+            sessionStorage.setItem('hasAskedAboutProgram', 'true');
+            
+            // Show notification
+            toast({
+              title: "Program Scheduled",
+              description: `You have "${scheduledProgram.name}" scheduled for today. Use the program menu to load it.`,
+            });
+          }
+        }
+      }
+    } else if (!workout) {
+      // If no schedules for today, create a default empty workout
+      console.log("No schedules for today, creating default workout");
+      const newWorkout = createNewWorkout("Today's Workout");
+      createWorkout(newWorkout);
+    }
+  });
+  
+  // Define this function before the useEffect that uses it
+  const createWorkoutWithProgramAndExercises = useCallback(async (programId: number, programName: string) => {
       try {
         console.log(`Creating workout with scheduled program: ${programName}`);
         const newWorkout = createNewWorkout(programName);
@@ -615,40 +652,47 @@ export default function CurrentWorkout() {
       } catch (error) {
         console.error("Error creating workout with program exercises:", error);
       }
-    };
+    }, [workoutFunctionsRef]);
     
-    // Default to creating a regular workout
-    let shouldCreateDefaultWorkout = true;
-    
-    // Only check for scheduled programs if we have program data loaded
-    const currentPrograms = workoutFunctionsRef.current.programs;
-    if (currentPrograms && currentPrograms.length > 0) {
-      // Check for today's scheduled program
-      const today = new Date();
-      const todaysSchedules = workoutFunctionsRef.current.getSchedulesForDate(today);
-      console.log("Today's schedules:", todaysSchedules);
+    // Check for scheduled programs on component mount
+    useEffect(() => {
+      // Skip if we're still loading or already have a workout
+      if (loading || workout) {
+        return;
+      }
       
-      if (todaysSchedules.length > 0) {
-        // Find the corresponding program
-        const programId = todaysSchedules[0].programId;
-        const scheduledProgram = currentPrograms.find(program => program.id === programId);
+      // Default to creating a regular workout
+      let shouldCreateDefaultWorkout = true;
+      
+      // Only check for scheduled programs if we have program data loaded
+      const currentPrograms = workoutFunctionsRef.current.programs;
+      if (currentPrograms && currentPrograms.length > 0) {
+        // Check for today's scheduled program
+        const today = new Date();
+        const todaysSchedules = workoutFunctionsRef.current.getSchedulesForDate(today);
+        console.log("Today's schedules:", todaysSchedules);
         
-        if (scheduledProgram) {
-          shouldCreateDefaultWorkout = false;
-          // Create workout with program and exercises all loaded at once
-          createWorkoutWithProgramAndExercises(scheduledProgram.id, scheduledProgram.name);
-          // Set for the UI
-          setTodaysScheduledProgram(scheduledProgram);
+        if (todaysSchedules.length > 0) {
+          // Find the corresponding program
+          const programId = todaysSchedules[0].programId;
+          const scheduledProgram = currentPrograms.find(program => program.id === programId);
+          
+          if (scheduledProgram) {
+            shouldCreateDefaultWorkout = false;
+            // Create workout with program and exercises all loaded at once
+            createWorkoutWithProgramAndExercises(scheduledProgram.id, scheduledProgram.name);
+            // Set for the UI
+            setTodaysScheduledProgram(scheduledProgram);
+          }
         }
       }
-    }
-    
-    // Create default workout if needed
-    if (shouldCreateDefaultWorkout) {
-      console.log("Creating default workout");
-      workoutFunctionsRef.current.createWorkout(createNewWorkout());
-    }
-  }, [loading, workout, todayDateString]); // Added todayDateString to refresh on date change
+      
+      // Create default workout if needed
+      if (shouldCreateDefaultWorkout) {
+        console.log("Creating default workout");
+        workoutFunctionsRef.current.createWorkout(createNewWorkout());
+      }
+    }, [loading, workout, createWorkoutWithProgramAndExercises]);
   
   // Update the UI when a workout exists but program isn't set - handles existing workouts
   useEffect(() => {

@@ -1,13 +1,34 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { addDays, isSameDay, isWithinInterval } from 'date-fns';
-import { useProgramSchedules } from '@/hooks/useProgramSchedules';
 import { LocalProgramSchedule } from '@/lib/workout';
+
+// Using a constant storage key for consistency
+const STORAGE_KEY = 'repwizard_program_schedules';
 
 /**
  * Hook for checking if programs are scheduled for a specific date
  */
 export function useScheduleChecks() {
-  const { schedules } = useProgramSchedules();
+  const [schedules, setSchedules] = useState<LocalProgramSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Load schedules from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedData = localStorage.getItem(STORAGE_KEY);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        if (Array.isArray(parsedData)) {
+          console.log('Loaded program schedules from localStorage:', parsedData);
+          setSchedules(parsedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading schedules:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   
   /**
    * Check if a date falls on one of the selected weekdays for a schedule
@@ -26,11 +47,26 @@ export function useScheduleChecks() {
    * @returns Array of schedules that are valid for the date
    */
   const getSchedulesForDate = useCallback((date: Date): LocalProgramSchedule[] => {
-    if (!date || !schedules || schedules.length === 0) {
+    if (!date || loading || schedules.length === 0) {
       return [];
     }
     
-    return schedules.filter(schedule => {
+    // Manually load the schedules from localStorage each time for the most up-to-date data
+    let currentSchedules = [];
+    try {
+      const storedData = localStorage.getItem(STORAGE_KEY);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        if (Array.isArray(parsedData)) {
+          currentSchedules = parsedData;
+        }
+      }
+    } catch (error) {
+      console.error('Error getting schedules for date:', error);
+      return [];
+    }
+    
+    return currentSchedules.filter(schedule => {
       // Skip inactive schedules
       if (!schedule.active) return false;
       
@@ -48,7 +84,7 @@ export function useScheduleChecks() {
       // Check if date falls on one of the selected weekdays
       return isSelectedWeekday(date, schedule.selectedWeekdays);
     });
-  }, [schedules, isSelectedWeekday]);
+  }, [schedules, isSelectedWeekday, loading]);
   
   /**
    * Get the next workout date according to the schedule
@@ -82,10 +118,30 @@ export function useScheduleChecks() {
     return getSchedulesForDate(date).length > 0;
   }, [getSchedulesForDate]);
   
+  /**
+   * Force refresh schedules from localStorage
+   */
+  const refreshSchedules = useCallback(() => {
+    try {
+      const storedData = localStorage.getItem(STORAGE_KEY);
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        if (Array.isArray(parsedData)) {
+          console.log('Refreshed program schedules from localStorage:', parsedData);
+          setSchedules(parsedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing schedules:', error);
+    }
+  }, []);
+  
   return {
     getSchedulesForDate,
     getNextWorkoutDate,
     hasScheduledPrograms,
-    schedules
+    schedules,
+    loading,
+    refreshSchedules
   };
 }
