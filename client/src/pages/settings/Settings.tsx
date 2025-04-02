@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/navigation/Header";
 import BottomNav from "@/components/navigation/BottomNav";
@@ -7,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 
 export default function Settings() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
@@ -238,6 +240,23 @@ export default function Settings() {
                 >
                   {isClearing ? 'Clearing...' : 'Clear All Data'}
                 </button>
+              </div>
+            </div>
+            
+            {/* Developer Tools */}
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <h2 className="text-lg font-medium mb-3">Developer Tools</h2>
+              
+              <div className="space-y-3">
+                <button 
+                  className="w-full py-2 px-4 rounded-lg text-center bg-purple-50 text-purple-700"
+                  onClick={() => navigate('/debug/local-storage')}
+                >
+                  LocalStorage Debug Tools
+                </button>
+                <p className="text-xs text-gray-500">
+                  Use these tools to fix workout storage issues and inspect data in localStorage
+                </p>
               </div>
             </div>
             
