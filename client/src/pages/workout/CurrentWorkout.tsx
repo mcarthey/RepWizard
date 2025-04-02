@@ -51,6 +51,9 @@ export default function CurrentWorkout() {
     console.log(`Starting program exercise reload operation: ${operationId}`);
     
     try {
+      // Check if this is just an initial render check (no toast needed)
+      const isInitialCheck = isInitialRenderRef.current;
+      
       // Get the workout templates for this program
       const response = await fetch(`/api/programs/${programId}/templates`);
       if (!response.ok) {
@@ -74,6 +77,9 @@ export default function CurrentWorkout() {
         
         const templateExercises = await exercisesResponse.json();
         console.log(`[${operationId}] Retrieved updated template exercises:`, templateExercises);
+        
+        // Store original exercise count for later comparison
+        const originalExerciseCount = workout.exercises.length;
         
         // Only continue if there are exercises in the template
         if (templateExercises && templateExercises.length > 0) {
@@ -134,10 +140,14 @@ export default function CurrentWorkout() {
           
           console.log(`[${operationId}] Exercise update completed successfully`);
           
-          toast({
-            title: "Workout Updated",
-            description: "Workout exercises have been updated to match the latest program changes",
-          });
+          // Only show toast if this wasn't just an initial render check
+          // AND there was an actual change in exercises
+          if (!isInitialCheck && (originalExerciseCount !== templateExercises.length)) {
+            toast({
+              title: "Workout Updated",
+              description: "Workout exercises have been updated to match the latest program changes",
+            });
+          }
         }
       }
     } catch (error) {
@@ -150,22 +160,102 @@ export default function CurrentWorkout() {
     }
   };
   
-  // Reference for tracking program updates to prevent infinite loops
+  // References for tracking program updates to prevent infinite loops and unnecessary updates
   const lastProgramUpdateRef = useRef<string>("");
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
+  const isInitialRenderRef = useRef<boolean>(true);
+  
+  // Function to check if there are actual template changes that require a reload
+  const checkForTemplateChanges = async (programId: number): Promise<boolean> => {
+    try {
+      // Get the current template structure
+      const response = await fetch(`/api/programs/${programId}/templates`);
+      if (!response.ok) return false;
+      
+      const templates = await response.json();
+      if (!templates || templates.length === 0) return false;
+      
+      // Find relevant template
+      const templateId = workout?.templateId || templates[0].id;
+      
+      // Get current template exercises
+      const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+      if (!exercisesResponse.ok) return false;
+      
+      const templateExercises = await exercisesResponse.json();
+      
+      // If we have no exercises on the template, no updates needed
+      if (!templateExercises || templateExercises.length === 0) return false;
+      
+      // Compare with current workout exercises
+      if (!workout || !workout.exercises) return true; // If no workout or exercises, reload needed
+      
+      // If exercise counts don't match, we need to update
+      if (workout.exercises.length !== templateExercises.length) return true;
+      
+      // Define template exercise interface to avoid TypeScript errors
+      interface TemplateExercise {
+        id: number;
+        exerciseId: number;
+        sets: number;
+        order: number;
+      }
+      
+      // Check if all template exercises exist in current workout
+      const templateExerciseIds = new Set((templateExercises as TemplateExercise[]).map(te => te.exerciseId));
+      const workoutExerciseIds = new Set(workout.exercises.map(we => we.exerciseId));
+      
+      // If sets don't match or exercise IDs don't match, update needed
+      for (const te of templateExercises as TemplateExercise[]) {
+        if (!workoutExerciseIds.has(te.exerciseId)) return true;
+        
+        // Find matching workout exercise
+        const workoutExercise = workout.exercises.find(we => we.exerciseId === te.exerciseId);
+        if (!workoutExercise) return true;
+        
+        // If set counts differ, update needed
+        if (!workoutExercise.sets || workoutExercise.sets.length !== te.sets) return true;
+      }
+      
+      // No significant changes detected
+      console.log("No template changes detected, skipping reload");
+      return false;
+      
+    } catch (error) {
+      console.error("Error checking for template changes:", error);
+      return false; // On error, don't trigger an update
+    }
+  };
   
   // Single point for updating workouts (to prevent duplications)
-  const executeProgramUpdate = (programId: number) => {
+  const executeProgramUpdate = async (programId: number) => {
     // Only allow one update at a time
     if (updateTimerRef.current) {
       clearTimeout(updateTimerRef.current);
       updateTimerRef.current = null;
     }
     
+    // Check if we recently updated (within last 30 seconds)
+    const now = Date.now();
+    if (now - lastUpdateTimeRef.current < 30000 && !isInitialRenderRef.current) {
+      console.log("Skipping update - too soon after previous update");
+      return;
+    }
+    
+    // First check if there are actual changes that require a reload
+    const hasChanges = await checkForTemplateChanges(programId);
+    if (!hasChanges && !isInitialRenderRef.current) {
+      console.log("No template changes detected, skipping update");
+      return;
+    }
+    
     // Perform the update after a delay
     updateTimerRef.current = setTimeout(() => {
       reloadProgramExercises(programId);
       updateTimerRef.current = null;
+      lastUpdateTimeRef.current = Date.now();
+      isInitialRenderRef.current = false;
     }, 1000);
   };
   
@@ -178,7 +268,7 @@ export default function CurrentWorkout() {
     const currentProgram = programs.find(p => p.id === workout.programId);
     if (!currentProgram) return;
     
-    // Create a unique signature for the current program state (without timestamp to prevent endless updates)
+    // Create a unique signature for the current program state
     const programSignature = `${currentProgram.id}-${currentProgram.name}`;
     
     // Only reload if we haven't processed this update already
@@ -188,8 +278,15 @@ export default function CurrentWorkout() {
       // Store this update signature
       lastProgramUpdateRef.current = programSignature;
       
-      // Execute the update
+      // Execute the update (with validation)
       executeProgramUpdate(currentProgram.id);
+    } else {
+      // If we're returning to this page and program signature hasn't changed
+      // We'll check for template changes, but only once during initial render
+      if (isInitialRenderRef.current) {
+        console.log("Initial render check for program updates");
+        executeProgramUpdate(currentProgram.id);
+      }
     }
     
     // Clean up on unmount
