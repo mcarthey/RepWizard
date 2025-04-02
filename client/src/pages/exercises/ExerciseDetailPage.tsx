@@ -86,33 +86,6 @@ export default function ExerciseDetailPage() {
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">{exercise?.name}</h1>
           
-          {/* Debug Image Info */}
-          <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-md mb-4 overflow-auto text-xs">
-            <h3 className="text-base font-bold mb-2">Debug Image Paths</h3>
-            <div className="space-y-2">
-              <div><span className="font-medium">Image Path in Database:</span> {exercise?.images ? JSON.stringify(exercise.images) : 'None'}</div>
-              {exercise && (
-                <div><span className="font-medium">Image URL generated:</span> {getExerciseImageUrl(exercise, 0)}</div>
-              )}
-              <div><span className="font-medium">Image Count:</span> {exercise ? getExerciseImageCount(exercise) : 0}</div>
-              
-              {/* Direct Image Link Test */}
-              {exercise && exercise.images && Array.isArray(exercise.images) && exercise.images.length > 0 && (
-                <div className="mt-2">
-                  <h4 className="font-medium mb-1">Image Link Test</h4>
-                  <a 
-                    href={exercise.images[0]} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    Test Direct Link to Image 1
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Image Gallery */}
             <div className="space-y-4">

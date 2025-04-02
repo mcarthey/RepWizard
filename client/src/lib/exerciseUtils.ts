@@ -61,20 +61,20 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
     return '/assets/placeholder-exercise.svg';
   }
 
-  // Direct debug output to help diagnose issues
-  console.log("Image data for exercise:", {
-    id: exercise.id,
-    name: exercise.name,
-    imagesType: typeof exercise.images,
-    isArray: Array.isArray(exercise.images),
-    rawValue: exercise.images
-  });
+  // Debug logs disabled now that things are working
+  // console.log("Image data for exercise:", {
+  //   id: exercise.id,
+  //   name: exercise.name,
+  //   imagesType: typeof exercise.images,
+  //   isArray: Array.isArray(exercise.images),
+  //   rawValue: exercise.images
+  // });
 
   // If images is an array and index is valid
   if (Array.isArray(exercise.images) && index < exercise.images.length) {
     const imagePath = exercise.images[index];
     if (imagePath) {
-      console.log("Using array path:", imagePath);
+      // console.log("Using array path:", imagePath);
       return imagePath; // Just return the path directly
     }
   }
@@ -82,12 +82,12 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
   // Handle case where images is a string format like {/path/to/img1.jpg,/path/to/img2.jpg}
   if (!Array.isArray(exercise.images)) {
     const imagesStr = String(exercise.images);
-    console.log("Non-array image string:", imagesStr);
+    // console.log("Non-array image string:", imagesStr);
     
     // Try to extract paths from curly brace format
     if (imagesStr.startsWith('{') && imagesStr.endsWith('}')) {
       const paths = imagesStr.substring(1, imagesStr.length - 1).split(',');
-      console.log("Parsed paths from braces:", paths);
+      // console.log("Parsed paths from braces:", paths);
       if (paths.length > index) {
         return paths[index].trim();
       }
@@ -96,7 +96,7 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
     // Handle comma-separated list without braces
     if (imagesStr.includes(',')) {
       const paths = imagesStr.split(',');
-      console.log("Parsed paths from comma-list:", paths);
+      // console.log("Parsed paths from comma-list:", paths);
       if (paths.length > index) {
         return paths[index].trim();
       }
@@ -104,7 +104,7 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
     
     // Single string path
     if (imagesStr.includes('/assets/')) {
-      console.log("Using single path:", imagesStr);
+      // console.log("Using single path:", imagesStr);
       return imagesStr;
     }
   }
@@ -113,14 +113,14 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
   const baseUrl = getExerciseImageBaseUrl(exercise);
   if (baseUrl) {
     const fallbackPath = `${baseUrl}/${index}.jpg`;
-    console.log("Using baseUrl fallback path:", fallbackPath);
+    // console.log("Using baseUrl fallback path:", fallbackPath);
     return fallbackPath;
   }
   
   // Last resort fallback: Construct a path based on the exercise name
   const formattedName = exercise.name.replace(/\s+/g, '_').replace(/\//g, '_');
   const fallbackPath = `/assets/exercises/${formattedName}/${index}.jpg`;
-  console.log("Using name-based fallback path:", fallbackPath);
+  // console.log("Using name-based fallback path:", fallbackPath);
   return fallbackPath;
 }
 
