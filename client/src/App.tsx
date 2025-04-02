@@ -5,10 +5,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './hooks/use-auth';
 import CurrentWorkout from './pages/workout/CurrentWorkout';
-import Programs from './pages/programs/Programs';
-import ProgramDetailRedesign from './pages/programs/ProgramDetailRedesign';
-import ExercisesPage from './pages/exercises/ExercisesPage';
-import ExerciseDetailPage from './pages/exercises/ExerciseDetailPage';
 
 // Protected route wrapper
 const ProtectedRoute = ({ component: Component, ...rest }: any) => {
@@ -49,13 +45,18 @@ const App: React.FC = () => {
           {/* Main content */}
           <main className="flex-1 pb-16">
             <Switch>
-              <Route path="/" component={() => <div>Home Page</div>} />
-              <ProtectedRoute path="/workout" component={CurrentWorkout} />
-              <Route path="/programs" component={Programs} />
-              <Route path="/programs/:id" component={ProgramDetailRedesign} />
-              <Route path="/exercises" component={ExercisesPage} />
-              <Route path="/exercises/:id" component={ExerciseDetailPage} />
-              <Route path="/profile" component={() => <div>Profile Page</div>} />
+              <Route path="/">
+                <div>Home Page</div>
+              </Route>
+              <Route path="/workout">
+                <CurrentWorkout />
+              </Route>
+              <Route path="/programs">
+                <div>Programs Page</div>
+              </Route>
+              <Route path="/profile">
+                <div>Profile Page</div>
+              </Route>
               <Route>
                 <div className="container py-8 text-center">
                   <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
