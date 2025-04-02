@@ -127,8 +127,41 @@ export default function InspectSchedules() {
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h2 className="text-lg font-semibold mb-2">Raw LocalStorage Data</h2>
             <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-              {localStorage.getItem('programSchedules') || 'No data found'}
+              {localStorage.getItem('repwizard_program_schedules') || 'No data found'}
             </pre>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-4 mt-4">
+            <h2 className="text-lg font-semibold mb-2">Data Cleanup</h2>
+            <div className="space-y-3">
+              <p className="text-sm">These actions help clean up POC data. The exercises data will remain intact.</p>
+              <button 
+                className="w-full py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+                onClick={() => {
+                  if (confirm("Are you sure you want to clean old data? This will remove obsolete storage keys.")) {
+                    localStorage.removeItem('programSchedules');
+                    localStorage.removeItem('workouts');
+                    localStorage.removeItem('currentWorkout');
+                    toast({
+                      title: "Old Data Cleaned",
+                      description: "Obsolete data has been removed from localStorage",
+                    });
+                  }
+                }}
+              >
+                Clean Old Data
+              </button>
+              <button 
+                className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                onClick={() => {
+                  if (confirm("Refresh the data from storage?")) {
+                    window.location.reload();
+                  }
+                }}
+              >
+                Refresh Data
+              </button>
+            </div>
           </div>
         </div>
       </main>
