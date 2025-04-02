@@ -86,20 +86,6 @@ export default function ExerciseDetailPage() {
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">{exercise?.name}</h1>
           
-          {/* Debug section */}
-          <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-md mb-4 overflow-auto max-h-96">
-            <h3 className="text-lg font-bold mb-2">Debug Data</h3>
-            <pre className="text-xs whitespace-pre-wrap">
-              {JSON.stringify(exercise, null, 2)}
-            </pre>
-          </div>
-          
-          {exercise && exercise.description && (
-            <div className="text-muted-foreground text-base">
-              {getExerciseDescription(exercise)}
-            </div>
-          )}
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Image Gallery */}
             <div className="space-y-4">
@@ -221,29 +207,18 @@ export default function ExerciseDetailPage() {
               
               <Separator />
               
-              <Tabs defaultValue="instructions" className="w-full">
+              <Tabs defaultValue="description" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="description">Description</TabsTrigger>
                   <TabsTrigger value="instructions">Instructions</TabsTrigger>
-                  <TabsTrigger value="details">Details</TabsTrigger>
                 </TabsList>
-                <TabsContent value="instructions" className="mt-4 space-y-4">
-                  <div className="prose max-w-none">
-                    {exercise ? (
-                      // Use our utility function to handle different instruction formats
-                      getExerciseInstructions(exercise).length > 0 ? (
-                        getExerciseInstructions(exercise).map((instruction, index) => (
-                          <p key={index}>{instruction}</p>
-                        ))
-                      ) : (
-                        <p>No instructions available for this exercise.</p>
-                      )
-                    ) : (
-                      <p>No instructions available for this exercise.</p>
-                    )}
-                  </div>
-                </TabsContent>
-                <TabsContent value="details" className="mt-4">
+                <TabsContent value="description" className="mt-4">
                   <Card className="p-4 bg-muted/50">
+                    {exercise && exercise.description && (
+                      <div className="mb-4">
+                        <p>{getExerciseDescription(exercise)}</p>
+                      </div>
+                    )}
                     <div className="flex flex-col gap-3">
                       <div className="flex items-start gap-2">
                         <Info className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -293,6 +268,22 @@ export default function ExerciseDetailPage() {
                       )}
                     </div>
                   </Card>
+                </TabsContent>
+                <TabsContent value="instructions" className="mt-4 space-y-4">
+                  <div className="prose max-w-none">
+                    {exercise ? (
+                      // Use our utility function to handle different instruction formats
+                      getExerciseInstructions(exercise).length > 0 ? (
+                        getExerciseInstructions(exercise).map((instruction, index) => (
+                          <p key={index}>{instruction}</p>
+                        ))
+                      ) : (
+                        <p>No instructions available for this exercise.</p>
+                      )
+                    ) : (
+                      <p>No instructions available for this exercise.</p>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>

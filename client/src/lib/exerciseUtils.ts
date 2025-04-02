@@ -54,36 +54,59 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
     return '/assets/placeholder-exercise.svg';
   }
 
+  // Direct debug output to help diagnose issues
+  console.log("Image data for exercise:", {
+    id: exercise.id,
+    name: exercise.name,
+    imagesType: typeof exercise.images,
+    isArray: Array.isArray(exercise.images),
+    rawValue: exercise.images
+  });
+
   // If images is an array and index is valid
   if (Array.isArray(exercise.images) && index < exercise.images.length) {
     const imagePath = exercise.images[index];
     if (imagePath) {
-      // If the image path is already a full path, return it
-      if (typeof imagePath === 'string' && imagePath.startsWith('/')) {
-        return imagePath;
-      }
-      
-      // Otherwise, construct the path
-      const baseUrl = getExerciseImageBaseUrl(exercise);
-      return `${baseUrl}/${index}.jpg`;
+      console.log("Using array path:", imagePath);
+      return imagePath; // Just return the path directly
     }
   }
   
   // Handle case where images is a string format like {/path/to/img1.jpg,/path/to/img2.jpg}
   if (!Array.isArray(exercise.images)) {
     const imagesStr = String(exercise.images);
+    console.log("Non-array image string:", imagesStr);
     
     // Try to extract paths from curly brace format
     if (imagesStr.startsWith('{') && imagesStr.endsWith('}')) {
       const paths = imagesStr.substring(1, imagesStr.length - 1).split(',');
+      console.log("Parsed paths from braces:", paths);
       if (paths.length > index) {
         return paths[index].trim();
       }
     }
+    
+    // Handle comma-separated list without braces
+    if (imagesStr.includes(',')) {
+      const paths = imagesStr.split(',');
+      console.log("Parsed paths from comma-list:", paths);
+      if (paths.length > index) {
+        return paths[index].trim();
+      }
+    }
+    
+    // Single string path
+    if (imagesStr.includes('/assets/')) {
+      console.log("Using single path:", imagesStr);
+      return imagesStr;
+    }
   }
   
-  // Fallback: Construct a path based on the exercise ID and index
-  return `/assets/exercises/${exercise.id}/${index}.jpg`;
+  // Fallback: Construct a path based on the exercise name (formatted for URL)
+  const formattedName = exercise.name.replace(/\s+/g, '_').replace(/\//g, '_');
+  const fallbackPath = `/assets/exercises/${formattedName}/${index}.jpg`;
+  console.log("Using fallback path:", fallbackPath);
+  return fallbackPath;
 }
 
 /**
