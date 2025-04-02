@@ -394,24 +394,6 @@ export default function CurrentWorkout() {
       <Header title="Today's Workout" />
       
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
-        {/* Today's Scheduled Workout Notification */}
-        {todaysScheduledProgram && !workout.programId && (
-          <div className="px-4 py-3 bg-blue-100 border-b border-blue-200">
-            <div className="flex items-center">
-              <span className="material-icons-round text-blue-600 mr-2">event_available</span>
-              <div className="flex-1">
-                <div className="font-medium text-blue-900">Scheduled Workout Today</div>
-                <div className="text-sm text-blue-800">{todaysScheduledProgram.name}</div>
-              </div>
-              <button 
-                className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                onClick={() => handleScheduledProgramSelect(todaysScheduledProgram.id)}
-              >
-                Start
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Workout Header */}
         <div className="px-4 py-4 bg-primary-50">
@@ -426,17 +408,50 @@ export default function CurrentWorkout() {
             </div>
           </div>
           
-          {/* Program selection button */}
-          <div 
-            className="flex items-center mt-1 cursor-pointer"
-            onClick={() => setShowProgramModal(true)}
-          >
-            <span className="text-sm bg-primary-100 text-primary-600 px-2 py-0.5 rounded flex items-center">
-              <span className="material-icons-round text-xs mr-1">
-                {selectedProgram ? "fitness_center" : "add"}
-              </span>
-              {selectedProgram ? "Program Active" : "Select Program"}
-            </span>
+          {/* Program selection area */}
+          <div className="flex items-center mt-1 justify-between">
+            {/* Program indicator/selector */}
+            <div className="flex items-center">
+              {/* If no program is selected but a scheduled one exists, show notice */}
+              {todaysScheduledProgram && !workout.programId ? (
+                <div className="flex items-center text-sm text-blue-600">
+                  <span className="material-icons-round text-xs mr-1">event_available</span>
+                  <span>Scheduled today: <strong>{todaysScheduledProgram.name}</strong></span>
+                </div>
+              ) : (
+                /* Normal program badge */
+                <span className={`text-sm ${selectedProgram ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600'} px-2 py-0.5 rounded flex items-center ${!selectedProgram ? 'cursor-pointer' : ''}`}
+                      onClick={() => !selectedProgram && setShowProgramModal(true)}>
+                  <span className="material-icons-round text-xs mr-1">
+                    {selectedProgram ? "fitness_center" : "add"}
+                  </span>
+                  {selectedProgram ? "Program Active" : "Select Program"}
+                </span>
+              )}
+            </div>
+            
+            {/* Action buttons */}
+            <div className="flex items-center">
+              {/* Show "Start" button if no program is selected but there's a scheduled one */}
+              {todaysScheduledProgram && !workout.programId && (
+                <button 
+                  className="ml-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                  onClick={() => handleScheduledProgramSelect(todaysScheduledProgram.id)}
+                >
+                  Start
+                </button>
+              )}
+              
+              {/* Show "Change" button only if program is NOT scheduled for today */}
+              {workout.programId && (!todaysScheduledProgram || workout.programId !== todaysScheduledProgram.id) && (
+                <button 
+                  className="ml-2 bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+                  onClick={() => setShowProgramModal(true)}
+                >
+                  Change
+                </button>
+              )}
+            </div>
           </div>
         </div>
         
@@ -544,26 +559,43 @@ export default function CurrentWorkout() {
                     </div>
                   ))}
                   
-                  <button 
-                    className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-300 transition-colors"
-                    onClick={() => {
-                      // Remove program association
-                      if (workout) {
-                        updateWorkout({
-                          ...workout,
-                          programId: null
-                        });
-                        toast({
-                          title: "Program Removed",
-                          description: "Workout is no longer associated with any program",
-                        });
-                      }
-                      setShowProgramModal(false);
-                    }}
-                  >
-                    <span className="material-icons-round text-sm mr-1">clear</span>
-                    Use No Program
-                  </button>
+                  {/* Only show "Use No Program" if the current program is not scheduled for today */}
+                  {(!todaysScheduledProgram || (workout.programId !== todaysScheduledProgram.id)) && (
+                    <button 
+                      className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-300 transition-colors"
+                      onClick={() => {
+                        // Remove program association
+                        if (workout) {
+                          updateWorkout({
+                            ...workout,
+                            programId: null
+                          });
+                          toast({
+                            title: "Program Removed",
+                            description: "Workout is no longer associated with any program",
+                          });
+                        }
+                        setShowProgramModal(false);
+                      }}
+                    >
+                      <span className="material-icons-round text-sm mr-1">clear</span>
+                      Use No Program
+                    </button>
+                  )}
+                  
+                  {/* Show disabled button with explanation if program is scheduled for today */}
+                  {todaysScheduledProgram && workout.programId === todaysScheduledProgram.id && (
+                    <div className="w-full">
+                      <button 
+                        className="w-full py-3 bg-gray-100 text-gray-400 rounded-lg flex items-center justify-center cursor-not-allowed"
+                        disabled
+                      >
+                        <span className="material-icons-round text-sm mr-1">event_busy</span>
+                        Cannot Remove Scheduled Program
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1 text-center">This program is scheduled for today</p>
+                    </div>
+                  )}
                 </>
               )}
             </div>
