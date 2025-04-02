@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
@@ -298,6 +298,143 @@ export default function CurrentWorkout() {
   // Get schedules for today's date 
   const { getSchedulesForDate } = useScheduleChecks();
   
+  // Create a stable date selection handler with useCallback
+  const handleDateSelect = useCallback(async (selectedDate: Date) => {
+    if (!workout) return;
+    
+    console.log(`Calendar date changed to: ${format(selectedDate, "yyyy-MM-dd")}`);
+    
+    // Check if there's a scheduled program for the selected date
+    const schedulesForDate = getSchedulesForDate(selectedDate);
+    console.log(`Schedules for selected date:`, schedulesForDate);
+    
+    // If we have schedules for this date, prompt to create a workout with the program
+    if (schedulesForDate.length > 0) {
+      const programId = schedulesForDate[0].programId;
+      const scheduledProgram = programs.find(p => p.id === programId);
+      
+      if (scheduledProgram) {
+        console.log(`Found scheduled program for selected date: ${scheduledProgram.name}`);
+        setTodaysScheduledProgram(scheduledProgram);
+        
+        // Ask if user wants to load the program for this date
+        const shouldLoadProgram = window.confirm(
+          `Program "${scheduledProgram.name}" is scheduled for this date. Would you like to load it?`
+        );
+        
+        if (shouldLoadProgram) {
+          try {
+            // First update the date on the existing workout
+            const updatedWorkout = {
+              ...workout,
+              date: selectedDate.toISOString(),
+              programId: scheduledProgram.id,
+              name: scheduledProgram.name,
+              exercises: [] // Clear exercises to load from program
+            };
+            
+            // Update with the new date
+            updateWorkout(updatedWorkout);
+            
+            // Show toast to confirm the update
+            toast({
+              title: "Loading Program",
+              description: `Loading "${scheduledProgram.name}" for ${format(selectedDate, "MMMM d, yyyy")}`,
+            });
+            
+            // Get the template for this program to load exercises
+            const response = await fetch(`/api/programs/${scheduledProgram.id}/templates`);
+            if (!response.ok) throw new Error('Failed to fetch workout templates');
+            
+            const templates = await response.json();
+            
+            if (templates && templates.length > 0) {
+              // Get the first template for now
+              const templateId = templates[0].id;
+              
+              // Update the workout with template ID
+              const workoutWithTemplate = {
+                ...updatedWorkout,
+                templateId
+              };
+              
+              updateWorkout(workoutWithTemplate);
+              
+              // Get the exercises for this template
+              const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+              if (exercisesResponse.ok) {
+                const templateExercises = await exercisesResponse.json();
+                
+                // Add exercises from the template
+                if (templateExercises && templateExercises.length > 0) {
+                  for (const templateExercise of templateExercises) {
+                    const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
+                    if (exerciseResponse.ok) {
+                      const exercise = await exerciseResponse.json();
+                      
+                      const newExercise = createWorkoutExercise(
+                        workoutWithTemplate.id,
+                        exercise,
+                        templateExercise.order
+                      );
+                      addExercise(newExercise);
+                      
+                      // Add default sets for the exercise
+                      for (let i = 0; i < templateExercise.sets; i++) {
+                        const setType = i === 0 ? "warmup" : "working";
+                        const newSet: LocalSet = {
+                          id: uuidv4(),
+                          workoutExerciseId: newExercise.id,
+                          setNumber: i + 1,
+                          weight: 0,
+                          reps: 0,
+                          rpe: null,
+                          setType,
+                          completed: false,
+                          notes: null
+                        };
+                        
+                        // Add the set
+                        addSet(newExercise.id, newSet);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+            toast({
+              title: "Program Loaded",
+              description: `"${scheduledProgram.name}" has been loaded for ${format(selectedDate, "MMMM d, yyyy")}`,
+            });
+          } catch (error) {
+            console.error("Error loading program for selected date:", error);
+            toast({
+              title: "Error",
+              description: "Failed to load program for the selected date",
+              variant: "destructive"
+            });
+          }
+          return;
+        }
+      }
+    }
+    
+    // If we're here, either there's no scheduled program or user didn't want to load it
+    // Update just the date, preserving all other workout data
+    const updatedWorkout = {
+      ...workout,
+      date: selectedDate.toISOString()
+    };
+    
+    updateWorkout(updatedWorkout);
+    
+    toast({
+      title: "Date Updated",
+      description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
+    });
+  }, [workout, getSchedulesForDate, programs, updateWorkout, addExercise, addSet, toast]);
+
   // Store functions and data in refs to maintain stable dependencies
   const workoutFunctionsRef = useRef({
     createWorkout,
@@ -305,7 +442,8 @@ export default function CurrentWorkout() {
     addExercise,
     addSet,
     getSchedulesForDate,
-    programs
+    programs,
+    handleDateSelect
   });
   
   // Update refs when functions or data change
@@ -315,9 +453,10 @@ export default function CurrentWorkout() {
       createWorkout,
       updateWorkout,
       addExercise,
-      addSet
+      addSet,
+      handleDateSelect
     };
-  }, [createWorkout, updateWorkout, addExercise, addSet]);
+  }, [createWorkout, updateWorkout, addExercise, addSet, handleDateSelect]);
   
   useEffect(() => {
     workoutFunctionsRef.current.getSchedulesForDate = getSchedulesForDate;
@@ -982,142 +1121,10 @@ export default function CurrentWorkout() {
         isVisible={showCalendarModal}
         onClose={() => setShowCalendarModal(false)}
         currentDate={new Date(workout.date)}
-        onDateSelect={async (selectedDate) => {
-          if (workout) {
-            console.log(`Calendar date changed to: ${format(selectedDate, "yyyy-MM-dd")}`);
-            
-            // Check if there's a scheduled program for the selected date
-            const schedulesForDate = workoutFunctionsRef.current.getSchedulesForDate(selectedDate);
-            console.log(`Schedules for selected date:`, schedulesForDate);
-            
-            // If we have schedules for this date, prompt to create a workout with the program
-            if (schedulesForDate.length > 0) {
-              const programId = schedulesForDate[0].programId;
-              const scheduledProgram = workoutFunctionsRef.current.programs.find(p => p.id === programId);
-              
-              if (scheduledProgram) {
-                console.log(`Found scheduled program for selected date: ${scheduledProgram.name}`);
-                setTodaysScheduledProgram(scheduledProgram);
-                
-                // Ask if user wants to load the program for this date
-                const shouldLoadProgram = window.confirm(
-                  `Program "${scheduledProgram.name}" is scheduled for this date. Would you like to load it?`
-                );
-                
-                if (shouldLoadProgram) {
-                  try {
-                    // First update the date on the existing workout
-                    const updatedWorkout = {
-                      ...workout,
-                      date: selectedDate.toISOString(),
-                      programId: scheduledProgram.id,
-                      name: scheduledProgram.name,
-                      exercises: [] // Clear exercises to load from program
-                    };
-                    
-                    // Update with the new date
-                    updateWorkout(updatedWorkout);
-                    
-                    // Show toast to confirm the update
-                    toast({
-                      title: "Loading Program",
-                      description: `Loading "${scheduledProgram.name}" for ${format(selectedDate, "MMMM d, yyyy")}`,
-                    });
-                    
-                    // Get the template for this program to load exercises
-                    const response = await fetch(`/api/programs/${scheduledProgram.id}/templates`);
-                    if (!response.ok) throw new Error('Failed to fetch workout templates');
-                    
-                    const templates = await response.json();
-                    console.log("Retrieved templates for program:", templates);
-                    
-                    if (templates && templates.length > 0) {
-                      // Get the first template ID
-                      const templateId = templates[0].id;
-                      
-                      // Update the workout with the template ID
-                      const workoutWithTemplate = {
-                        ...updatedWorkout,
-                        templateId
-                      };
-                      updateWorkout(workoutWithTemplate);
-                      
-                      // Get exercises for this template
-                      const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
-                      if (!exercisesResponse.ok) throw new Error('Failed to fetch template exercises');
-                      
-                      const templateExercises = await exercisesResponse.json();
-                      console.log("Retrieved template exercises:", templateExercises);
-                      
-                      // Add each exercise from the template to the workout
-                      if (templateExercises && templateExercises.length > 0) {
-                        for (const templateExercise of templateExercises) {
-                          const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
-                          if (exerciseResponse.ok) {
-                            const exercise = await exerciseResponse.json();
-                            
-                            // Create and add the new exercise
-                            const newExercise = createWorkoutExercise(
-                              workoutWithTemplate.id,
-                              exercise,
-                              templateExercise.order
-                            );
-                            addExercise(newExercise);
-                            
-                            // Add default sets for the exercise
-                            for (let i = 0; i < templateExercise.sets; i++) {
-                              const setType = i === 0 ? "warmup" : "working";
-                              const newSet: LocalSet = {
-                                id: uuidv4(),
-                                workoutExerciseId: newExercise.id,
-                                setNumber: i + 1,
-                                weight: 0,
-                                reps: 0,
-                                rpe: null,
-                                setType,
-                                completed: false,
-                                notes: null
-                              };
-                              
-                              // Add the set
-                              addSet(newExercise.id, newSet);
-                            }
-                          }
-                        }
-                      }
-                    }
-                    
-                    toast({
-                      title: "Program Loaded",
-                      description: `"${scheduledProgram.name}" has been loaded for ${format(selectedDate, "MMMM d, yyyy")}`,
-                    });
-                  } catch (error) {
-                    console.error("Error loading program for selected date:", error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to load program for the selected date",
-                      variant: "destructive"
-                    });
-                  }
-                  return;
-                }
-              }
-            }
-            
-            // If we're here, either there's no scheduled program or user didn't want to load it
-            // Update just the date, preserving all other workout data
-            const updatedWorkout = {
-              ...workout,
-              date: selectedDate.toISOString()
-            };
-            
-            updateWorkout(updatedWorkout);
-            
-            toast({
-              title: "Date Updated",
-              description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
-            });
-          }
+        onDateSelect={(selectedDate) => {
+          setShowCalendarModal(false);
+          // Use the stable date select handler from the ref to ensure consistent behavior
+          workoutFunctionsRef.current.handleDateSelect(selectedDate);
         }}
       />
     </>
