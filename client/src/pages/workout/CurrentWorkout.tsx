@@ -298,8 +298,45 @@ export default function CurrentWorkout() {
   // Get schedules for today's date 
   const { getSchedulesForDate } = useScheduleChecks();
   
+  // Store functions and data in refs to maintain stable dependencies
+  const workoutFunctionsRef = useRef({
+    createWorkout,
+    updateWorkout,
+    addExercise,
+    addSet,
+    getSchedulesForDate,
+    programs
+  });
+  
+  // Update refs when functions or data change
+  useEffect(() => {
+    workoutFunctionsRef.current = {
+      ...workoutFunctionsRef.current,
+      createWorkout,
+      updateWorkout,
+      addExercise,
+      addSet
+    };
+  }, [createWorkout, updateWorkout, addExercise, addSet]);
+  
+  useEffect(() => {
+    workoutFunctionsRef.current.getSchedulesForDate = getSchedulesForDate;
+  }, [getSchedulesForDate]);
+  
+  useEffect(() => {
+    workoutFunctionsRef.current.programs = programs;
+  }, [programs]);
+  
   // Check if there's a program scheduled for today and create a workout if needed
   useEffect(() => {
+    // Skip processing if we're loading or a workout already exists
+    if (loading || workout) {
+      console.log("Current workout state:", { loading, workout });
+      return;
+    }
+    
+    console.log("Creating new workout because none exists");
+    
     const createWorkoutWithProgramAndExercises = async (programId: number, programName: string) => {
       try {
         console.log(`Creating workout with scheduled program: ${programName}`);
@@ -307,7 +344,7 @@ export default function CurrentWorkout() {
         newWorkout.programId = programId;
         
         // Create the workout first so we have an ID to work with
-        createWorkout(newWorkout);
+        workoutFunctionsRef.current.createWorkout(newWorkout);
         
         // Now load the exercises for this program
         // First, get the workout templates for this program
@@ -324,7 +361,7 @@ export default function CurrentWorkout() {
           const templateId = templates[0].id;
           
           // Update the new workout with template ID
-          updateWorkout({
+          workoutFunctionsRef.current.updateWorkout({
             ...newWorkout,
             templateId
           });
@@ -354,7 +391,7 @@ export default function CurrentWorkout() {
                 );
                 
                 // Add it to the workout
-                addExercise(newExercise);
+                workoutFunctionsRef.current.addExercise(newExercise);
                 
                 // Add some default sets based on the template
                 for (let i = 0; i < templateExercise.sets; i++) {
@@ -371,7 +408,7 @@ export default function CurrentWorkout() {
                     notes: null
                   };
                   
-                  addSet(newExercise.id, newSet);
+                  workoutFunctionsRef.current.addSet(newExercise.id, newSet);
                 }
               }
             }
@@ -382,57 +419,52 @@ export default function CurrentWorkout() {
       }
     };
     
-    if (!loading && !workout) {
-      console.log("Creating new workout because none exists");
+    // Default to creating a regular workout
+    let shouldCreateDefaultWorkout = true;
+    
+    // Only check for scheduled programs if we have program data loaded
+    const currentPrograms = workoutFunctionsRef.current.programs;
+    if (currentPrograms && currentPrograms.length > 0) {
+      // Check for today's scheduled program
+      const today = new Date();
+      const todaysSchedules = workoutFunctionsRef.current.getSchedulesForDate(today);
+      console.log("Today's schedules:", todaysSchedules);
       
-      // Default to creating a regular workout
-      let shouldCreateDefaultWorkout = true;
-      
-      // Only check for scheduled programs if we have program data loaded
-      if (programs.length > 0) {
-        // Check for today's scheduled program
-        const today = new Date();
-        const todaysSchedules = getSchedulesForDate(today);
-        console.log("Today's schedules:", todaysSchedules);
+      if (todaysSchedules.length > 0) {
+        // Find the corresponding program
+        const programId = todaysSchedules[0].programId;
+        const scheduledProgram = currentPrograms.find(program => program.id === programId);
         
-        if (todaysSchedules.length > 0) {
-          // Find the corresponding program
-          const programId = todaysSchedules[0].programId;
-          const scheduledProgram = programs.find(program => program.id === programId);
-          
-          if (scheduledProgram) {
-            shouldCreateDefaultWorkout = false;
-            // Create workout with program and exercises all loaded at once
-            createWorkoutWithProgramAndExercises(scheduledProgram.id, scheduledProgram.name);
-            // Set for the UI
-            setTodaysScheduledProgram(scheduledProgram);
-          }
+        if (scheduledProgram) {
+          shouldCreateDefaultWorkout = false;
+          // Create workout with program and exercises all loaded at once
+          createWorkoutWithProgramAndExercises(scheduledProgram.id, scheduledProgram.name);
+          // Set for the UI
+          setTodaysScheduledProgram(scheduledProgram);
         }
       }
-      
-      // Create default workout if needed
-      if (shouldCreateDefaultWorkout) {
-        console.log("Creating default workout");
-        createWorkout(createNewWorkout());
-      }
-    } else {
-      console.log("Current workout state:", { loading, workout });
     }
-  }, [loading, workout, createWorkout, updateWorkout, addExercise, addSet, programs, getSchedulesForDate]);
+    
+    // Create default workout if needed
+    if (shouldCreateDefaultWorkout) {
+      console.log("Creating default workout");
+      workoutFunctionsRef.current.createWorkout(createNewWorkout());
+    }
+  }, [loading, workout]); // Reduced dependency array
   
   // Update the UI when a workout exists but program isn't set - handles existing workouts
   useEffect(() => {
     if (workout && !workout.programId && programs.length > 0) {
       // First, check for today's scheduled program
       const today = new Date();
-      const todaysSchedules = getSchedulesForDate(today);
+      const todaysSchedules = workoutFunctionsRef.current.getSchedulesForDate(today);
       console.log("Today's schedules for notification:", todaysSchedules);
       
       // Also check for schedules based on the workout's date
       // This is important if the workout was created on a different day
       const workoutDate = new Date(workout.date);
       const workoutDateSchedules = workoutDate.toDateString() !== today.toDateString() 
-        ? getSchedulesForDate(workoutDate)
+        ? workoutFunctionsRef.current.getSchedulesForDate(workoutDate)
         : [];
       console.log("Workout date schedules for notification:", workoutDateSchedules);
       
@@ -454,7 +486,7 @@ export default function CurrentWorkout() {
       // If the workout already has a program associated, clear the notification
       setTodaysScheduledProgram(null);
     }
-  }, [programs, workout, getSchedulesForDate]);
+  }, [programs, workout]); // Removed getSchedulesForDate dependency
   
   // Get the associated program if there is one
   const selectedProgram = workout?.programId 

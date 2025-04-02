@@ -46,13 +46,13 @@ export function useCurrentWorkout() {
     }
   }, [workout, loading]);
 
-  // Create a new workout
+  // Create a new workout - stable reference
   const createWorkout = useCallback((newWorkout: LocalWorkout) => {
     console.log("Creating new workout:", newWorkout);
     setWorkout(newWorkout);
   }, []);
 
-  // Add an exercise to the workout
+  // Add an exercise to the workout - stable reference
   const addExercise = useCallback((exercise: LocalExercise) => {
     console.log("Adding exercise to workout:", exercise);
     setWorkout(prev => {
@@ -70,7 +70,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Update an exercise in the workout
+  // Update an exercise in the workout - stable reference
   const updateExercise = useCallback((exerciseId: string, updates: Partial<LocalExercise>) => {
     setWorkout(prev => {
       if (!prev) return null;
@@ -83,7 +83,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Remove an exercise from the workout
+  // Remove an exercise from the workout - stable reference
   const removeExercise = useCallback((exerciseId: string) => {
     setWorkout(prev => {
       if (!prev) return null;
@@ -94,7 +94,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Add a set to an exercise
+  // Add a set to an exercise - stable reference
   const addSet = useCallback((exerciseId: string, set: LocalSet) => {
     setWorkout(prev => {
       if (!prev) return null;
@@ -113,7 +113,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Update a set
+  // Update a set - stable reference
   const updateSet = useCallback((exerciseId: string, setId: string, updates: Partial<LocalSet>) => {
     console.log("useStorage.updateSet:", { exerciseId, setId, updates });
     
@@ -153,7 +153,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Remove a set
+  // Remove a set - stable reference
   const removeSet = useCallback((exerciseId: string, setId: string) => {
     setWorkout(prev => {
       if (!prev) return null;
@@ -172,7 +172,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Complete the workout
+  // Complete the workout - stable reference
   const completeWorkout = useCallback(() => {
     setWorkout(prev => {
       if (!prev) return null;
@@ -183,7 +183,7 @@ export function useCurrentWorkout() {
     });
   }, []);
 
-  // Clear the current workout
+  // Clear the current workout - stable reference
   const clearWorkout = useCallback(async () => {
     try {
       const localForage = await getLocalForage();
@@ -194,7 +194,7 @@ export function useCurrentWorkout() {
     }
   }, []);
 
-  // Update the entire workout object
+  // Update the entire workout object - stable reference
   const updateWorkout = useCallback((updates: Partial<LocalWorkout>) => {
     setWorkout(prev => {
       if (!prev) return null;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { LocalProgramSchedule } from '@shared/schema';
 
 // Storage key for program schedules
@@ -7,6 +7,7 @@ export const PROGRAM_SCHEDULES_STORAGE_KEY = 'repwizard_program_schedules';
 // Simple hook to check for schedules
 export function useScheduleChecks() {
   const [schedules, setSchedules] = useState<LocalProgramSchedule[]>([]);
+  const schedulesRef = useRef<LocalProgramSchedule[]>([]);
   
   // Load schedules from localStorage
   useEffect(() => {
@@ -14,24 +15,32 @@ export function useScheduleChecks() {
       // Try to get stored schedules
       const storedSchedules = localStorage.getItem(PROGRAM_SCHEDULES_STORAGE_KEY);
       if (storedSchedules) {
-        setSchedules(JSON.parse(storedSchedules));
+        const parsedSchedules = JSON.parse(storedSchedules);
+        setSchedules(parsedSchedules);
+        schedulesRef.current = parsedSchedules;
       }
     } catch (error) {
       console.error('Error loading schedules:', error);
     }
   }, []);
   
-  // Get schedules for a specific date
+  // Update ref when schedules change
+  useEffect(() => {
+    schedulesRef.current = schedules;
+  }, [schedules]);
+  
+  // Get schedules for a specific date - stable reference using ref instead of state
   const getSchedulesForDate = useCallback((date: Date) => {
-    if (schedules.length === 0) {
+    const currentSchedules = schedulesRef.current;
+    if (currentSchedules.length === 0) {
       return [];
     }
     
     console.log("Getting schedules for date:", date.toISOString());
-    console.log("All available schedules:", schedules);
+    console.log("All available schedules:", currentSchedules);
     
     // Return schedules that include this date and day of the week
-    const matchingSchedules = schedules.filter(schedule => {
+    const matchingSchedules = currentSchedules.filter(schedule => {
       try {
         // Parse dates for comparison (YYYY-MM-DD format)
         const startDate = new Date(schedule.startDate);
@@ -78,7 +87,7 @@ export function useScheduleChecks() {
     
     console.log("Matching schedules:", matchingSchedules);
     return matchingSchedules;
-  }, [schedules]);
+  }, []); // Empty dependency array for stable reference
   
   return {
     schedules,

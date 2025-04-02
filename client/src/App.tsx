@@ -18,6 +18,7 @@ import Progress from "@/pages/progress/Progress";
 import Settings from "@/pages/settings/Settings";
 import InspectSchedules from "@/pages/debug/InspectSchedules";
 import LocalStorageDebug from "@/pages/debug/LocalStorageDebug";
+import WorkoutDebug from "@/pages/debug/WorkoutDebug";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/debug/schedules" component={InspectSchedules} />
       <ProtectedRoute path="/debug/local-storage" component={LocalStorageDebug} />
+      <ProtectedRoute path="/debug/workout" component={WorkoutDebug} />
       
       {/* Not Found */}
       <Route component={NotFound} />
