@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
-import { Exercise } from '@shared/schema';
+import { Exercise, Program } from '@shared/schema';
 import { useAuth } from '../hooks/use-auth';
 import { useLocalStorage } from '../hooks/use-local-storage';
 
@@ -44,18 +44,20 @@ export interface LocalWorkout {
   exercises: LocalWorkoutExercise[];
 }
 
-export interface Program {
-  id: number;
-  name: string;
-  description: string;
-  weeks: number;
-  daysPerWeek: number;
-  type: string;
-  difficulty: string;
-  createdBy: number;
-}
+// We can remove this as we're importing from schema.ts
+// export interface Program {
+//   id: number;
+//   name: string;
+//   description: string;
+//   weeks: number;
+//   daysPerWeek: number;
+//   type: string;
+//   difficulty: string;
+//   createdBy: number;
+// }
 
-export interface ProgramSchedule {
+// We'll import ProgramSchedule from schema.ts in the future
+export interface LocalProgramSchedule {
   id: string;
   userId: number;
   programId: number;
@@ -228,14 +230,18 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [storedWorkouts, setStoredWorkouts] = useLocalStorage<LocalWorkout[]>(WORKOUTS_STORAGE_KEY, []);
   
   // Load programs
-  const { data: programs = [] } = useQuery({
+  const { data: programs = [] } = useQuery<Program[]>({
     queryKey: ['/api/programs'],
     enabled: !!user,
   });
   
   // Load workout for the current date
   useEffect(() => {
+    // Create a flag to prevent setting state after unmount
+    let isMounted = true;
+    
     const loadWorkoutForDate = async () => {
+      if (!isMounted) return;
       dispatch({ type: 'SET_LOADING', payload: true });
       
       // Format date for lookup: YYYY-MM-DD
@@ -249,44 +255,68 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       if (workoutForDate) {
         // Found existing workout
         console.log('[load-workout] Found workout for date:', workoutForDate);
-        dispatch({ type: 'SET_WORKOUT', payload: workoutForDate });
+        if (isMounted) {
+          dispatch({ type: 'SET_WORKOUT', payload: workoutForDate });
+        }
       } else {
         // Check if there's a scheduled program for this date
         // For now, this is simplified - usually you'd check a program schedule
         // Just use a default workout template from program 1 as an example
         
         // Create a new default workout for demo purposes
-        if (programs && programs.length > 0) {
+        if (programs && Array.isArray(programs) && programs.length > 0) {
           const defaultProgram = programs[0];
-          const defaultWorkout: LocalWorkout = {
-            id: uuidv4(),
-            date: state.selectedDate.toISOString(),
-            name: defaultProgram.name,
-            notes: null,
-            programId: defaultProgram.id,
-            templateId: 1, // Assuming template ID 1
-            completed: false,
-            exercises: []
-          };
           
-          // Add to storage and state
-          const updatedWorkouts = [...storedWorkouts, defaultWorkout];
-          setStoredWorkouts(updatedWorkouts);
-          console.log('[load-workout] Created new workout:', defaultWorkout);
-          dispatch({ type: 'SET_WORKOUT', payload: defaultWorkout });
+          if (defaultProgram && defaultProgram.id && defaultProgram.name) {
+            const defaultWorkout: LocalWorkout = {
+              id: uuidv4(),
+              date: state.selectedDate.toISOString(),
+              name: defaultProgram.name,
+              notes: null,
+              programId: defaultProgram.id,
+              templateId: 1, // Assuming template ID 1
+              completed: false,
+              exercises: []
+            };
+            
+            // To prevent recursive updates, only update storage if component is still mounted
+            if (isMounted) {
+              console.log('[load-workout] Created new workout:', defaultWorkout);
+              dispatch({ type: 'SET_WORKOUT', payload: defaultWorkout });
+              // We'll let the other useEffect handle storage update to avoid duplication
+            }
+          } else {
+            if (isMounted) {
+              dispatch({ type: 'SET_WORKOUT', payload: null });
+            }
+          }
         } else {
-          dispatch({ type: 'SET_WORKOUT', payload: null });
+          if (isMounted) {
+            dispatch({ type: 'SET_WORKOUT', payload: null });
+          }
         }
       }
     };
     
     loadWorkoutForDate();
-  }, [state.selectedDate, storedWorkouts, programs]);
+    
+    // Cleanup function to prevent updates after unmount
+    return () => {
+      isMounted = false; 
+    };
+  }, [state.selectedDate]);
   
   // Save workout changes to local storage
   useEffect(() => {
     if (state.workout && !state.loading) {
       console.log('Saving workout to storage:', state.workout);
+      
+      // Add a check to prevent infinite re-renders
+      const existingWorkout = storedWorkouts.find(w => w.id === state.workout!.id);
+      if (existingWorkout && JSON.stringify(existingWorkout) === JSON.stringify(state.workout)) {
+        console.log('No changes detected, skipping save');
+        return;
+      }
       
       // Update the workout in the stored list
       const updatedWorkouts = state.workout.id
@@ -298,7 +328,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       setStoredWorkouts(updatedWorkouts);
       console.log('Workout saved successfully');
     }
-  }, [state.workout, state.loading]);
+  }, [state.workout, state.loading, storedWorkouts]);
   
   // Actions
   const actions = {
