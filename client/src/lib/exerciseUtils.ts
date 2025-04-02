@@ -35,11 +35,18 @@ export function getExerciseImageBaseUrl(exercise: Exercise | undefined): string 
     // Return the path up to the filename
     const pathMatch = firstImage.match(/(\/assets\/exercises\/[^/]+)\/./);
     if (pathMatch && pathMatch[1]) {
+      // Use the local path directly
       return pathMatch[1];
     }
   }
 
-  // Default to a standard format based on exercise id
+  // Default to a standard format based on exercise id or name
+  if (exercise.name) {
+    const formattedName = exercise.name.replace(/\s+/g, '_').replace(/\//g, '_');
+    return `/assets/exercises/${formattedName}`;
+  }
+  
+  // Fallback to ID if name is not available
   return `/assets/exercises/${exercise.id}`;
 }
 
@@ -102,10 +109,18 @@ export function getExerciseImageUrl(exercise: Exercise | undefined, index: numbe
     }
   }
   
-  // Fallback: Construct a path based on the exercise name (formatted for URL)
+  // Try using the base URL + index fallback
+  const baseUrl = getExerciseImageBaseUrl(exercise);
+  if (baseUrl) {
+    const fallbackPath = `${baseUrl}/${index}.jpg`;
+    console.log("Using baseUrl fallback path:", fallbackPath);
+    return fallbackPath;
+  }
+  
+  // Last resort fallback: Construct a path based on the exercise name
   const formattedName = exercise.name.replace(/\s+/g, '_').replace(/\//g, '_');
   const fallbackPath = `/assets/exercises/${formattedName}/${index}.jpg`;
-  console.log("Using fallback path:", fallbackPath);
+  console.log("Using name-based fallback path:", fallbackPath);
   return fallbackPath;
 }
 

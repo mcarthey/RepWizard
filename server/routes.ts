@@ -5,6 +5,12 @@ import { setupAuth } from "./auth";
 import { ZodError } from "zod";
 import express from "express";
 import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// ESM replacement for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import {
   insertExerciseSchema,
   insertProgramSchema,
@@ -46,8 +52,12 @@ const ensureRole = (allowedRoles: string[]) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
-  // Set up authentication
-  setupAuth(app);
+  
+  // Set up static file serving for exercise images
+  const assetsPath = path.join(__dirname, 'client', 'public', 'assets');
+  app.use('/assets', express.static(assetsPath));
+  console.log(`Serving static assets from: ${assetsPath}`);
+  
   // Error handling helper
   const handleError = (err: unknown) => {
     if (err instanceof ZodError) {
