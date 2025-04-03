@@ -17,6 +17,8 @@ import QuickAddModal from "@/components/modals/QuickAddModal";
 import WorkoutCalendarModal from "@/components/modals/WorkoutCalendarModal";
 
 export default function CurrentWorkout() {
+  console.log("CurrentWorkout component rendering");
+  
   const { 
     workout, 
     loading,
@@ -29,6 +31,15 @@ export default function CurrentWorkout() {
     removeSet,
     updateWorkout 
   } = useCurrentWorkout();
+  
+  // Debug workout state
+  console.log("DEBUG WORKOUT STATE:", {
+    hasWorkout: !!workout,
+    workoutDate: workout?.date ? new Date(workout.date).toISOString() : 'none',
+    exerciseCount: workout?.exercises?.length || 0,
+    workoutName: workout?.name || 'none',
+    loading
+  });
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showProgramModal, setShowProgramModal] = useState(false);
@@ -1059,10 +1070,21 @@ export default function CurrentWorkout() {
         
         {/* Workout Exercises Content - Hide if collapsed */}
         <div className="px-4 pt-4">
+          {console.log("RENDER INFO - Workout Exercises section", {
+            hasWorkout: !!workout,
+            exerciseCount: workout?.exercises?.length || 0,
+            exerciseDetails: workout?.exercises || [],
+            selectedProgram,
+            isCollapsed: selectedProgram ? collapsedSections[`program-${selectedProgram.id}`] : false
+          })}
+          
           {(!selectedProgram || !collapsedSections[`program-${selectedProgram.id}`]) && (
-            workout.exercises.length === 0 ? (
+            !workout || workout.exercises.length === 0 ? (
               <div className="py-16 text-center bg-white rounded-lg shadow-sm">
                 <p className="text-gray-500 mb-6 text-lg">No exercises added yet</p>
+                <p className="text-gray-500 mb-6 text-sm">
+                  {!workout ? "Workout is not loaded" : `Workout loaded with 0 exercises: ${workout.name}`}
+                </p>
                 <button
                   className="py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-lg shadow-md flex items-center justify-center mx-auto transition-colors"
                   onClick={() => {
@@ -1077,6 +1099,10 @@ export default function CurrentWorkout() {
               </div>
             ) : (
               <>
+                <div className="bg-blue-50 p-2 mb-4 rounded-md">
+                  <p>Loaded workout: {workout.name}</p>
+                  <p>Exercise count: {workout.exercises.length}</p>
+                </div>
                 {workout.exercises.map((exercise) => (
                   <ExerciseCard
                     key={exercise.id}

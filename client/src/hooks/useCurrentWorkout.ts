@@ -52,7 +52,13 @@ export function useCurrentWorkout() {
           
           // Force a complete state update to ensure UI rendering
           setWorkout(null); // Clear first
-          setTimeout(() => setWorkout(savedWorkout), 0); // Then set with small delay
+          setTimeout(() => {
+            // Set the workout with a slight delay
+            setWorkout(savedWorkout);
+            console.log("Setting workout to:", savedWorkout.name, "with", savedWorkout.exercises.length, "exercises");
+            // Explicitly set loading to false AFTER the workout is set
+            setTimeout(() => setLoading(false), 50);
+          }, 10); // Then set with small delay
         } else {
           // Create a new workout for this date if none exists
           console.log(`No workout found for ${format(activeDate, 'yyyy-MM-dd')}, creating new one`);
@@ -64,7 +70,13 @@ export function useCurrentWorkout() {
           
           // Force a complete state update to ensure UI rendering
           setWorkout(null); // Clear first
-          setTimeout(() => setWorkout(newWorkout), 0); // Then set with small delay
+          setTimeout(() => {
+            // Set the workout with a slight delay
+            setWorkout(newWorkout);
+            console.log("Setting new workout to:", newWorkout.name);
+            // Explicitly set loading to false AFTER the workout is set
+            setTimeout(() => setLoading(false), 50);
+          }, 10); // Then set with small delay
         }
       } catch (error) {
         console.error(`Error loading workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, error);
@@ -80,9 +92,15 @@ export function useCurrentWorkout() {
         
         // Force a complete state update to ensure UI rendering
         setWorkout(null); // Clear first
-        setTimeout(() => setWorkout(fallbackWorkout), 0); // Then set with small delay
+        setTimeout(() => {
+          // Set the workout with a slight delay
+          setWorkout(fallbackWorkout);
+          console.log("Setting fallback workout to:", fallbackWorkout.name);
+          // Explicitly set loading to false AFTER the workout is set
+          setTimeout(() => setLoading(false), 50);
+        }, 10); // Then set with small delay
       } finally {
-        setTimeout(() => setLoading(false), 50); // Small delay to ensure workout state is updated first
+        // We don't need to set loading to false here anymore as it's handled in each case
       }
     };
     
@@ -94,6 +112,8 @@ export function useCurrentWorkout() {
    */
   const changeActiveDate = useCallback((newDate: Date) => {
     console.log(`Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
+    // Set loading to true when changing dates to indicate we're loading a new date's workout
+    setLoading(true);
     setActiveDate(newDate);
   }, []);
   
@@ -111,6 +131,13 @@ export function useCurrentWorkout() {
     // Update state and storage
     setWorkout(updatedWorkout);
     saveToStorage(storageKey, updatedWorkout);
+    
+    // If we're updating with exercises, we're no longer loading
+    if (updatedWorkout.exercises && updatedWorkout.exercises.length > 0) {
+      console.log(`Workout updated with ${updatedWorkout.exercises.length} exercises, setting loading to false`);
+      // Small delay to ensure React has processed the workout state update
+      setTimeout(() => setLoading(false), 50);
+    }
   }, [saveToStorage]);
   
   /**
