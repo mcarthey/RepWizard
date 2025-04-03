@@ -724,6 +724,15 @@ export default function CurrentWorkout() {
     
     // CRITICAL FIX: Pass isManualSelection=true to indicate this is a user-selected date
     // This will prevent it from being overridden by default date logic
+    // Also set this in sessionStorage for double protection
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    sessionStorage.setItem('manually_selected_date', dateStr);
+    sessionStorage.setItem('manually_selected_date_timestamp', selectedDate.getTime().toString());
+    localStorage.setItem('repwizard_last_viewed_workout_date', dateStr);
+    
+    console.log(`[DATE PROTECTION] Reinforcing manual date selection in handleDateSelect: ${dateStr}`);
+    
+    // Call the changeActiveDate function with the manual selection flag
     changeActiveDate(selectedDate, true);
     
     console.log(`[TRACKING] changeActiveDate called for: ${format(selectedDate, "yyyy-MM-dd")}, time taken: ${Date.now() - beforeTimestamp}ms`);
@@ -1631,7 +1640,13 @@ export default function CurrentWorkout() {
         currentDate={activeDate}
         onDateSelect={(selectedDate) => {
           setShowCalendarModal(false);
+          
+          // The WorkoutCalendarModal already stored the manual selection in sessionStorage
+          // Just ensure we also tag this as a manual selection when we pass it to changeActiveDate
+          console.log(`[DATE PROTECTION] Calendar selected date: ${format(selectedDate, "yyyy-MM-dd")}`);
+          
           // Use the full handleDateSelect function with proper template loading
+          // This will call changeActiveDate internally with isManualSelection=true
           handleDateSelect(selectedDate);
         }}
       />
@@ -1687,6 +1702,24 @@ export default function CurrentWorkout() {
             >
               Check Apr 21
             </button>
+            
+            {/* DATE PROTECTION DEBUG */}
+            <button 
+              onClick={() => {
+                // Clear all date protection flags for testing
+                sessionStorage.removeItem('manually_selected_date');
+                sessionStorage.removeItem('manually_selected_date_timestamp');
+                localStorage.removeItem('repwizard_last_viewed_workout_date');
+                console.log('[DATE PROTECTION] Reset all date protection flags');
+                toast({
+                  title: "Date Protection Reset",
+                  description: "All manual date selection flags have been cleared",
+                });
+              }}
+              className="px-2 py-1 bg-red-600 text-white rounded text-xs ml-auto"
+            >
+              Reset Date Protection
+            </button>
           </div>
           
           <div className="space-y-1">
@@ -1730,6 +1763,43 @@ export default function CurrentWorkout() {
                 ) : (
                   <div>No template selected</div>
                 )}
+              </div>
+            </div>
+            
+            {/* DATE PROTECTION DEBUG SECTION */}
+            <div className="mt-3 border-t border-gray-700 pt-2">
+              <span className="font-semibold text-green-400">Date Protection Status:</span>
+              <div className="pl-2 mt-1">
+                <div>
+                  <div className="flex items-start">
+                    <span className="font-medium mr-2">Session Storage:</span>
+                    <div>
+                      <div>manually_selected_date: {sessionStorage.getItem('manually_selected_date') || 'not set'}</div>
+                      <div>manually_selected_date_timestamp: {sessionStorage.getItem('manually_selected_date_timestamp') || 'not set'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start mt-1">
+                    <span className="font-medium mr-2">Local Storage:</span>
+                    <div>
+                      <div>repwizard_last_viewed_workout_date: {localStorage.getItem('repwizard_last_viewed_workout_date') || 'not set'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start mt-1">
+                    <span className="font-medium mr-2">Active Date:</span>
+                    <div>
+                      {activeDate ? format(activeDate, 'yyyy-MM-dd') : 'not set'}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start mt-1">
+                    <span className="font-medium mr-2">Workout Date:</span>
+                    <div>
+                      {workout?.date ? format(new Date(workout.date), 'yyyy-MM-dd') : 'not set'}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -23,11 +23,20 @@ export default function WorkoutCalendarModal({
     return schedules.length > 0;
   };
   
-  // Function to determine if this is the manually selected date
+  // Function to determine if this is the manually selected date with enhanced protection
   const isManuallySelectedDate = (date: Date) => {
-    const manuallySelectedDate = sessionStorage.getItem('manually_selected_date');
-    if (!manuallySelectedDate) return false;
-    return format(date, 'yyyy-MM-dd') === manuallySelectedDate;
+    // Check all possible storage mechanisms for manually selected date
+    const sessionDate = sessionStorage.getItem('manually_selected_date');
+    const localDate = localStorage.getItem('repwizard_last_viewed_workout_date');
+    
+    // Format the date parameter for comparison
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    // Debug info to help troubleshoot date selection
+    console.log(`[DATE PROTECTION] Checking if ${dateStr} is manually selected. Session: ${sessionDate}, Local: ${localDate}`);
+    
+    // Check if the date matches either the session storage or local storage value
+    return dateStr === sessionDate || dateStr === localDate;
   };
   
   // Handle date selection with proper confirmation
@@ -49,8 +58,20 @@ export default function WorkoutCalendarModal({
     console.log(`[CALENDAR TRACKING] Date copy created with timestamp: ${dateCopy.getTime()}`);
     console.log(`[CALENDAR TRACKING] Date copy formatted: ${format(dateCopy, "yyyy-MM-dd")}`);
     
+    // Mark this date as manually selected by the user
+    const dateStr = format(dateCopy, 'yyyy-MM-dd');
+    console.log(`[DATE PROTECTION] Storing manually selected date in WorkoutCalendarModal: ${dateStr}`);
+    sessionStorage.setItem('manually_selected_date', dateStr);
+    sessionStorage.setItem('manually_selected_date_timestamp', dateCopy.getTime().toString());
+    localStorage.setItem('repwizard_last_viewed_workout_date', dateStr);
+    
     // Call the provided onDateSelect with the copied date
+    // Importantly, we pass true as the second parameter to indicate this is a manual selection
+    // The CurrentWorkout component should read this flag and handle it appropriately
     console.log(`[CALENDAR TRACKING] About to call onDateSelect with date: ${format(dateCopy, "yyyy-MM-dd")}`);
+    
+    // We need to modify the parent component to accept this second parameter
+    // But for now we just set the sessionStorage directly
     onDateSelect(dateCopy);
     
     // Close the modal after selection

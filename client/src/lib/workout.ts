@@ -32,6 +32,7 @@ export interface LocalWorkout {
   templateId: number | null;
   completed: boolean;
   exercises: LocalWorkoutExercise[];
+  manuallySelected?: boolean; // Flag to indicate if this workout's date was manually selected
 }
 
 // Type for local program schedules

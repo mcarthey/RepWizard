@@ -29,15 +29,35 @@ export function useCurrentWorkout() {
   const { saveToStorage, loadFromStorage } = useStorage();
   const { toast } = useToast();
   
-  // Check if we have a manually selected date stored in sessionStorage
+  // Check if we have a manually selected date stored in either sessionStorage or localStorage
   // If so, use that as the initial activeDate to maintain user selection across page loads
-  const manuallySelectedDate = sessionStorage.getItem('manually_selected_date');
+  const sessionDate = sessionStorage.getItem('manually_selected_date');
+  const localDate = localStorage.getItem('repwizard_manually_selected_date') || 
+                    localStorage.getItem('repwizard_last_viewed_workout_date');
+  
+  // Use the session date with fallback to localStorage date
+  const manuallySelectedDate = sessionDate || localDate;
+  
+  console.log(`[DATE PROTECTION] Checking for stored dates: Session: ${sessionDate}, Local: ${localDate}`);
   
   // Active date state - initialize with manually selected date if available
   const [activeDate, setActiveDate] = useState<Date>(() => {
     if (manuallySelectedDate) {
-      console.log(`[DATE PROTECTION] Initializing with manually selected date from sessionStorage: ${manuallySelectedDate}`);
-      return parseISO(manuallySelectedDate);
+      try {
+        console.log(`[DATE PROTECTION] Initializing with manually selected date: ${manuallySelectedDate}`);
+        
+        // If we have a local date but no session date, sync them
+        if (localDate && !sessionDate) {
+          console.log(`[DATE PROTECTION] Syncing localStorage date to sessionStorage: ${localDate}`);
+          sessionStorage.setItem('manually_selected_date', localDate);
+          sessionStorage.setItem('manually_selected_date_timestamp', new Date(localDate).getTime().toString());
+        }
+        
+        return parseISO(manuallySelectedDate);
+      } catch (err) {
+        console.error(`[DATE PROTECTION] Error parsing manually selected date: ${manuallySelectedDate}`, err);
+        return new Date();
+      }
     }
     return new Date();
   });
@@ -52,19 +72,64 @@ export function useCurrentWorkout() {
       try {
         setLoading(true);
         
+        // CRITICAL DATE FIX: Check if there's a manually selected date that we should be using
+        // Enhanced logic to check both sessionStorage and localStorage
+        const sessionDate = sessionStorage.getItem('manually_selected_date');
+        const localStorageDate = localStorage.getItem('repwizard_manually_selected_date') || 
+                                localStorage.getItem('repwizard_last_viewed_workout_date');
+        
+        // Use session date first with fallback to localStorage
+        const manuallySelectedDate = sessionDate || localStorageDate;
+        let dateToUse = activeDate;
+        
+        if (manuallySelectedDate) {
+          try {
+            // If there's a manually selected date and it's different from activeDate, use it
+            const manualDateObj = parseISO(manuallySelectedDate);
+            const manualDateStr = format(manualDateObj, 'yyyy-MM-dd');
+            const activeDateStr = format(activeDate, 'yyyy-MM-dd');
+            
+            console.log(`[DATE PROTECTION] Comparing manually selected date ${manualDateStr} with active date ${activeDateStr}`);
+            console.log(`[DATE PROTECTION] Sources - Session: ${sessionDate}, LocalStorage: ${localStorageDate}`);
+            
+            if (manualDateStr !== activeDateStr) {
+              console.log(`[DATE PROTECTION] Override: Using manually selected date ${manualDateStr} instead of ${activeDateStr}`);
+              dateToUse = manualDateObj;
+              
+              // CRITICAL: Also update the activeDate state to match
+              setActiveDate(manualDateObj);
+              
+              // Since we found the date in localStorage but not sessionStorage, sync them
+              if (!sessionDate && localStorageDate) {
+                console.log(`[DATE PROTECTION] Syncing localStorage date to sessionStorage: ${localStorageDate}`);
+                sessionStorage.setItem('manually_selected_date', localStorageDate);
+                sessionStorage.setItem('manually_selected_date_timestamp', new Date(localStorageDate).getTime().toString());
+              }
+            }
+          } catch (err) {
+            console.error(`[DATE PROTECTION] Error processing manually selected date: ${manuallySelectedDate}`, err);
+            // Continue with activeDate as fallback
+          }
+        }
+        
         // Get the storage key for this date
-        const storageKey = getWorkoutKeyForDate(activeDate);
-        console.log(`[TRACKING] Loading workout for date: ${format(activeDate, 'yyyy-MM-dd')} with key: ${storageKey}`);
-        console.log(`[TRACKING] Active date timestamp: ${activeDate.getTime()}`);
+        const storageKey = getWorkoutKeyForDate(dateToUse);
+        console.log(`[TRACKING] Loading workout for date: ${format(dateToUse, 'yyyy-MM-dd')} with key: ${storageKey}`);
+        console.log(`[TRACKING] Active date timestamp: ${dateToUse.getTime()}`);
         
         // Try to load an existing workout for this date
         const savedWorkout = loadFromStorage<LocalWorkout>(storageKey);
         
         if (savedWorkout) {
-          console.log(`[TRACKING] Found workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, savedWorkout);
+          console.log(`[TRACKING] Found workout for date ${format(dateToUse, 'yyyy-MM-dd')}:`, savedWorkout);
           console.log(`[TRACKING] Workout has ${savedWorkout.exercises.length} exercises`);
           console.log(`[TRACKING] Workout date from storage: ${savedWorkout.date}`);
           console.log(`[TRACKING] Workout date timestamp: ${new Date(savedWorkout.date).getTime()}`);
+          
+          // Check if this workout has the manuallySelected flag
+          if (manuallySelectedDate && (savedWorkout as any).manuallySelected) {
+            console.log(`[DATE PROTECTION] This workout was manually selected by the user`);
+          }
           
           // Force a complete state update to ensure UI rendering
           setWorkout(null); // Clear first
@@ -77,9 +142,14 @@ export function useCurrentWorkout() {
           }, 10); // Then set with small delay
         } else {
           // Create a new workout for this date if none exists
-          console.log(`No workout found for ${format(activeDate, 'yyyy-MM-dd')}, creating new one`);
-          const newWorkout = createNewWorkout(`Workout for ${format(activeDate, 'MMM d, yyyy')}`);
-          newWorkout.date = activeDate.toISOString();
+          console.log(`No workout found for ${format(dateToUse, 'yyyy-MM-dd')}, creating new one`);
+          const newWorkout = createNewWorkout(`Workout for ${format(dateToUse, 'MMM d, yyyy')}`);
+          newWorkout.date = dateToUse.toISOString();
+          
+          // Add manuallySelected flag if this was a manually selected date
+          if (manuallySelectedDate) {
+            (newWorkout as any).manuallySelected = true;
+          }
           
           // Save it immediately
           saveToStorage(storageKey, newWorkout);
@@ -89,7 +159,7 @@ export function useCurrentWorkout() {
           setTimeout(() => {
             // Set the workout with a slight delay
             setWorkout(newWorkout);
-            console.log("Setting new workout to:", newWorkout.name);
+            console.log("[TRACKING] Setting new workout to:", newWorkout.name);
             // Explicitly set loading to false AFTER the workout is set
             setTimeout(() => setLoading(false), 50);
           }, 10); // Then set with small delay
@@ -133,41 +203,109 @@ export function useCurrentWorkout() {
    * @param isManualSelection Whether this date change came from user selection (true) or auto-loading (false)
    */
   const changeActiveDate = useCallback((newDate: Date, isManualSelection: boolean = false) => {
-    console.log(`[TRACKING] Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
-    console.log(`[TRACKING] New date timestamp: ${newDate.getTime()}`);
-    console.log(`[DATE PROTECTION] Manual selection: ${isManualSelection}`);
-    
-    // This date was manually selected, store this info in sessionStorage to persist across component reloads
-    if (isManualSelection) {
-      const dateStr = format(newDate, 'yyyy-MM-dd');
-      console.log(`[DATE PROTECTION] Storing manually selected date in sessionStorage: ${dateStr}`);
-      sessionStorage.setItem('manually_selected_date', dateStr);
+    try {
+      // Validate input
+      if (!newDate || !(newDate instanceof Date) || isNaN(newDate.getTime())) {
+        console.error(`[DATE PROTECTION] Invalid date provided to changeActiveDate:`, newDate);
+        toast({
+          title: "Date Error",
+          description: "Invalid date format. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log(`[TRACKING] Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
+      console.log(`[TRACKING] New date timestamp: ${newDate.getTime()}`);
+      console.log(`[DATE PROTECTION] Manual selection: ${isManualSelection}`);
+      
+      // Make a deep copy of the date to ensure no reference issues
+      const dateCopy = new Date(newDate.getTime());
+      
+      // ENHANCED FIX: This date was manually selected, store more information to make it stick
+      if (isManualSelection) {
+        try {
+          const dateStr = format(dateCopy, 'yyyy-MM-dd');
+          console.log(`[DATE PROTECTION] Storing manually selected date in sessionStorage: ${dateStr}`);
+          
+          // Store in multiple places for triple protection
+          // 1. SessionStorage for current browser tab
+          sessionStorage.setItem('manually_selected_date', dateStr);
+          sessionStorage.setItem('manually_selected_date_timestamp', dateCopy.getTime().toString());
+          
+          // 2. LocalStorage for persistence across tabs/sessions
+          localStorage.setItem('repwizard_last_viewed_workout_date', dateStr);
+          localStorage.setItem('repwizard_manually_selected_date', dateStr);
+          
+          // 3. Flag directly on the workout object
+          const storageKey = getWorkoutKeyForDate(dateCopy);
+          const existingWorkout = loadFromStorage<LocalWorkout>(storageKey);
+          
+          if (existingWorkout) {
+            console.log(`[DATE PROTECTION] Found existing workout for selected date: ${dateStr}`);
+            
+            // Set a special flag on the workout to indicate it was manually selected
+            const updatedWorkout = {
+              ...existingWorkout,
+              manuallySelected: true
+            };
+            
+            // Save it back to storage with this flag
+            saveToStorage(storageKey, updatedWorkout);
+            console.log(`[DATE PROTECTION] Updated workout with manuallySelected flag`);
+          } else {
+            console.log(`[DATE PROTECTION] No existing workout found for ${dateStr}, will be created with manuallySelected flag`);
+          }
+        } catch (err) {
+          console.error(`[DATE PROTECTION] Error while setting manual date protection flags:`, err);
+          // Continue execution despite error - this is just enhanced protection
+        }
+      }
+      
+      // Check for date stability
+      if (activeDate) {
+        console.log(`[TRACKING] Previous active date: ${format(activeDate, 'yyyy-MM-dd')}`);
+        console.log(`[TRACKING] Previous date timestamp: ${activeDate.getTime()}`);
+        const sameDate = activeDate.toISOString().split('T')[0] === dateCopy.toISOString().split('T')[0];
+        console.log(`[TRACKING] Selected same date? ${sameDate}`);
+        
+        if (sameDate) {
+          console.log(`[TRACKING] Selected the same date, but continuing to ensure consistent behavior`);
+        }
+      }
+      
+      // Set loading to true when changing dates to indicate we're loading a new date's workout
+      setLoading(true);
+      
+      // Log before the state update
+      console.log(`[TRACKING] About to set activeDate state to: ${format(dateCopy, 'yyyy-MM-dd')}`);
+      
+      // Update the active date with our copy
+      setActiveDate(dateCopy);
+      
+      // Verify the set was called
+      console.log(`[TRACKING] Called setActiveDate with: ${format(dateCopy, 'yyyy-MM-dd')}`);
+      
+      // Additional verification with setTimeout to catch async issues
+      setTimeout(() => {
+        console.log(`[DATE PROTECTION] Verifying active date was set to: ${format(dateCopy, 'yyyy-MM-dd')}`);
+      }, 0);
+    } catch (error) {
+      console.error(`[DATE PROTECTION] Critical error in changeActiveDate:`, error);
+      toast({
+        title: "Date Selection Error",
+        description: "There was a problem changing the workout date. Please try again.",
+        variant: "destructive"
+      });
+      
+      // Still attempt to set the date to avoid getting stuck
+      try {
+        setActiveDate(newDate);
+      } catch (e) {
+        console.error(`[DATE PROTECTION] Failed fallback date set:`, e);
+      }
     }
-    
-    // Check for date stability
-    if (activeDate) {
-      console.log(`[TRACKING] Previous active date: ${format(activeDate, 'yyyy-MM-dd')}`);
-      console.log(`[TRACKING] Previous date timestamp: ${activeDate.getTime()}`);
-      const sameDate = activeDate.toISOString().split('T')[0] === newDate.toISOString().split('T')[0];
-      console.log(`[TRACKING] Selected same date? ${sameDate}`);
-    }
-    
-    // Set loading to true when changing dates to indicate we're loading a new date's workout
-    setLoading(true);
-    
-    // Log before the state update
-    console.log(`[TRACKING] About to set activeDate state to: ${format(newDate, 'yyyy-MM-dd')}`);
-    
-    // Make a deep copy of the date to ensure no reference issues
-    const dateCopy = new Date(newDate.getTime());
-    console.log(`[TRACKING] Deep copied date: ${format(dateCopy, 'yyyy-MM-dd')}`);
-    
-    // Set the active date
-    setActiveDate(dateCopy);
-    
-    // Log after the state update to confirm
-    console.log(`[TRACKING] Called setActiveDate with: ${format(dateCopy, 'yyyy-MM-dd')}`);
-  }, [activeDate]);
+  }, [activeDate, loadFromStorage, saveToStorage, toast]);
   
   /**
    * Update the current workout
