@@ -496,6 +496,45 @@ export default function CurrentWorkout() {
   // Get schedules for today's date 
   const { getSchedulesForDate } = useScheduleChecks();
   
+  // Debug function to manually check schedules for a date
+  const debugCheckSchedules = (date: Date) => {
+    const schedulesForDate = getSchedulesForDate(date);
+    console.log(`DEBUG - Manual check for date ${format(date, "yyyy-MM-dd")}:`, schedulesForDate);
+    
+    // Update debug info
+    setDebugInfo(prev => ({
+      ...prev,
+      schedulesFound: schedulesForDate.length,
+      workoutDate: date.toISOString(),
+      startDate: schedulesForDate.length > 0 ? schedulesForDate[0].startDate : null
+    }));
+    
+    if (schedulesForDate.length > 0) {
+      const schedule = schedulesForDate[0];
+      const startDate = new Date(schedule.startDate);
+      
+      // Calculate difference in days from start date
+      const dayDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      console.log(`DEBUG MANUAL - Days since program start: ${dayDiff}`);
+      
+      // Calculate the week (1-indexed)
+      const weekNumber = Math.floor(dayDiff / 7) + 1;
+      console.log(`DEBUG MANUAL - Calculated week number: ${weekNumber}`);
+      
+      // Calculate the day of the week (1-indexed through 7 for Monday to Sunday)
+      const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay();
+      console.log(`DEBUG MANUAL - Day of week: ${dayOfWeek}`);
+      
+      // Update debug info with the calculated values
+      setDebugInfo(prev => ({
+        ...prev,
+        weekNumber,
+        dayNumber: dayOfWeek,
+        daysSinceStart: dayDiff
+      }));
+    }
+  };
+  
   // Create a stable date selection handler with useCallback
   const handleDateSelect = useCallback(async (selectedDate: Date) => {
     console.log(`Calendar date changed to: ${format(selectedDate, "yyyy-MM-dd")}`);
@@ -1134,10 +1173,20 @@ export default function CurrentWorkout() {
     <>
       <Header title="Today's Workout">
         <button
-          onClick={() => setShowDebugInfo(prev => !prev)}
-          className="text-xs px-2 py-1 bg-gray-700 text-white rounded-md ml-auto mr-1"
+          onClick={handleQuickAdd} 
+          className="text-sm px-3 py-1 rounded-lg bg-primary text-white flex items-center"
         >
-          {showDebugInfo ? 'Hide Debug' : 'Show Debug'}
+          <span className="material-icons-round mr-1 text-sm">add</span>
+          Add
+        </button>
+        <button
+          onClick={() => setShowDebugInfo(prev => !prev)}
+          className="text-xs px-2 py-1 bg-gray-700 text-white rounded-md ml-2"
+        >
+          <span className="material-icons-round text-xs mr-1">
+            {showDebugInfo ? 'bug_off' : 'bug_report'}
+          </span>
+          {showDebugInfo ? 'Hide' : 'Debug'}
         </button>
       </Header>
       
@@ -1389,6 +1438,46 @@ export default function CurrentWorkout() {
               className="bg-red-600 text-white px-2 py-1 rounded-sm"
             >
               Close
+            </button>
+          </div>
+          
+          {/* Debug Actions */}
+          <div className="mb-3 flex flex-wrap gap-2">
+            <button 
+              onClick={() => debugCheckSchedules(new Date())}
+              className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
+            >
+              Check Today
+            </button>
+            <button 
+              onClick={() => {
+                const date = new Date();
+                date.setDate(date.getDate() + 7);
+                debugCheckSchedules(date);
+              }}
+              className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
+            >
+              Check +7 Days
+            </button>
+            <button 
+              onClick={() => {
+                const date = new Date();
+                date.setDate(date.getDate() + 14);
+                debugCheckSchedules(date);
+              }}
+              className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
+            >
+              Check +14 Days
+            </button>
+            <button 
+              onClick={() => {
+                // Check April 21 specifically
+                const date = new Date(2025, 3, 21); // Month is 0-indexed (3 = April)
+                debugCheckSchedules(date);
+              }}
+              className="px-2 py-1 bg-purple-600 text-white rounded text-xs"
+            >
+              Check Apr 21
             </button>
           </div>
           
