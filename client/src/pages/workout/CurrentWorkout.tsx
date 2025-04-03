@@ -707,19 +707,26 @@ export default function CurrentWorkout() {
   
   // Create a stable date selection handler with useCallback
   const handleDateSelect = useCallback(async (selectedDate: Date) => {
-    console.log(`Calendar date changed to: ${format(selectedDate, "yyyy-MM-dd")}`);
+    console.log(`[TRACKING] Calendar date selection started: ${format(selectedDate, "yyyy-MM-dd")}`);
     
     if (workout) {
-      console.log(`Current workout date is: ${format(new Date(workout.date), "yyyy-MM-dd")}`);
+      console.log(`[TRACKING] Before date change - Current workout date is: ${format(new Date(workout.date), "yyyy-MM-dd")}`);
     }
     
     // Check if there's a scheduled program for the selected date
     const schedulesForDate = getSchedulesForDate(selectedDate);
-    console.log(`Schedules for selected date:`, schedulesForDate);
+    console.log(`[TRACKING] Schedules for selected date:`, schedulesForDate);
+    
+    console.log(`[TRACKING] About to call changeActiveDate for: ${format(selectedDate, "yyyy-MM-dd")}`)
+    
+    // Store the timestamp to detect date changes
+    const beforeTimestamp = Date.now();
     
     // Switch to the new date using the changeActiveDate function
     // This will automatically load any existing workout for this date
     changeActiveDate(selectedDate);
+    
+    console.log(`[TRACKING] changeActiveDate called for: ${format(selectedDate, "yyyy-MM-dd")}, time taken: ${Date.now() - beforeTimestamp}ms`);
     
     // If we have schedules for this date, prompt to create a workout with the program
     if (schedulesForDate.length > 0) {

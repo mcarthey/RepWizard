@@ -15,7 +15,10 @@ import {
  */
 const getWorkoutKeyForDate = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return `workout_${format(dateObj, 'yyyy-MM-dd')}`;
+  const dateStr = format(dateObj, 'yyyy-MM-dd');
+  const key = `workout_${dateStr}`;
+  console.log(`[TRACKING] Generated storage key for date ${dateStr}, timestamp: ${dateObj.getTime()}, key: ${key}`);
+  return key;
 };
 
 /**
@@ -41,21 +44,24 @@ export function useCurrentWorkout() {
         
         // Get the storage key for this date
         const storageKey = getWorkoutKeyForDate(activeDate);
-        console.log(`Loading workout for date: ${format(activeDate, 'yyyy-MM-dd')} with key: ${storageKey}`);
+        console.log(`[TRACKING] Loading workout for date: ${format(activeDate, 'yyyy-MM-dd')} with key: ${storageKey}`);
+        console.log(`[TRACKING] Active date timestamp: ${activeDate.getTime()}`);
         
         // Try to load an existing workout for this date
         const savedWorkout = loadFromStorage<LocalWorkout>(storageKey);
         
         if (savedWorkout) {
-          console.log(`Found workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, savedWorkout);
-          console.log(`Workout has ${savedWorkout.exercises.length} exercises`);
+          console.log(`[TRACKING] Found workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, savedWorkout);
+          console.log(`[TRACKING] Workout has ${savedWorkout.exercises.length} exercises`);
+          console.log(`[TRACKING] Workout date from storage: ${savedWorkout.date}`);
+          console.log(`[TRACKING] Workout date timestamp: ${new Date(savedWorkout.date).getTime()}`);
           
           // Force a complete state update to ensure UI rendering
           setWorkout(null); // Clear first
           setTimeout(() => {
             // Set the workout with a slight delay
             setWorkout(savedWorkout);
-            console.log("Setting workout to:", savedWorkout.name, "with", savedWorkout.exercises.length, "exercises");
+            console.log("[TRACKING] Setting workout to:", savedWorkout.name, "with", savedWorkout.exercises.length, "exercises");
             // Explicitly set loading to false AFTER the workout is set
             setTimeout(() => setLoading(false), 50);
           }, 10); // Then set with small delay
@@ -111,11 +117,33 @@ export function useCurrentWorkout() {
    * Change the active date and load the corresponding workout
    */
   const changeActiveDate = useCallback((newDate: Date) => {
-    console.log(`Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
+    console.log(`[TRACKING] Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
+    console.log(`[TRACKING] New date timestamp: ${newDate.getTime()}`);
+    
+    // Check for date stability
+    if (activeDate) {
+      console.log(`[TRACKING] Previous active date: ${format(activeDate, 'yyyy-MM-dd')}`);
+      console.log(`[TRACKING] Previous date timestamp: ${activeDate.getTime()}`);
+      const sameDate = activeDate.toISOString().split('T')[0] === newDate.toISOString().split('T')[0];
+      console.log(`[TRACKING] Selected same date? ${sameDate}`);
+    }
+    
     // Set loading to true when changing dates to indicate we're loading a new date's workout
     setLoading(true);
-    setActiveDate(newDate);
-  }, []);
+    
+    // Log before the state update
+    console.log(`[TRACKING] About to set activeDate state to: ${format(newDate, 'yyyy-MM-dd')}`);
+    
+    // Make a deep copy of the date to ensure no reference issues
+    const dateCopy = new Date(newDate.getTime());
+    console.log(`[TRACKING] Deep copied date: ${format(dateCopy, 'yyyy-MM-dd')}`);
+    
+    // Set the active date
+    setActiveDate(dateCopy);
+    
+    // Log after the state update to confirm
+    console.log(`[TRACKING] Called setActiveDate with: ${format(dateCopy, 'yyyy-MM-dd')}`);
+  }, [activeDate]);
   
   /**
    * Update the current workout

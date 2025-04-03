@@ -29,15 +29,25 @@ export default function WorkoutCalendarModal({
     
     // Format the date for display
     const formattedDate = format(date, "MMMM d, yyyy");
+    console.log(`[CALENDAR TRACKING] Date selected in calendar: ${formattedDate}`);
+    console.log(`[CALENDAR TRACKING] Raw date object timestamp: ${date.getTime()}`);
     
     // Check if there are schedules for this date
     const schedules = getSchedulesForDate(date);
     const hasSchedules = schedules.length > 0;
     
-    // Call the provided onDateSelect with the selected date
-    onDateSelect(date);
+    // Create a fresh copy of the date to avoid reference issues
+    // This is critical to prevent issues with date tracking
+    const dateCopy = new Date(date.getTime());
+    console.log(`[CALENDAR TRACKING] Date copy created with timestamp: ${dateCopy.getTime()}`);
+    console.log(`[CALENDAR TRACKING] Date copy formatted: ${format(dateCopy, "yyyy-MM-dd")}`);
+    
+    // Call the provided onDateSelect with the copied date
+    console.log(`[CALENDAR TRACKING] About to call onDateSelect with date: ${format(dateCopy, "yyyy-MM-dd")}`);
+    onDateSelect(dateCopy);
     
     // Close the modal after selection
+    console.log(`[CALENDAR TRACKING] Closing calendar modal after selection`);
     onClose();
   };
   
