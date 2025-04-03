@@ -46,6 +46,21 @@ export default function CurrentWorkout() {
   const reloadProgramExercises = async (programId: number) => {
     if (!workout || workout.programId !== programId) return;
     
+    // If the workout already has exercises, don't reload unless it's from a program update
+    if (workout.exercises.length > 0 && !isInitialRenderRef.current) {
+      console.log("Workout already has exercises and is not an initial render, skipping reload");
+      return;
+    }
+    
+    // Prevent multiple concurrent reloads by using a loading flag
+    if (programExerciseLoadingRef.current) {
+      console.log("Exercise reload already in progress, skipping");
+      return;
+    }
+    
+    // Set the loading flag to prevent concurrent reloads
+    programExerciseLoadingRef.current = true;
+    
     // Create a unique key for this operation to prevent duplicate calls
     const operationId = `reload-${Date.now()}`;
     console.log(`Starting program exercise reload operation: ${operationId}`);
@@ -157,6 +172,11 @@ export default function CurrentWorkout() {
         description: "Failed to update workout with program changes",
         variant: "destructive"
       });
+    } finally {
+      // Always reset the loading flag when done
+      programExerciseLoadingRef.current = false;
+      // Mark that we've done an initial render
+      isInitialRenderRef.current = false;
     }
   };
   
@@ -165,6 +185,7 @@ export default function CurrentWorkout() {
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
   const isInitialRenderRef = useRef<boolean>(true);
+  const programExerciseLoadingRef = useRef<boolean>(false);
   
   // Function to check if there are actual template changes that require a reload
   const checkForTemplateChanges = async (programId: number): Promise<boolean> => {
