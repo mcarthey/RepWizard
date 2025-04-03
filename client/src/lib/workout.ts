@@ -9,7 +9,7 @@ export interface LocalSet {
   weight: number;
   reps: number;
   rpe: number | null;
-  setType: 'warmup' | 'working' | 'dropset' | 'failure';
+  setType: string; // 'warmup' | 'working' | 'dropset' | 'failure';
   completed: boolean;
   notes: string | null;
 }

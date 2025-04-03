@@ -44,138 +44,153 @@ export default function CurrentWorkout() {
   
   // Define the reload function
   const reloadProgramExercises = async (programId: number) => {
-    if (!workout || workout.programId !== programId) return;
-    
-    // If the workout already has exercises, don't reload unless it's from a program update
-    if (workout.exercises.length > 0 && !isInitialRenderRef.current) {
-      console.log("Workout already has exercises and is not an initial render, skipping reload");
+    // Basic validation
+    if (!workout || workout.programId !== programId) {
+      console.log("Cannot reload exercises: workout is missing or program ID mismatch");
       return;
     }
     
-    // Prevent multiple concurrent reloads by using a loading flag
+    // If already loading, skip this call
     if (programExerciseLoadingRef.current) {
       console.log("Exercise reload already in progress, skipping");
       return;
     }
     
-    // Set the loading flag to prevent concurrent reloads
+    // Set loading flag
     programExerciseLoadingRef.current = true;
-    
-    // Create a unique key for this operation to prevent duplicate calls
     const operationId = `reload-${Date.now()}`;
     console.log(`Starting program exercise reload operation: ${operationId}`);
     
     try {
-      // Check if this is just an initial render check (no toast needed)
-      const isInitialCheck = isInitialRenderRef.current;
-      
-      // Get the workout templates for this program
+      // 1. Get templates for the program
+      console.log(`Fetching templates for program ${programId}`);
       const response = await fetch(`/api/programs/${programId}/templates`);
       if (!response.ok) {
-        throw new Error('Failed to fetch workout templates');
+        throw new Error(`Failed to fetch templates: ${response.status} ${response.statusText}`);
       }
       
       const templates = await response.json();
-      console.log(`[${operationId}] Retrieved updated templates for program:`, templates);
+      if (!templates || templates.length === 0) {
+        throw new Error("No templates found for program");
+      }
       
-      if (templates && templates.length > 0) {
-        // Get the first template or find the one currently being used
-        const templateId = workout.templateId && 
-          templates.find((t: any) => t.id === workout.templateId) ? 
-          workout.templateId : templates[0].id;
-        
-        // Get the exercises for this template
-        const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
-        if (!exercisesResponse.ok) {
-          throw new Error('Failed to fetch template exercises');
-        }
-        
-        const templateExercises = await exercisesResponse.json();
-        console.log(`[${operationId}] Retrieved updated template exercises:`, templateExercises);
-        
-        // Store original exercise count for later comparison
-        const originalExerciseCount = workout.exercises.length;
-        
-        // Only continue if there are exercises in the template
-        if (templateExercises && templateExercises.length > 0) {
-          // Create a new workout with no exercises to replace the current one
-          // This prevents React from reusing exercise components
-          const updatedWorkout = {
-            ...workout,
-            exercises: [],
-            templateId
-          };
+      // 2. Get the template ID (either existing one or first available)
+      const templateId = workout.templateId && 
+        templates.find((t: any) => t.id === workout.templateId) ? 
+        workout.templateId : templates[0].id;
+      
+      console.log(`Using template ID ${templateId}`);
+      
+      // 3. Get exercises for the template
+      const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
+      if (!exercisesResponse.ok) {
+        throw new Error(`Failed to fetch template exercises: ${exercisesResponse.status} ${exercisesResponse.statusText}`);
+      }
+      
+      const templateExercises = await exercisesResponse.json();
+      if (!templateExercises || templateExercises.length === 0) {
+        throw new Error("No exercises found in template");
+      }
+      
+      console.log(`Found ${templateExercises.length} exercises in template`);
+      
+      // 4. Clear existing exercises by updating the workout
+      const updatedWorkout = {
+        ...workout,
+        exercises: [], // Clear all exercises
+        templateId    // Make sure template ID is set
+      };
+      
+      // Update the workout in storage
+      updateWorkout(updatedWorkout);
+      console.log("Cleared existing exercises from workout");
+      
+      // 5. Create new exercise list to be added all at once
+      const exercisesWithSets = [];
+      
+      // Fetch full exercise details and prepare exercise and set data
+      for (const templateExercise of templateExercises) {
+        try {
+          // Get full exercise details
+          const exerciseId = templateExercise.exerciseId;
+          console.log(`Fetching details for exercise ${exerciseId}`);
           
-          // Update the workout first to clear existing exercises
-          await new Promise<void>(resolve => {
-            updateWorkout(updatedWorkout);
-            setTimeout(resolve, 100); // Small delay to ensure state is updated
-          });
-          
-          console.log(`[${operationId}] Cleared existing exercises, now adding updated ones`);
-          
-          // Fetch and add the updated exercises
-          for (const templateExercise of templateExercises) {
-            const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
-            if (exerciseResponse.ok) {
-              const exercise = await exerciseResponse.json();
-              
-              // Create a new workout exercise
-              const newExercise = createWorkoutExercise(
-                workout.id,
-                exercise,
-                templateExercise.order
-              );
-              
-              // Add it to the workout
-              addExercise(newExercise);
-              
-              // Add some default sets based on the template
-              for (let i = 0; i < templateExercise.sets; i++) {
-                const setType = i === 0 ? "warmup" : "working";
-                const newSet: LocalSet = {
-                  id: uuidv4(),
-                  workoutExerciseId: newExercise.id,
-                  setNumber: i + 1,
-                  weight: 0,
-                  reps: 0,
-                  rpe: null,
-                  setType,
-                  completed: false,
-                  notes: null
-                };
-                
-                await new Promise<void>(resolve => {
-                  addSet(newExercise.id, newSet);
-                  setTimeout(resolve, 50); // Small delay to ensure state is updated
-                });
-              }
-            }
+          const exerciseResponse = await fetch(`/api/exercises/${exerciseId}`);
+          if (!exerciseResponse.ok) {
+            console.warn(`Could not fetch exercise ${exerciseId}, skipping`);
+            continue;
           }
           
-          console.log(`[${operationId}] Exercise update completed successfully`);
+          const exercise = await exerciseResponse.json();
           
-          // Only show toast if this wasn't just an initial render check
-          // AND there was an actual change in exercises
-          if (!isInitialCheck && (originalExerciseCount !== templateExercises.length)) {
-            toast({
-              title: "Workout Updated",
-              description: "Workout exercises have been updated to match the latest program changes",
+          // Create workout exercise
+          const newExercise = createWorkoutExercise(
+            workout.id,
+            exercise,
+            templateExercise.order
+          );
+          
+          // Create sets for this exercise
+          const sets = [];
+          for (let i = 0; i < templateExercise.sets; i++) {
+            const setType = i === 0 ? "warmup" : "working";
+            sets.push({
+              id: uuidv4(),
+              workoutExerciseId: newExercise.id,
+              setNumber: i + 1,
+              weight: 0,
+              reps: 0,
+              rpe: null,
+              setType,
+              completed: false,
+              notes: null
             });
           }
+          
+          // Save exercise and its sets
+          exercisesWithSets.push({
+            exercise: newExercise,
+            sets: sets
+          });
+          
+        } catch (err) {
+          console.error(`Error processing exercise ${templateExercise.exerciseId}:`, err);
+          // Continue with other exercises
         }
       }
+      
+      // 6. Add all exercises one by one
+      console.log(`Adding ${exercisesWithSets.length} exercises to workout`);
+      for (const { exercise, sets } of exercisesWithSets) {
+        // Add exercise
+        addExercise(exercise);
+        
+        // Add all sets for this exercise
+        for (const set of sets) {
+          addSet(exercise.id, set);
+        }
+      }
+      
+      // Show success toast if this isn't the initial render
+      if (!isInitialRenderRef.current) {
+        toast({
+          title: "Workout Updated",
+          description: "Workout exercises have been loaded successfully",
+        });
+      }
+      
+      console.log(`[${operationId}] Successfully loaded ${exercisesWithSets.length} exercises with sets`);
+      
     } catch (error) {
-      console.error(`[${operationId}] Error updating workout with program changes:`, error);
+      console.error(`[${operationId}] Error loading program exercises:`, error);
       toast({
-        title: "Update Failed",
-        description: "Failed to update workout with program changes",
+        title: "Could Not Load Exercises",
+        description: "There was a problem loading the exercises for this workout. Try again or check the console for details.",
         variant: "destructive"
       });
     } finally {
-      // Always reset the loading flag when done
+      // Always reset flags
       programExerciseLoadingRef.current = false;
-      // Mark that we've done an initial render
       isInitialRenderRef.current = false;
     }
   };
@@ -751,9 +766,17 @@ export default function CurrentWorkout() {
       
       // Make sure to load exercises for the program
       // This handles the case where workout has programId but no exercises
-      if (workout.exercises.length === 0) {
+      if (workout.exercises.length === 0 && !programExerciseLoadingRef.current) {
         console.log("Workout has program but no exercises, loading exercises...");
-        reloadProgramExercises(workout.programId);
+        
+        // Add a small delay to avoid race conditions
+        setTimeout(() => {
+          if (workout.programId && !programExerciseLoadingRef.current) {
+            // Use executeProgramUpdate instead of direct call to reloadProgramExercises
+            // This ensures proper debouncing and checking for actual changes
+            executeProgramUpdate(workout.programId);
+          }
+        }, 500);
       }
     }
   }, [programs, workout]); // Removed getSchedulesForDate dependency
