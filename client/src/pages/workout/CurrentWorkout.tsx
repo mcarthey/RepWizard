@@ -874,7 +874,7 @@ export default function CurrentWorkout() {
       const newWorkout = createNewWorkout("Today's Workout");
       createWorkout(newWorkout);
     }
-  }, [loading, workout, programs, getSchedulesForDate, createWorkoutWithProgramAndExercises, createWorkout, createNewWorkout, setTodaysScheduledProgram, toast]);
+  }, [loading, workout, programs, getSchedulesForDate, createWorkout, createNewWorkout, setTodaysScheduledProgram, toast]);
   
   // Define this function before the useEffect that uses it
   const createWorkoutWithProgramAndExercises = useCallback(async (programId: number, programName: string) => {
@@ -1011,7 +1011,7 @@ export default function CurrentWorkout() {
         console.log("Creating default workout");
         workoutFunctionsRef.current.createWorkout(createNewWorkout());
       }
-    }, [loading, workout, createWorkoutWithProgramAndExercises]);
+    }, [loading, workout]);
   
   // Update the UI when a workout exists but program isn't set - handles existing workouts
   useEffect(() => {
