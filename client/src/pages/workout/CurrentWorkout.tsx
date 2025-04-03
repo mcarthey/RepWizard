@@ -649,6 +649,52 @@ export default function CurrentWorkout() {
             selectedTemplate: targetTemplate.name,
             selectedTemplateId: targetTemplate.id
           }));
+          
+          // Ask if user wants to create a workout using this template
+          const shouldCreateWorkout = window.confirm(
+            `Do you want to create a workout for ${format(date, "MMMM d, yyyy")} using the "${targetTemplate.name}" template?`
+          );
+          
+          if (shouldCreateWorkout) {
+            try {
+              // Create a new workout for the selected date with the program
+              const newWorkoutId = uuidv4();
+              const newWorkout = {
+                id: newWorkoutId,
+                date: date.toISOString(),
+                programId: programId,
+                templateId: targetTemplate.id,
+                name: `Workout for ${format(date, "MMM d, yyyy")}`,
+                notes: null,
+                completed: false,
+                exercises: []
+              };
+              
+              // Create the workout first
+              createWorkout(newWorkout);
+              
+              // Then load the exercises
+              setTimeout(async () => {
+                // First change to this date
+                changeActiveDate(date);
+                
+                // Then load the workout with exercises
+                await reloadProgramExercises(programId);
+                
+                toast({
+                  title: "Workout Created",
+                  description: `Created workout for ${format(date, "MMMM d, yyyy")} with "${targetTemplate.name}" template`,
+                });
+              }, 500);
+            } catch (error) {
+              console.error("Error creating workout from debug template:", error);
+              toast({
+                title: "Error",
+                description: "Failed to create workout from template",
+                variant: "destructive"
+              });
+            }
+          }
         } else {
           console.log(`DEBUG - No matching template found for Week ${weekNumber}, Day ${dayOfWeek}`);
         }
@@ -657,7 +703,7 @@ export default function CurrentWorkout() {
         console.error("Error in debug template check:", error);
       }
     }
-  };
+  }
   
   // Create a stable date selection handler with useCallback
   const handleDateSelect = useCallback(async (selectedDate: Date) => {
