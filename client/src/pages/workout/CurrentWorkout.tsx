@@ -1173,7 +1173,7 @@ export default function CurrentWorkout() {
     <>
       <Header title="Today's Workout">
         <button
-          onClick={handleQuickAdd} 
+          onClick={() => setShowAddModal(true)} 
           className="text-sm px-3 py-1 rounded-lg bg-primary text-white flex items-center"
         >
           <span className="material-icons-round mr-1 text-sm">add</span>
