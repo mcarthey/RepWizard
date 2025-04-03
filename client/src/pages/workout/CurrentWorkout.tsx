@@ -713,6 +713,12 @@ export default function CurrentWorkout() {
       console.log(`[TRACKING] Before date change - Current workout date is: ${format(new Date(workout.date), "yyyy-MM-dd")}`);
     }
     
+    // CRITICAL FIX: Store the manually selected date to prevent it from being overridden
+    // This tells other hooks that the user has explicitly chosen this date
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    lastManuallySelectedDateRef.current = dateStr;
+    console.log(`[DATE PROTECTION] Recorded manual date selection: ${dateStr}`);
+    
     // Check if there's a scheduled program for the selected date
     const schedulesForDate = getSchedulesForDate(selectedDate);
     console.log(`[TRACKING] Schedules for selected date:`, schedulesForDate);
@@ -820,6 +826,11 @@ export default function CurrentWorkout() {
   
   // Keep track of the last checked date for program schedules
   const lastScheduleCheckRef = useRef<string>("");
+  
+  // CRITICAL FIX: Store a reference to the last manually selected date 
+  // to prevent auto-creation logic from overriding it
+  const lastManuallySelectedDateRef = useRef<string | null>(null);
+  
   const todayDateString = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
   // Check if there's a program scheduled for today and create a workout if needed
@@ -980,10 +991,19 @@ export default function CurrentWorkout() {
       }
     }, [workoutFunctionsRef]);
     
+
+    
     // Check for scheduled programs on component mount
     useEffect(() => {
       // Skip if we're still loading or already have a workout
       if (loading || workout) {
+        return;
+      }
+      
+      // CRITICAL FIX: Check if user has manually selected a date
+      // If so, don't auto-create a workout for today's date
+      if (lastManuallySelectedDateRef.current) {
+        console.log(`[DATE PROTECTION] Skipping auto-creation since user manually selected date: ${lastManuallySelectedDateRef.current}`);
         return;
       }
       
