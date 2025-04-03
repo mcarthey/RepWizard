@@ -1,25 +1,24 @@
 import { useCallback } from 'react';
-import { debounce } from '@/lib/utils';
 
 /**
- * Hook for accessing and manipulating local storage with debouncing support
+ * Hook for accessing and manipulating local storage
+ * Note: Previously used debouncing but it was removed to fix date selection issues
  */
 export function useStorage() {
   /**
-   * Save data to local storage with debouncing to prevent excessive writes
+   * Save data to local storage immediately to prevent race conditions
+   * Previously this was debounced, but that caused issues with date selection
    */
-  const saveToStorage = useCallback(
-    debounce((key: string, data: any) => {
-      try {
-        const serializedData = JSON.stringify(data);
-        localStorage.setItem(key, serializedData);
-        console.log(`Saved data to ${key}`);
-      } catch (error) {
-        console.error(`Error saving data to ${key}:`, error);
-      }
-    }, 500),
-    []
-  );
+  // Use immediate save instead of debounced to prevent race conditions with date changes
+  const saveToStorage = useCallback((key: string, data: any) => {
+    try {
+      const serializedData = JSON.stringify(data);
+      localStorage.setItem(key, serializedData);
+      console.log(`Saved data to ${key}`);
+    } catch (error) {
+      console.error(`Error saving data to ${key}:`, error);
+    }
+  }, []);
 
   /**
    * Load data from local storage
