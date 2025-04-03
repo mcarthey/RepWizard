@@ -1593,8 +1593,8 @@ export default function CurrentWorkout() {
         currentDate={activeDate}
         onDateSelect={(selectedDate) => {
           setShowCalendarModal(false);
-          // Use changeActiveDate directly from the hook
-          changeActiveDate(selectedDate);
+          // Use the full handleDateSelect function with proper template loading
+          handleDateSelect(selectedDate);
         }}
       />
 
