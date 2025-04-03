@@ -874,7 +874,7 @@ export default function CurrentWorkout() {
       const newWorkout = createNewWorkout("Today's Workout");
       createWorkout(newWorkout);
     }
-  });
+  }, [loading, workout, programs, getSchedulesForDate, createWorkoutWithProgramAndExercises, createWorkout, createNewWorkout, setTodaysScheduledProgram, toast]);
   
   // Define this function before the useEffect that uses it
   const createWorkoutWithProgramAndExercises = useCallback(async (programId: number, programName: string) => {
