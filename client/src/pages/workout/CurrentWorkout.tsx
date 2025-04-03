@@ -424,7 +424,8 @@ export default function CurrentWorkout() {
     toast
   ]);
 
-  // Store functions and data in refs to maintain stable dependencies
+  // We'll still need the workoutFunctionsRef for now to avoid breaking too much code
+  // This will help us transition to a cleaner approach
   const workoutFunctionsRef = useRef({
     createWorkout,
     updateWorkout,
@@ -434,18 +435,6 @@ export default function CurrentWorkout() {
     programs,
     handleDateSelect
   });
-  
-  // Update refs when functions or data change
-  useEffect(() => {
-    workoutFunctionsRef.current = {
-      ...workoutFunctionsRef.current,
-      createWorkout,
-      updateWorkout,
-      addExercise,
-      addSet,
-      handleDateSelect
-    };
-  }, [createWorkout, updateWorkout, addExercise, addSet, handleDateSelect]);
   
   useEffect(() => {
     workoutFunctionsRef.current.getSchedulesForDate = getSchedulesForDate;
@@ -1205,8 +1194,8 @@ export default function CurrentWorkout() {
         currentDate={activeDate}
         onDateSelect={(selectedDate) => {
           setShowCalendarModal(false);
-          // Use handleDateSelect directly since it now uses the improved changeActiveDate
-          handleDateSelect(selectedDate);
+          // Use changeActiveDate directly from the hook
+          changeActiveDate(selectedDate);
         }}
       />
     </>
