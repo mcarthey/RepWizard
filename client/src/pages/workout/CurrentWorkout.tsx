@@ -48,6 +48,30 @@ export default function CurrentWorkout() {
   const [todaysScheduledProgram, setTodaysScheduledProgram] = useState<Program | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
+  
+  // Debug information state
+  const [debugInfo, setDebugInfo] = useState<{
+    weekNumber: number | null;
+    dayNumber: number | null;
+    templates: string[];
+    selectedTemplate: string | null;
+    selectedTemplateId: number | null;
+    startDate: string | null;
+    workoutDate: string | null;
+    daysSinceStart: number | null;
+    schedulesFound: number;
+  }>({
+    weekNumber: null,
+    dayNumber: null,
+    templates: [],
+    selectedTemplate: null,
+    selectedTemplateId: null,
+    startDate: null,
+    workoutDate: null,
+    daysSinceStart: null,
+    schedulesFound: 0
+  });
+  const [showDebugInfo, setShowDebugInfo] = useState(true);
   const [, navigate] = useLocation();
   
   // Get program data
@@ -99,6 +123,13 @@ export default function CurrentWorkout() {
       let weekNumber = 1;
       let dayNumber = 1;
       
+      // Update debug info
+      setDebugInfo(prev => ({
+        ...prev,
+        schedulesFound: schedulesForDate.length,
+        workoutDate: workoutDate.toISOString()
+      }));
+        
       if (schedulesForDate.length > 0) {
         const schedule = schedulesForDate[0];
         const startDate = new Date(schedule.startDate);
@@ -128,10 +159,25 @@ export default function CurrentWorkout() {
         // Find the matching template
         console.log(`DEBUG - Looking for template for Week ${weekNumber}, Day ${dayOfWeek}`);
         dayNumber = dayOfWeek;
+        
+        // Update debug info
+        setDebugInfo(prev => ({
+          ...prev,
+          weekNumber,
+          dayNumber: dayOfWeek,
+          startDate: startDate.toISOString(),
+          daysSinceStart: dayDiff
+        }));
       }
       
       // Log all available templates for debugging
-      console.log(`DEBUG - All available templates:`, templates.map(t => t.name));
+      console.log(`DEBUG - All available templates:`, templates.map((t: any) => t.name));
+      
+      // Update debug info with template names
+      setDebugInfo(prev => ({
+        ...prev,
+        templates: templates.map((t: any) => t.name || 'Unnamed Template')
+      }));
       
       // Find the template for this week/day combination
       // Template naming convention is usually "Program Name - Week X Day Y"
@@ -167,6 +213,13 @@ export default function CurrentWorkout() {
       
       // If we found a specific template, use it, otherwise fall back to the first template
       const templateId = targetTemplate ? targetTemplate.id : templates[0].id;
+      
+      // Update debug info with selected template
+      setDebugInfo(prev => ({
+        ...prev,
+        selectedTemplate: targetTemplate ? targetTemplate.name : templates[0].name,
+        selectedTemplateId: templateId
+      }));
       
       if (targetTemplate) {
         console.log(`DEBUG - Selected template: ID ${templateId} - "${targetTemplate.name}" (matched week/day)`);
@@ -1079,7 +1132,14 @@ export default function CurrentWorkout() {
 
   return (
     <>
-      <Header title="Today's Workout" />
+      <Header title="Today's Workout">
+        <button
+          onClick={() => setShowDebugInfo(prev => !prev)}
+          className="text-xs px-2 py-1 bg-gray-700 text-white rounded-md ml-auto mr-1"
+        >
+          {showDebugInfo ? 'Hide Debug' : 'Show Debug'}
+        </button>
+      </Header>
       
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
 
@@ -1318,6 +1378,66 @@ export default function CurrentWorkout() {
           changeActiveDate(selectedDate);
         }}
       />
+
+      {/* Debug Panel */}
+      {showDebugInfo && (
+        <div className="fixed bottom-16 left-0 right-0 bg-black/80 text-white text-xs p-2 z-50 rounded-t-md max-h-[50vh] overflow-auto">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-bold">Template Selection Debug</h3>
+            <button 
+              onClick={() => setShowDebugInfo(false)}
+              className="bg-red-600 text-white px-2 py-1 rounded-sm"
+            >
+              Close
+            </button>
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex flex-col">
+              <span className="font-semibold">Week/Day Calculation:</span>
+              <div className="pl-2">
+                <div>Week: {debugInfo.weekNumber ?? 'Not calculated'}</div>
+                <div>Day: {debugInfo.dayNumber ?? 'Not calculated'}</div>
+                <div>Start Date: {debugInfo.startDate ? new Date(debugInfo.startDate).toLocaleDateString() : 'None'}</div>
+                <div>Workout Date: {debugInfo.workoutDate ? new Date(debugInfo.workoutDate).toLocaleDateString() : 'None'}</div>
+                <div>Days Since Start: {debugInfo.daysSinceStart ?? 'Unknown'}</div>
+                <div>Schedules Found: {debugInfo.schedulesFound}</div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col mt-2">
+              <span className="font-semibold">Templates:</span>
+              <div className="pl-2 mt-1">
+                {debugInfo.templates.length > 0 ? (
+                  <ul className="list-disc pl-4">
+                    {debugInfo.templates.map((template, idx) => (
+                      <li key={idx} className={template === debugInfo.selectedTemplate ? 'text-green-400 font-bold' : ''}>
+                        {template} {template === debugInfo.selectedTemplate && '(Selected)'}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div>No templates loaded</div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <span className="font-semibold">Selected Template:</span>
+              <div className="pl-2">
+                {debugInfo.selectedTemplate ? (
+                  <div>
+                    <div>Name: {debugInfo.selectedTemplate}</div>
+                    <div>ID: {debugInfo.selectedTemplateId}</div>
+                  </div>
+                ) : (
+                  <div>No template selected</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

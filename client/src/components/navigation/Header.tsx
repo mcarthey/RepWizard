@@ -5,13 +5,15 @@ interface HeaderProps {
   showBackButton?: boolean;
   onBackClick?: () => void;
   actionButton?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function Header({ 
   title, 
   showBackButton = false, 
   onBackClick,
-  actionButton 
+  actionButton,
+  children
 }: HeaderProps) {
   const [, setLocation] = useLocation();
 
@@ -38,14 +40,17 @@ export default function Header({
         <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
       </div>
       
-      {actionButton || (
-        <button 
-          className="rounded-full p-2 hover:bg-gray-100 transition-colors"
-          aria-label="Options"
-        >
-          <span className="material-icons-round text-gray-600">more_vert</span>
-        </button>
-      )}
+      <div className="flex items-center">
+        {children}
+        {actionButton || (
+          <button 
+            className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+            aria-label="Options"
+          >
+            <span className="material-icons-round text-gray-600">more_vert</span>
+          </button>
+        )}
+      </div>
     </header>
   );
 }
