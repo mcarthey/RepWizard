@@ -363,16 +363,17 @@ export default function CurrentWorkout() {
         
         if (shouldLoadProgram) {
           try {
-            // First update the date on the existing workout
+            console.log(`Updating workout:`, scheduledProgram.name, selectedDate.toISOString());
+            
+            // First update the date and basic info on the existing workout
             const updatedWorkout = {
               ...workout,
               date: selectedDate.toISOString(),
               programId: scheduledProgram.id,
-              name: scheduledProgram.name,
-              exercises: [] // Clear exercises to load from program
+              name: scheduledProgram.name
             };
             
-            // Update with the new date
+            // Update with the new date and basic info
             updateWorkout(updatedWorkout);
             
             // Show toast to confirm the update
@@ -381,66 +382,8 @@ export default function CurrentWorkout() {
               description: `Loading "${scheduledProgram.name}" for ${format(selectedDate, "MMMM d, yyyy")}`,
             });
             
-            // Get the template for this program to load exercises
-            const response = await fetch(`/api/programs/${scheduledProgram.id}/templates`);
-            if (!response.ok) throw new Error('Failed to fetch workout templates');
-            
-            const templates = await response.json();
-            
-            if (templates && templates.length > 0) {
-              // Get the first template for now
-              const templateId = templates[0].id;
-              
-              // Update the workout with template ID
-              const workoutWithTemplate = {
-                ...updatedWorkout,
-                templateId
-              };
-              
-              updateWorkout(workoutWithTemplate);
-              
-              // Get the exercises for this template
-              const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
-              if (exercisesResponse.ok) {
-                const templateExercises = await exercisesResponse.json();
-                
-                // Add exercises from the template
-                if (templateExercises && templateExercises.length > 0) {
-                  for (const templateExercise of templateExercises) {
-                    const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
-                    if (exerciseResponse.ok) {
-                      const exercise = await exerciseResponse.json();
-                      
-                      const newExercise = createWorkoutExercise(
-                        workoutWithTemplate.id,
-                        exercise,
-                        templateExercise.order
-                      );
-                      addExercise(newExercise);
-                      
-                      // Add default sets for the exercise
-                      for (let i = 0; i < templateExercise.sets; i++) {
-                        const setType = i === 0 ? "warmup" : "working";
-                        const newSet: LocalSet = {
-                          id: uuidv4(),
-                          workoutExerciseId: newExercise.id,
-                          setNumber: i + 1,
-                          weight: 0,
-                          reps: 0,
-                          rpe: null,
-                          setType,
-                          completed: false,
-                          notes: null
-                        };
-                        
-                        // Add the set
-                        addSet(newExercise.id, newSet);
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            // Now use the reloadProgramExercises function to load all exercises at once
+            await reloadProgramExercises(scheduledProgram.id);
             
             toast({
               title: "Program Loaded",
@@ -472,7 +415,7 @@ export default function CurrentWorkout() {
       title: "Date Updated",
       description: `Workout date set to ${format(selectedDate, "MMMM d, yyyy")}`,
     });
-  }, [workout, getSchedulesForDate, programs, updateWorkout, addExercise, addSet, toast]);
+  }, [workout, getSchedulesForDate, programs, updateWorkout, reloadProgramExercises, toast]);
 
   // Store functions and data in refs to maintain stable dependencies
   const workoutFunctionsRef = useRef({
