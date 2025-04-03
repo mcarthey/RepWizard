@@ -5,7 +5,10 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
+const isDevelopment = process.env.NODE_ENV === 'development';
+const DATABASE_URL = process.env.DATABASE_URL || (isDevelopment ? 'postgresql://localhost:5432/repwizard' : null);
+
+if (!DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
