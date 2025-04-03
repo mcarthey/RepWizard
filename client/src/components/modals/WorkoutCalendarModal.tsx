@@ -23,6 +23,13 @@ export default function WorkoutCalendarModal({
     return schedules.length > 0;
   };
   
+  // Function to determine if this is the manually selected date
+  const isManuallySelectedDate = (date: Date) => {
+    const manuallySelectedDate = sessionStorage.getItem('manually_selected_date');
+    if (!manuallySelectedDate) return false;
+    return format(date, 'yyyy-MM-dd') === manuallySelectedDate;
+  };
+  
   // Handle date selection with proper confirmation
   const handleDateSelection = (date: Date | undefined) => {
     if (!date) return;
@@ -80,9 +87,11 @@ export default function WorkoutCalendarModal({
             className="rounded-md border"
             modifiers={{
               booked: (date) => hasScheduledWorkout(date),
+              manuallySelected: (date) => isManuallySelectedDate(date),
             }}
             modifiersClassNames={{
               booked: "bg-blue-100 font-bold text-blue-600 hover:bg-blue-200",
+              manuallySelected: "bg-green-100 font-bold text-green-600 hover:bg-green-200 border-2 border-green-500",
             }}
             today={new Date()}
           />
@@ -90,7 +99,11 @@ export default function WorkoutCalendarModal({
         
         <div className="mt-4 text-center text-sm text-gray-500">
           <p>Dates with scheduled workouts are highlighted in blue</p>
-          <p className="mt-2">Current workout date: {format(currentDate, "MMMM d, yyyy")}</p>
+          <p>Manually selected dates are highlighted in green</p>
+          <p className="mt-2 font-medium">Current workout date: {format(currentDate, "MMMM d, yyyy")}</p>
+          {isManuallySelectedDate(currentDate) && (
+            <p className="text-green-600 text-xs mt-1">This date was manually selected</p>
+          )}
         </div>
       </div>
     </div>

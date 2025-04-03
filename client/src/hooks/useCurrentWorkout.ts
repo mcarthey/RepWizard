@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useStorage } from '@/hooks/useStorage';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { 
   LocalWorkout, 
   LocalWorkoutExercise, 
@@ -29,8 +29,18 @@ export function useCurrentWorkout() {
   const { saveToStorage, loadFromStorage } = useStorage();
   const { toast } = useToast();
   
-  // Active date state
-  const [activeDate, setActiveDate] = useState<Date>(new Date());
+  // Check if we have a manually selected date stored in sessionStorage
+  // If so, use that as the initial activeDate to maintain user selection across page loads
+  const manuallySelectedDate = sessionStorage.getItem('manually_selected_date');
+  
+  // Active date state - initialize with manually selected date if available
+  const [activeDate, setActiveDate] = useState<Date>(() => {
+    if (manuallySelectedDate) {
+      console.log(`[DATE PROTECTION] Initializing with manually selected date from sessionStorage: ${manuallySelectedDate}`);
+      return parseISO(manuallySelectedDate);
+    }
+    return new Date();
+  });
   
   // Workout and loading states
   const [workout, setWorkout] = useState<LocalWorkout | null>(null);
@@ -115,10 +125,24 @@ export function useCurrentWorkout() {
   
   /**
    * Change the active date and load the corresponding workout
+   * 
+   * CRITICAL FIX: We now store if a date was manually selected to prevent
+   * it from being overridden by default scheduling logic
+   * 
+   * @param newDate The date to switch to
+   * @param isManualSelection Whether this date change came from user selection (true) or auto-loading (false)
    */
-  const changeActiveDate = useCallback((newDate: Date) => {
+  const changeActiveDate = useCallback((newDate: Date, isManualSelection: boolean = false) => {
     console.log(`[TRACKING] Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
     console.log(`[TRACKING] New date timestamp: ${newDate.getTime()}`);
+    console.log(`[DATE PROTECTION] Manual selection: ${isManualSelection}`);
+    
+    // This date was manually selected, store this info in sessionStorage to persist across component reloads
+    if (isManualSelection) {
+      const dateStr = format(newDate, 'yyyy-MM-dd');
+      console.log(`[DATE PROTECTION] Storing manually selected date in sessionStorage: ${dateStr}`);
+      sessionStorage.setItem('manually_selected_date', dateStr);
+    }
     
     // Check for date stability
     if (activeDate) {

@@ -713,12 +713,6 @@ export default function CurrentWorkout() {
       console.log(`[TRACKING] Before date change - Current workout date is: ${format(new Date(workout.date), "yyyy-MM-dd")}`);
     }
     
-    // CRITICAL FIX: Store the manually selected date to prevent it from being overridden
-    // This tells other hooks that the user has explicitly chosen this date
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    lastManuallySelectedDateRef.current = dateStr;
-    console.log(`[DATE PROTECTION] Recorded manual date selection: ${dateStr}`);
-    
     // Check if there's a scheduled program for the selected date
     const schedulesForDate = getSchedulesForDate(selectedDate);
     console.log(`[TRACKING] Schedules for selected date:`, schedulesForDate);
@@ -728,9 +722,9 @@ export default function CurrentWorkout() {
     // Store the timestamp to detect date changes
     const beforeTimestamp = Date.now();
     
-    // Switch to the new date using the changeActiveDate function
-    // This will automatically load any existing workout for this date
-    changeActiveDate(selectedDate);
+    // CRITICAL FIX: Pass isManualSelection=true to indicate this is a user-selected date
+    // This will prevent it from being overridden by default date logic
+    changeActiveDate(selectedDate, true);
     
     console.log(`[TRACKING] changeActiveDate called for: ${format(selectedDate, "yyyy-MM-dd")}, time taken: ${Date.now() - beforeTimestamp}ms`);
     
@@ -1000,10 +994,11 @@ export default function CurrentWorkout() {
         return;
       }
       
-      // CRITICAL FIX: Check if user has manually selected a date
-      // If so, don't auto-create a workout for today's date
-      if (lastManuallySelectedDateRef.current) {
-        console.log(`[DATE PROTECTION] Skipping auto-creation since user manually selected date: ${lastManuallySelectedDateRef.current}`);
+      // CRITICAL FIX: Check if user has manually selected a date from sessionStorage
+      // This persists even if the component remounts after first selection
+      const manuallySelectedDate = sessionStorage.getItem('manually_selected_date');
+      if (manuallySelectedDate) {
+        console.log(`[DATE PROTECTION] Skipping auto-creation since user manually selected date: ${manuallySelectedDate}`);
         return;
       }
       
@@ -1385,6 +1380,22 @@ export default function CurrentWorkout() {
           </span>
           {showDebugInfo ? 'Hide' : 'Debug'}
         </button>
+        {showDebugInfo && (
+          <button
+            onClick={() => {
+              sessionStorage.removeItem('manually_selected_date');
+              console.log('[DATE PROTECTION] Cleared manually selected date from sessionStorage');
+              toast({
+                title: "Debug Action",
+                description: "Cleared manually selected date from sessionStorage"
+              });
+            }}
+            className="text-xs px-2 py-1 bg-red-700 text-white rounded-md ml-2"
+          >
+            <span className="material-icons-round text-xs mr-1">restart_alt</span>
+            Reset Date
+          </button>
+        )}
       </Header>
       
       <main className="flex-1 overflow-y-auto no-scrollbar pb-20">
