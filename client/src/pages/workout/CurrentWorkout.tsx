@@ -187,25 +187,51 @@ export default function CurrentWorkout() {
         if (!t.name) return false;
         
         const nameLower = t.name.toLowerCase();
+        
+        // Define various patterns to check for
+        // Standard format: "Week X Day Y"
         const weekString = `week ${weekNumber}`;
         const dayString = `day ${dayNumber}`;
+        
+        // Short formats
         const shortWeekDay = `w${weekNumber}d${dayNumber}`;
         const shortWeekDayDash = `w${weekNumber}-d${dayNumber}`;
         
-        console.log(`DEBUG - Checking template "${t.name}" for match pattern:
-          - "${weekString}" AND "${dayString}" OR
-          - "${shortWeekDay}" OR
-          - "${shortWeekDayDash}"`);
+        // Alternative formats
+        const weekDayNoSpace = `week${weekNumber}day${dayNumber}`;
+        const weekDaySlash = `week${weekNumber}/day${dayNumber}`;
+        const daySlashWeek = `day${dayNumber}/week${weekNumber}`;
+        
+        // Numeric format only - e.g., "3-1" for Week 3 Day 1
+        const numericFormat = `${weekNumber}-${dayNumber}`;
+        
+        console.log(`DEBUG - Checking template "${t.name}" for various match patterns`);
         
         // Check each condition separately for better logging
         const hasWeekAndDay = nameLower.includes(weekString) && nameLower.includes(dayString);
         const hasShortFormat = nameLower.includes(shortWeekDay);
         const hasShortDashFormat = nameLower.includes(shortWeekDayDash);
+        const hasNoSpaceFormat = nameLower.includes(weekDayNoSpace);
+        const hasSlashFormat = nameLower.includes(weekDaySlash) || nameLower.includes(daySlashWeek);
+        const hasNumericFormat = nameLower.includes(numericFormat);
         
-        const isMatch = hasWeekAndDay || hasShortFormat || hasShortDashFormat;
+        // Match if any of the patterns are found
+        const isMatch = hasWeekAndDay || hasShortFormat || hasShortDashFormat || 
+                        hasNoSpaceFormat || hasSlashFormat || hasNumericFormat;
         
         if (isMatch) {
-          console.log(`DEBUG - MATCH FOUND: "${t.name}" matches our criteria!`);
+          console.log(`DEBUG - MATCH FOUND: "${t.name}" matches Week ${weekNumber}, Day ${dayNumber}!`);
+          // Log which pattern matched
+          console.log(`DEBUG - Matched patterns: ${
+            [
+              hasWeekAndDay ? `"week ${weekNumber}" AND "day ${dayNumber}"` : '',
+              hasShortFormat ? `"w${weekNumber}d${dayNumber}"` : '',
+              hasShortDashFormat ? `"w${weekNumber}-d${dayNumber}"` : '',
+              hasNoSpaceFormat ? `"week${weekNumber}day${dayNumber}"` : '',
+              hasSlashFormat ? 'slash format' : '',
+              hasNumericFormat ? `"${weekNumber}-${dayNumber}"` : ''
+            ].filter(Boolean).join(', ')
+          }`);
         }
         
         return isMatch;
@@ -497,11 +523,19 @@ export default function CurrentWorkout() {
   const { getSchedulesForDate } = useScheduleChecks();
   
   // Debug function to manually check schedules for a date
-  const debugCheckSchedules = (date: Date) => {
+  const debugCheckSchedules = async (date: Date) => {
+    // Clear previous templates first
+    setDebugInfo(prev => ({
+      ...prev,
+      templates: [],
+      selectedTemplate: null,
+      selectedTemplateId: null
+    }));
+    
     const schedulesForDate = getSchedulesForDate(date);
     console.log(`DEBUG - Manual check for date ${format(date, "yyyy-MM-dd")}:`, schedulesForDate);
     
-    // Update debug info
+    // Update debug info with schedule info
     setDebugInfo(prev => ({
       ...prev,
       schedulesFound: schedulesForDate.length,
@@ -512,6 +546,7 @@ export default function CurrentWorkout() {
     if (schedulesForDate.length > 0) {
       const schedule = schedulesForDate[0];
       const startDate = new Date(schedule.startDate);
+      const programId = schedule.programId;
       
       // Calculate difference in days from start date
       const dayDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -532,6 +567,95 @@ export default function CurrentWorkout() {
         dayNumber: dayOfWeek,
         daysSinceStart: dayDiff
       }));
+      
+      // Now fetch the templates for this program to see what we should be selecting
+      try {
+        console.log(`DEBUG - Fetching templates for program ID: ${programId}`);
+        const templatesResponse = await fetch(`/api/programs/${programId}/templates`);
+        
+        if (!templatesResponse.ok) {
+          console.error("Failed to fetch templates for debug info");
+          return;
+        }
+        
+        const templates = await templatesResponse.json();
+        console.log(`DEBUG - Retrieved ${templates.length} templates:`, templates);
+        
+        // Update debug info with template names
+        setDebugInfo(prev => ({
+          ...prev,
+          templates: templates.map((t: any) => t.name || 'Unnamed Template')
+        }));
+        
+        // Now try to find the matching template for this week/day
+        console.log(`DEBUG - Looking for templates matching Week ${weekNumber}, Day ${dayOfWeek}`);
+        
+        const targetTemplate = templates.find((t: any) => {
+          if (!t.name) return false;
+          
+          const nameLower = t.name.toLowerCase();
+          
+          // Define various patterns to check for
+          // Standard format: "Week X Day Y"
+          const weekString = `week ${weekNumber}`;
+          const dayString = `day ${dayOfWeek}`;
+          
+          // Short formats
+          const shortWeekDay = `w${weekNumber}d${dayOfWeek}`;
+          const shortWeekDayDash = `w${weekNumber}-d${dayOfWeek}`;
+          
+          // Alternative formats
+          const weekDayNoSpace = `week${weekNumber}day${dayOfWeek}`;
+          const weekDaySlash = `week${weekNumber}/day${dayOfWeek}`;
+          const daySlashWeek = `day${dayOfWeek}/week${weekNumber}`;
+          
+          // Numeric format only - e.g., "3-1" for Week 3 Day 1
+          const numericFormat = `${weekNumber}-${dayOfWeek}`;
+          
+          // Check each condition separately for better logging
+          const hasWeekAndDay = nameLower.includes(weekString) && nameLower.includes(dayString);
+          const hasShortFormat = nameLower.includes(shortWeekDay);
+          const hasShortDashFormat = nameLower.includes(shortWeekDayDash);
+          const hasNoSpaceFormat = nameLower.includes(weekDayNoSpace);
+          const hasSlashFormat = nameLower.includes(weekDaySlash) || nameLower.includes(daySlashWeek);
+          const hasNumericFormat = nameLower.includes(numericFormat);
+          
+          // Match if any of the patterns are found
+          const isMatch = hasWeekAndDay || hasShortFormat || hasShortDashFormat || 
+                          hasNoSpaceFormat || hasSlashFormat || hasNumericFormat;
+          
+          if (isMatch) {
+            console.log(`DEBUG - MATCH FOUND: "${t.name}" matches Week ${weekNumber}, Day ${dayOfWeek}!`);
+            // Log which pattern matched
+            console.log(`DEBUG - Matched patterns: ${
+              [
+                hasWeekAndDay ? `"week ${weekNumber}" AND "day ${dayOfWeek}"` : '',
+                hasShortFormat ? `"w${weekNumber}d${dayOfWeek}"` : '',
+                hasShortDashFormat ? `"w${weekNumber}-d${dayOfWeek}"` : '',
+                hasNoSpaceFormat ? `"week${weekNumber}day${dayOfWeek}"` : '',
+                hasSlashFormat ? 'slash format' : '',
+                hasNumericFormat ? `"${weekNumber}-${dayOfWeek}"` : ''
+              ].filter(Boolean).join(', ')
+            }`);
+          }
+          
+          return isMatch;
+        });
+        
+        if (targetTemplate) {
+          console.log(`DEBUG - Selected template for Week ${weekNumber}, Day ${dayOfWeek}: ${targetTemplate.name}`);
+          setDebugInfo(prev => ({
+            ...prev,
+            selectedTemplate: targetTemplate.name,
+            selectedTemplateId: targetTemplate.id
+          }));
+        } else {
+          console.log(`DEBUG - No matching template found for Week ${weekNumber}, Day ${dayOfWeek}`);
+        }
+        
+      } catch (error) {
+        console.error("Error in debug template check:", error);
+      }
     }
   };
   
