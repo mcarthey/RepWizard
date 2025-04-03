@@ -124,9 +124,18 @@ export function useCurrentWorkout() {
    */
   const updateWorkout = useCallback((updatedWorkout: LocalWorkout) => {
     console.log("Updating workout:", updatedWorkout.name, updatedWorkout.date);
+    console.log("DEBUG updateWorkout - Exercise count in update:", 
+      updatedWorkout.exercises.length);
+    console.log("DEBUG updateWorkout - Full exercise list:", updatedWorkout.exercises);
+    
     setWorkout(updatedWorkout);
     saveToStorage('currentWorkout', updatedWorkout);
-  }, [saveToStorage]);
+    
+    // Double-check what was stored immediately after
+    const storedData = loadFromStorage<LocalWorkout>('currentWorkout');
+    console.log("DEBUG updateWorkout - VALIDATION - Exercise count in storage:", 
+      storedData?.exercises.length || 0);
+  }, [saveToStorage, loadFromStorage]);
   
   /**
    * Create a new workout
@@ -143,15 +152,26 @@ export function useCurrentWorkout() {
    * Add an exercise to the current workout
    */
   const addExercise = useCallback((exercise: LocalWorkoutExercise) => {
-    if (!workoutRef.current) return;
+    if (!workoutRef.current) {
+      console.error("Cannot add exercise - no current workout");
+      return;
+    }
+    
+    console.log("DEBUG addExercise - BEFORE: workout has", 
+      workoutRef.current.exercises.length, "exercises");
     
     const updatedWorkout = {
       ...workoutRef.current,
       exercises: [...workoutRef.current.exercises, exercise]
     };
     
+    console.log("DEBUG addExercise - AFTER: updatedWorkout now has", 
+      updatedWorkout.exercises.length, "exercises");
+      
     setWorkout(updatedWorkout);
     saveToStorage('currentWorkout', updatedWorkout);
+    console.log("DEBUG: Saved workout with", updatedWorkout.exercises.length, 
+      "exercises to storage");
   }, [saveToStorage]);
   
   /**
