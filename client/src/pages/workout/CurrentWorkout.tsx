@@ -89,10 +89,12 @@ export default function CurrentWorkout() {
       
       // Calculate which week and day we're on based on the workout date
       const workoutDate = new Date(workout.date);
-      console.log(`Finding template for date: ${workoutDate.toISOString()}`);
+      console.log(`DEBUG - Finding template for date: ${workoutDate.toISOString()}`);
+      console.log(`DEBUG - Current program:`, currentProgram);
       
       // Find the scheduled program that includes this date
       const schedulesForDate = getSchedulesForDate(workoutDate);
+      console.log(`DEBUG - Schedules matching this date:`, schedulesForDate);
       
       let weekNumber = 1;
       let dayNumber = 1;
@@ -101,25 +103,40 @@ export default function CurrentWorkout() {
         const schedule = schedulesForDate[0];
         const startDate = new Date(schedule.startDate);
         
+        console.log(`DEBUG - Program start date: ${startDate.toISOString()}`);
+        console.log(`DEBUG - Workout date: ${workoutDate.toISOString()}`);
+        
         // Calculate difference in days from start date
         const dayDiff = Math.floor((workoutDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        console.log(`DEBUG - Days since program start: ${dayDiff}`);
         
         // Calculate the week (1-indexed)
         weekNumber = Math.floor(dayDiff / 7) + 1;
+        console.log(`DEBUG - Calculated week number: ${weekNumber}`);
         
         // Calculate the day of the week (1-indexed through 7 for Monday to Sunday)
         const dayOfWeek = workoutDate.getDay() === 0 ? 7 : workoutDate.getDay();
+        console.log(`DEBUG - Day of week: ${dayOfWeek}`);
         
         // Make sure we don't exceed the total weeks
-        weekNumber = Math.min(weekNumber, currentProgram.weeks);
+        const originalWeekNumber = weekNumber;
+        weekNumber = Math.min(weekNumber, currentProgram.weeks || 1);
+        if (originalWeekNumber !== weekNumber) {
+          console.log(`DEBUG - Week number capped from ${originalWeekNumber} to ${weekNumber} based on program weeks`);
+        }
         
         // Find the matching template
-        console.log(`Looking for template for Week ${weekNumber}, Day ${dayOfWeek}`);
+        console.log(`DEBUG - Looking for template for Week ${weekNumber}, Day ${dayOfWeek}`);
         dayNumber = dayOfWeek;
       }
       
+      // Log all available templates for debugging
+      console.log(`DEBUG - All available templates:`, templates.map(t => t.name));
+      
       // Find the template for this week/day combination
       // Template naming convention is usually "Program Name - Week X Day Y"
+      console.log(`DEBUG - Starting template search for Week ${weekNumber}, Day ${dayNumber}`);
+      
       const targetTemplate = templates.find((t: any) => {
         if (!t.name) return false;
         
@@ -129,16 +146,34 @@ export default function CurrentWorkout() {
         const shortWeekDay = `w${weekNumber}d${dayNumber}`;
         const shortWeekDayDash = `w${weekNumber}-d${dayNumber}`;
         
-        console.log(`Checking template "${t.name}" for ${weekString} and ${dayString}`);
+        console.log(`DEBUG - Checking template "${t.name}" for match pattern:
+          - "${weekString}" AND "${dayString}" OR
+          - "${shortWeekDay}" OR
+          - "${shortWeekDayDash}"`);
         
-        return (nameLower.includes(weekString) && nameLower.includes(dayString)) || 
-               nameLower.includes(shortWeekDay) || 
-               nameLower.includes(shortWeekDayDash);
+        // Check each condition separately for better logging
+        const hasWeekAndDay = nameLower.includes(weekString) && nameLower.includes(dayString);
+        const hasShortFormat = nameLower.includes(shortWeekDay);
+        const hasShortDashFormat = nameLower.includes(shortWeekDayDash);
+        
+        const isMatch = hasWeekAndDay || hasShortFormat || hasShortDashFormat;
+        
+        if (isMatch) {
+          console.log(`DEBUG - MATCH FOUND: "${t.name}" matches our criteria!`);
+        }
+        
+        return isMatch;
       });
       
       // If we found a specific template, use it, otherwise fall back to the first template
       const templateId = targetTemplate ? targetTemplate.id : templates[0].id;
-      console.log(`Selected template: ${templateId} ${targetTemplate ? '(matched week/day)' : '(default fallback)'}`);
+      
+      if (targetTemplate) {
+        console.log(`DEBUG - Selected template: ID ${templateId} - "${targetTemplate.name}" (matched week/day)`);
+      } else {
+        console.log(`DEBUG - No matching template found. Falling back to the first template: ID ${templateId} - "${templates[0].name}"`);
+        console.log(`DEBUG - This might indicate a program data issue - the template for Week ${weekNumber}, Day ${dayNumber} doesn't exist`);
+      }
       
       
       // STEP 2: Get all exercises for this template
@@ -461,7 +496,8 @@ export default function CurrentWorkout() {
             
             // Now use the reloadProgramExercises function to load exercises
             setTimeout(async () => {
-              console.log("Loading exercises for new workout after short delay");
+              console.log(`DEBUG - Loading exercises for new workout on ${format(selectedDate, "yyyy-MM-dd")} for program: ${scheduledProgram.name}`);
+              console.log(`DEBUG - This workout is Schedule Week ${Math.floor(Math.abs((+selectedDate - +new Date(schedulesForDate[0].startDate)) / (1000 * 60 * 60 * 24 * 7)) + 1)}, Day ${selectedDate.getDay() === 0 ? 7 : selectedDate.getDay()}`);
               await reloadProgramExercises(scheduledProgram.id);
               
               toast({
