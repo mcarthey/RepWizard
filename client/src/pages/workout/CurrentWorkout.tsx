@@ -69,7 +69,7 @@ export default function CurrentWorkout() {
     });
     
     try {
-      // STEP 1: Get the template for this program
+      // STEP 1: Get the templates for this program
       const templatesResponse = await fetch(`/api/programs/${programId}/templates`);
       if (!templatesResponse.ok) {
         throw new Error("Failed to fetch workout templates");
@@ -80,8 +80,66 @@ export default function CurrentWorkout() {
         throw new Error("No templates found for this program");
       }
       
-      // Use the first template
-      const templateId = templates[0].id;
+      // STEP 1b: Find the right template for the current date's week and day
+      // Get the current program
+      const currentProgram = programs.find(p => p.id === programId);
+      if (!currentProgram) {
+        throw new Error("Program not found");
+      }
+      
+      // Calculate which week and day we're on based on the workout date
+      const workoutDate = new Date(workout.date);
+      console.log(`Finding template for date: ${workoutDate.toISOString()}`);
+      
+      // Find the scheduled program that includes this date
+      const schedulesForDate = getSchedulesForDate(workoutDate);
+      
+      let weekNumber = 1;
+      let dayNumber = 1;
+      
+      if (schedulesForDate.length > 0) {
+        const schedule = schedulesForDate[0];
+        const startDate = new Date(schedule.startDate);
+        
+        // Calculate difference in days from start date
+        const dayDiff = Math.floor((workoutDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Calculate the week (1-indexed)
+        weekNumber = Math.floor(dayDiff / 7) + 1;
+        
+        // Calculate the day of the week (1-indexed through 7 for Monday to Sunday)
+        const dayOfWeek = workoutDate.getDay() === 0 ? 7 : workoutDate.getDay();
+        
+        // Make sure we don't exceed the total weeks
+        weekNumber = Math.min(weekNumber, currentProgram.weeks);
+        
+        // Find the matching template
+        console.log(`Looking for template for Week ${weekNumber}, Day ${dayOfWeek}`);
+        dayNumber = dayOfWeek;
+      }
+      
+      // Find the template for this week/day combination
+      // Template naming convention is usually "Program Name - Week X Day Y"
+      const targetTemplate = templates.find((t: any) => {
+        if (!t.name) return false;
+        
+        const nameLower = t.name.toLowerCase();
+        const weekString = `week ${weekNumber}`;
+        const dayString = `day ${dayNumber}`;
+        const shortWeekDay = `w${weekNumber}d${dayNumber}`;
+        const shortWeekDayDash = `w${weekNumber}-d${dayNumber}`;
+        
+        console.log(`Checking template "${t.name}" for ${weekString} and ${dayString}`);
+        
+        return (nameLower.includes(weekString) && nameLower.includes(dayString)) || 
+               nameLower.includes(shortWeekDay) || 
+               nameLower.includes(shortWeekDayDash);
+      });
+      
+      // If we found a specific template, use it, otherwise fall back to the first template
+      const templateId = targetTemplate ? targetTemplate.id : templates[0].id;
+      console.log(`Selected template: ${templateId} ${targetTemplate ? '(matched week/day)' : '(default fallback)'}`);
+      
       
       // STEP 2: Get all exercises for this template
       const exercisesResponse = await fetch(`/api/workout-templates/${templateId}/exercises`);
@@ -108,7 +166,7 @@ export default function CurrentWorkout() {
       updateWorkout(freshWorkout);
       
       // STEP 5: Collect all exercise data
-      const exercisePromises = templateExercises.map(async (templateExercise) => {
+      const exercisePromises = templateExercises.map(async (templateExercise: any) => {
         try {
           const exerciseResponse = await fetch(`/api/exercises/${templateExercise.exerciseId}`);
           if (!exerciseResponse.ok) return null;
