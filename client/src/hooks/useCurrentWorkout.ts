@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useStorage } from '@/hooks/useStorage';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 import { 
   LocalWorkout, 
   LocalWorkoutExercise, 
@@ -8,105 +9,136 @@ import {
   createNewWorkout
 } from '@/lib/workout';
 
-// Create a static cache to maintain workout state between renders and component mounts
-// This prevents unnecessary reloads when navigating between tabs
-let workoutCache: {
-  workout: LocalWorkout | null;
+// Create a cache system for workouts by date
+interface WorkoutCacheEntry {
+  workout: LocalWorkout;
   lastUpdated: number;
-} | null = null;
+}
+
+type WorkoutCache = Record<string, WorkoutCacheEntry>;
+
+// Initialize an empty cache
+let workoutCache: WorkoutCache = {};
+
+/**
+ * Generate a storage key for a specific date
+ * Format: workout_YYYY-MM-DD
+ */
+const getWorkoutKeyForDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return `workout_${format(dateObj, 'yyyy-MM-dd')}`;
+};
 
 /**
  * Hook for managing the current workout
- * This is a specialized wrapper around useWorkout that adds stability
- * features to help prevent unnecessary re-renders
+ * This is a specialized wrapper around useWorkout that adds date-specific storage
+ * to handle multiple workouts across different dates
  */
 export function useCurrentWorkout() {
   const { saveToStorage, loadFromStorage } = useStorage();
   const { toast } = useToast();
-  const [workout, setWorkout] = useState<LocalWorkout | null>(
-    // Initialize from cache if available to prevent flicker during navigation
-    workoutCache?.workout || null
-  );
-  const [loading, setLoading] = useState(!workoutCache);
+  
+  // Store the currently active date
+  const [activeDate, setActiveDate] = useState<Date>(new Date());
+  
+  // Create storage key for the active date
+  const activeStorageKey = getWorkoutKeyForDate(activeDate);
+  
+  // Initialize from cache if available for current date
+  const cachedWorkout = workoutCache[activeStorageKey]?.workout || null;
+  
+  const [workout, setWorkout] = useState<LocalWorkout | null>(cachedWorkout);
+  const [loading, setLoading] = useState(!cachedWorkout);
   
   // Use refs to maintain stable function references
   const workoutRef = useRef<LocalWorkout | null>(workout);
-  const initialLoadCompletedRef = useRef<boolean>(!!workoutCache);
+  const activeDateRef = useRef<Date>(activeDate);
+  const initialLoadCompletedRef = useRef<boolean>(!!cachedWorkout);
   
-  // Keep the ref in sync with the state
+  // Keep the refs in sync with the state
   useEffect(() => {
     workoutRef.current = workout;
+    activeDateRef.current = activeDate;
     
     // Update the cache when workout changes
     if (workout) {
-      workoutCache = {
+      workoutCache[activeStorageKey] = {
         workout,
         lastUpdated: Date.now()
       };
     }
-  }, [workout]);
+  }, [workout, activeDate, activeStorageKey]);
   
-  // Load workout on initial mount, but only if we don't have cached data
+  // Load workout for the active date when date changes
   useEffect(() => {
-    // Skip if we already completed initial load or have cached data
-    if (initialLoadCompletedRef.current) {
+    // Skip if we're still initializing
+    if (!initialLoadCompletedRef.current && !activeDate) {
       return;
     }
     
-    const loadWorkout = async () => {
+    const loadWorkoutForDate = async () => {
       try {
-        // Check if the cached workout is still recent (within last 5 minutes)
-        const isCacheValid = workoutCache && 
-          (Date.now() - workoutCache.lastUpdated < 5 * 60 * 1000);
+        setLoading(true);
+        console.log(`Loading workout for date: ${format(activeDate, 'yyyy-MM-dd')}`);
+        
+        // Check if we have a cached version first
+        const dateSpecificKey = getWorkoutKeyForDate(activeDate);
+        const cachedWorkoutEntry = workoutCache[dateSpecificKey];
+        const isCacheValid = cachedWorkoutEntry && 
+          (Date.now() - cachedWorkoutEntry.lastUpdated < 5 * 60 * 1000);
           
-        if (isCacheValid && workoutCache.workout) {
-          console.log("Using cached workout:", workoutCache.workout.name);
-          setWorkout(workoutCache.workout);
-          workoutRef.current = workoutCache.workout;
+        if (isCacheValid) {
+          console.log(`Using cached workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, 
+            cachedWorkoutEntry.workout.name);
+          setWorkout(cachedWorkoutEntry.workout);
         } else {
-          // Load from localStorage if cache is invalid or missing
-          const savedWorkout = loadFromStorage<LocalWorkout>('currentWorkout');
+          // Load from storage using date-specific key
+          const savedWorkout = loadFromStorage<LocalWorkout>(dateSpecificKey);
           
           if (savedWorkout) {
-            console.log("Loaded current workout from storage:", savedWorkout.name);
+            console.log(`Loaded workout for date ${format(activeDate, 'yyyy-MM-dd')} from storage:`, 
+              savedWorkout.name);
             setWorkout(savedWorkout);
-            workoutRef.current = savedWorkout;
             
-            // Update cache
-            workoutCache = {
+            // Update the cache
+            workoutCache[dateSpecificKey] = {
               workout: savedWorkout,
               lastUpdated: Date.now()
             };
           } else {
-            // Create a new workout if none exists
-            const newWorkout = createNewWorkout();
-            console.log("Created new workout:", newWorkout.name);
-            setWorkout(newWorkout);
-            workoutRef.current = newWorkout;
-            saveToStorage('currentWorkout', newWorkout);
+            // Create a new workout for this date if none exists
+            const newWorkout = createNewWorkout(`Workout for ${format(activeDate, 'MMM d, yyyy')}`);
+            newWorkout.date = activeDate.toISOString();
             
-            // Update cache
-            workoutCache = {
+            console.log(`Created new workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, 
+              newWorkout.name);
+            setWorkout(newWorkout);
+            saveToStorage(dateSpecificKey, newWorkout);
+            
+            // Update the cache
+            workoutCache[dateSpecificKey] = {
               workout: newWorkout,
               lastUpdated: Date.now()
             };
           }
         }
       } catch (error) {
-        console.error("Error loading workout:", error);
+        console.error(`Error loading workout for date ${format(activeDate, 'yyyy-MM-dd')}:`, error);
         toast({
           title: "Error",
-          description: "Failed to load workout data",
+          description: "Failed to load workout data for selected date",
           variant: "destructive"
         });
         
         // Create a new workout as fallback
-        const newWorkout = createNewWorkout();
-        setWorkout(newWorkout);
-        workoutRef.current = newWorkout;
+        const newWorkout = createNewWorkout(`Workout for ${format(activeDate, 'MMM d, yyyy')}`);
+        newWorkout.date = activeDate.toISOString();
         
-        // Update cache
-        workoutCache = {
+        setWorkout(newWorkout);
+        
+        // Update the cache
+        const dateSpecificKey = getWorkoutKeyForDate(activeDate);
+        workoutCache[dateSpecificKey] = {
           workout: newWorkout,
           lastUpdated: Date.now()
         };
@@ -116,7 +148,15 @@ export function useCurrentWorkout() {
       }
     };
     
-    loadWorkout();
+    loadWorkoutForDate();
+  }, [activeDate]);
+  
+  /**
+   * Change the active date and load the corresponding workout
+   */
+  const changeActiveDate = useCallback((newDate: Date) => {
+    console.log(`Changing active workout date to: ${format(newDate, 'yyyy-MM-dd')}`);
+    setActiveDate(newDate);
   }, []);
   
   /**
@@ -126,27 +166,56 @@ export function useCurrentWorkout() {
     console.log("Updating workout:", updatedWorkout.name, updatedWorkout.date);
     console.log("DEBUG updateWorkout - Exercise count in update:", 
       updatedWorkout.exercises.length);
-    console.log("DEBUG updateWorkout - Full exercise list:", updatedWorkout.exercises);
+    
+    // Always use the date from the workout to determine storage key
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
     
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
     
-    // Double-check what was stored immediately after
-    const storedData = loadFromStorage<LocalWorkout>('currentWorkout');
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
+    
+    // Double-check what was stored
+    const storedData = loadFromStorage<LocalWorkout>(storageKey);
     console.log("DEBUG updateWorkout - VALIDATION - Exercise count in storage:", 
       storedData?.exercises.length || 0);
   }, [saveToStorage, loadFromStorage]);
   
   /**
-   * Create a new workout
+   * Create a new workout for the current active date
    */
-  const createWorkout = useCallback(() => {
-    const newWorkout = createNewWorkout();
-    console.log("Creating new workout:", newWorkout.name);
+  const createWorkout = useCallback((providedWorkout?: LocalWorkout) => {
+    // If a workout is provided, use it, otherwise create a new one
+    const newWorkout = providedWorkout || createNewWorkout(
+      `Workout for ${format(activeDate, 'MMM d, yyyy')}`
+    );
+    
+    // Make sure date is set correctly
+    if (!providedWorkout) {
+      newWorkout.date = activeDate.toISOString();
+    }
+    
+    console.log("Creating new workout:", newWorkout.name, "for date:", 
+      format(new Date(newWorkout.date), 'yyyy-MM-dd'));
+    
+    // Calculate storage key based on workout date
+    const storageKey = getWorkoutKeyForDate(new Date(newWorkout.date));
+    
     setWorkout(newWorkout);
-    saveToStorage('currentWorkout', newWorkout);
+    saveToStorage(storageKey, newWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: newWorkout,
+      lastUpdated: Date.now()
+    };
+    
     return newWorkout;
-  }, [saveToStorage]);
+  }, [activeDate, saveToStorage]);
   
   /**
    * Add an exercise to the current workout
@@ -167,11 +236,20 @@ export function useCurrentWorkout() {
     
     console.log("DEBUG addExercise - AFTER: updatedWorkout now has", 
       updatedWorkout.exercises.length, "exercises");
-      
+    
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
+    
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
+    
     console.log("DEBUG: Saved workout with", updatedWorkout.exercises.length, 
-      "exercises to storage");
+      "exercises to storage with key", storageKey);
   }, [saveToStorage]);
   
   /**
@@ -185,8 +263,16 @@ export function useCurrentWorkout() {
       exercises: workoutRef.current.exercises.filter(e => e.id !== exerciseId)
     };
     
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
+    
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
   }, [saveToStorage]);
   
   /**
@@ -208,8 +294,16 @@ export function useCurrentWorkout() {
       })
     };
     
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
+    
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
   }, [saveToStorage]);
   
   /**
@@ -233,8 +327,16 @@ export function useCurrentWorkout() {
       })
     };
     
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
+    
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
   }, [saveToStorage]);
   
   /**
@@ -256,8 +358,16 @@ export function useCurrentWorkout() {
       })
     };
     
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
+    
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
   }, [saveToStorage]);
   
   /**
@@ -271,8 +381,16 @@ export function useCurrentWorkout() {
       completed: true
     };
     
+    const storageKey = getWorkoutKeyForDate(new Date(updatedWorkout.date));
+    
     setWorkout(updatedWorkout);
-    saveToStorage('currentWorkout', updatedWorkout);
+    saveToStorage(storageKey, updatedWorkout);
+    
+    // Update cache
+    workoutCache[storageKey] = {
+      workout: updatedWorkout,
+      lastUpdated: Date.now()
+    };
     
     // Save to workout history
     const workoutHistory = loadFromStorage<LocalWorkout[]>('workoutHistory') || [];
@@ -287,6 +405,8 @@ export function useCurrentWorkout() {
   return {
     workout,
     loading,
+    activeDate,
+    changeActiveDate,
     updateWorkout,
     createWorkout,
     addExercise,

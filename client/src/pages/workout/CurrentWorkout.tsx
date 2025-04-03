@@ -19,7 +19,9 @@ import WorkoutCalendarModal from "@/components/modals/WorkoutCalendarModal";
 export default function CurrentWorkout() {
   const { 
     workout, 
-    loading, 
+    loading,
+    activeDate,
+    changeActiveDate, 
     createWorkout, 
     addExercise, 
     addSet, 
@@ -339,18 +341,19 @@ export default function CurrentWorkout() {
   
   // Create a stable date selection handler with useCallback
   const handleDateSelect = useCallback(async (selectedDate: Date) => {
-    if (!workout) return;
-    
     console.log(`Calendar date changed to: ${format(selectedDate, "yyyy-MM-dd")}`);
-    console.log(`Current workout date is: ${format(new Date(workout.date), "yyyy-MM-dd")}`);
     
-    // Create a unique ID for the new date's workout
-    const newWorkoutId = uuidv4();
-    console.log(`Generated new workout ID: ${newWorkoutId}`);
+    if (workout) {
+      console.log(`Current workout date is: ${format(new Date(workout.date), "yyyy-MM-dd")}`);
+    }
     
     // Check if there's a scheduled program for the selected date
     const schedulesForDate = getSchedulesForDate(selectedDate);
     console.log(`Schedules for selected date:`, schedulesForDate);
+    
+    // Switch to the new date using the changeActiveDate function
+    // This will automatically load any existing workout for this date
+    changeActiveDate(selectedDate);
     
     // If we have schedules for this date, prompt to create a workout with the program
     if (schedulesForDate.length > 0) {
@@ -368,10 +371,12 @@ export default function CurrentWorkout() {
         
         if (shouldLoadProgram) {
           try {
-            console.log(`Creating NEW workout for: ${scheduledProgram.name} on ${selectedDate.toISOString()}`);
+            // Create a unique ID for the new date's workout
+            const newWorkoutId = uuidv4();
+            console.log(`Creating NEW workout for: ${scheduledProgram.name} on ${selectedDate.toISOString()} with ID: ${newWorkoutId}`);
             
             // Create a completely NEW workout for this date with a new ID
-            const newWorkout: LocalWorkout = {
+            const newWorkout = {
               id: newWorkoutId,
               date: selectedDate.toISOString(),
               programId: scheduledProgram.id,
@@ -382,19 +387,10 @@ export default function CurrentWorkout() {
               templateId: null
             };
             
-            // Create the new workout instead of updating the existing one
+            // Use the createWorkout function to handle proper storage
             createWorkout(newWorkout);
             
-            console.log(`New workout created with ID: ${newWorkoutId}`);
-            
-            // Show toast to confirm the update
-            toast({
-              title: "Creating New Workout",
-              description: `Creating "${scheduledProgram.name}" for ${format(selectedDate, "MMMM d, yyyy")}`,
-            });
-            
-            // Now use the reloadProgramExercises function to load all exercises at once
-            // Make sure this uses the new workout ID
+            // Now use the reloadProgramExercises function to load exercises
             setTimeout(async () => {
               console.log("Loading exercises for new workout after short delay");
               await reloadProgramExercises(scheduledProgram.id);
@@ -405,6 +401,7 @@ export default function CurrentWorkout() {
               });
             }, 500); // Short delay to ensure workout is created first
             
+            return;
           } catch (error) {
             console.error("Error loading program for selected date:", error);
             toast({
@@ -413,37 +410,19 @@ export default function CurrentWorkout() {
               variant: "destructive"
             });
           }
-          return;
         }
       }
     }
     
-    // If we're here, either there's no scheduled program or user didn't want to load it
-    // Create a new workout with just the date changed
-    console.log(`Creating new workout with updated date: ${selectedDate.toISOString()}`);
-    
-    const newWorkout: LocalWorkout = {
-      id: newWorkoutId,
-      date: selectedDate.toISOString(),
-      name: workout.name,
-      notes: workout.notes,
-      completed: false,
-      exercises: workout.exercises.map(ex => ({
-        ...ex,
-        workoutId: newWorkoutId
-      })),
-      programId: workout.programId,
-      templateId: workout.templateId
-    };
-    
-    // Create a new workout instead of updating
-    createWorkout(newWorkout);
-    
-    toast({
-      title: "New Workout Created",
-      description: `New workout created for ${format(selectedDate, "MMMM d, yyyy")}`,
-    });
-  }, [workout, getSchedulesForDate, programs, createWorkout, reloadProgramExercises, toast]);
+  }, [
+    workout,
+    getSchedulesForDate,
+    programs,
+    changeActiveDate,
+    createWorkout,
+    reloadProgramExercises,
+    toast
+  ]);
 
   // Store functions and data in refs to maintain stable dependencies
   const workoutFunctionsRef = useRef({
@@ -1223,11 +1202,11 @@ export default function CurrentWorkout() {
       <WorkoutCalendarModal
         isVisible={showCalendarModal}
         onClose={() => setShowCalendarModal(false)}
-        currentDate={new Date(workout.date)}
+        currentDate={activeDate}
         onDateSelect={(selectedDate) => {
           setShowCalendarModal(false);
-          // Use the stable date select handler from the ref to ensure consistent behavior
-          workoutFunctionsRef.current.handleDateSelect(selectedDate);
+          // Use handleDateSelect directly since it now uses the improved changeActiveDate
+          handleDateSelect(selectedDate);
         }}
       />
     </>
