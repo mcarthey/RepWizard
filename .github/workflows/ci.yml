@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**", "feature/**", "fix/**"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "9.0.x"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: Build and test the non-MAUI projects (Core, Shared, Application,
+  #         Infrastructure, Api, Tests). Runs on every push/PR in ~60 s.
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-and-test:
+    name: Build & Test (.NET 9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      # Restore only the projects that can build without MAUI workloads
+      - name: Restore (non-MAUI projects)
+        run: |
+          dotnet restore RepWizard.Core/RepWizard.Core.csproj
+          dotnet restore RepWizard.Shared/RepWizard.Shared.csproj
+          dotnet restore RepWizard.Application/RepWizard.Application.csproj
+          dotnet restore RepWizard.Infrastructure/RepWizard.Infrastructure.csproj
+          dotnet restore RepWizard.Api/RepWizard.Api.csproj
+          dotnet restore RepWizard.Tests/RepWizard.Tests.csproj
+
+      - name: Build (non-MAUI projects)
+        run: |
+          dotnet build RepWizard.Core/RepWizard.Core.csproj             --no-restore -c Release
+          dotnet build RepWizard.Shared/RepWizard.Shared.csproj         --no-restore -c Release
+          dotnet build RepWizard.Application/RepWizard.Application.csproj --no-restore -c Release
+          dotnet build RepWizard.Infrastructure/RepWizard.Infrastructure.csproj --no-restore -c Release
+          dotnet build RepWizard.Api/RepWizard.Api.csproj               --no-restore -c Release
+          dotnet build RepWizard.Tests/RepWizard.Tests.csproj           --no-restore -c Release
+
+      - name: Test with coverage
+        run: |
+          dotnet test RepWizard.Tests/RepWizard.Tests.csproj \
+            --no-build -c Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --logger "console;verbosity=normal" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
+          retention-days: 14
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TestResults/**/coverage.cobertura.xml
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Verify the MAUI projects compile (UI + App) with the full workload.
+  #         Uses a macOS runner which has MAUI workloads available.
+  #         Only runs on PRs to main and pushes to main to keep costs down.
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-maui:
+    name: Build MAUI (compile check)
+    runs-on: macos-15
+    timeout-minutes: 30
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install MAUI workloads
+        run: dotnet workload install maui
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-maui-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/global.json') }}
+          restore-keys: |
+            nuget-maui-${{ runner.os }}-
+
+      - name: Restore MAUI projects
+        run: |
+          dotnet restore RepWizard.UI/RepWizard.UI.csproj
+          dotnet restore RepWizard.App/RepWizard.App.csproj
+
+      # Build for a single RID to keep the job fast (Android release is the
+      # canonical compile check; iOS would require signing certificates)
+      - name: Build RepWizard.UI
+        run: |
+          dotnet build RepWizard.UI/RepWizard.UI.csproj \
+            --no-restore -c Release \
+            -f net9.0-android
+
+      - name: Build RepWizard.App
+        run: |
+          dotnet build RepWizard.App/RepWizard.App.csproj \
+            --no-restore -c Release \
+            -f net9.0-android
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3: Publish a summary comment on PRs with test / coverage results.
+  # ─────────────────────────────────────────────────────────────────────────────
+  pr-summary:
+    name: PR test summary
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+      - name: Publish test summary
+        uses: dorny/test-reporter@v1
+        with:
+          name: xUnit test results
+          path: "TestResults/**/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
