@@ -15,6 +15,9 @@ public static class ViewModelRegistration
         services.AddTransient<TodayViewModel>();
         services.AddTransient<ActiveSessionViewModel>();
         services.AddTransient<ProgressViewModel>();
+        services.AddTransient<SessionDetailViewModel>();
+        services.AddTransient<MeasurementsViewModel>();
+        services.AddTransient<ChartsViewModel>();
         services.AddTransient<CoachViewModel>();
         return services;
     }

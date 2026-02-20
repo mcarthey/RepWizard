@@ -2,6 +2,8 @@ using MediatR;
 using RepWizard.Application.Commands.Workouts.CompleteWorkoutSession;
 using RepWizard.Application.Commands.Workouts.LogSet;
 using RepWizard.Application.Commands.Workouts.StartWorkoutSession;
+using RepWizard.Application.Queries.Exercises.GetExercisePR;
+using RepWizard.Application.Queries.Workouts.GetSessionHistory;
 using RepWizard.Application.Queries.Workouts.GetWorkoutSession;
 using RepWizard.Shared.DTOs;
 
@@ -87,6 +89,47 @@ public static class WorkoutEndpoints
         })
         .WithName("CompleteWorkoutSession")
         .WithSummary("Complete an active workout session and trigger sync");
+
+        // GET /api/v1/workouts/sessions?userId={id}&page=1&pageSize=20 — history list
+        group.MapGet("/sessions", async (
+            Guid userId,
+            int page = 1,
+            int pageSize = 20,
+            IMediator mediator = default!,
+            CancellationToken ct = default) =>
+        {
+            var result = await mediator.Send(
+                new GetSessionHistoryQuery(userId, page, pageSize), ct);
+
+            if (result.IsFailure)
+                return Results.BadRequest(ApiResponse<object>.Fail(result.Error!));
+
+            var paged = result.Value!;
+            return Results.Ok(new ApiResponse<IList<WorkoutHistoryDto>>
+            {
+                Success = true,
+                Data = paged.Items.ToList(),
+                Pagination = new PaginationInfo(paged.Page, paged.PageSize, paged.TotalCount)
+            });
+        })
+        .WithName("GetSessionHistory")
+        .WithSummary("Get paginated workout session history for a user");
+
+        // GET /api/v1/workouts/prs?userId={id}&exerciseId={id} — personal records
+        group.MapGet("/prs", async (
+            Guid userId,
+            Guid? exerciseId,
+            IMediator mediator,
+            CancellationToken ct) =>
+        {
+            var result = await mediator.Send(new GetExercisePRQuery(userId, exerciseId), ct);
+
+            return result.IsSuccess
+                ? Results.Ok(ApiResponse<IReadOnlyList<ExercisePRDto>>.Ok(result.Value!))
+                : Results.BadRequest(ApiResponse<object>.Fail(result.Error!));
+        })
+        .WithName("GetExercisePRs")
+        .WithSummary("Get personal records (best sets) per exercise for a user");
 
         return app;
     }

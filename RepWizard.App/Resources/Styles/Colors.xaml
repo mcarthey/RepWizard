@@ -1,46 +1,75 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-    Material 3 Expressive Color System for RepWizard
-    Follows the M3E spec in Section 13.6.
+    RepWizard Brand Color System — Material 3 Expressive
+    Palette derived from the RepWizard concept art:
+      - Hooded wizard/athlete figure with cyan glowing accents
+      - Deep navy/charcoal dark backgrounds
+      - Cyan (#00C8E8) primary energy colour from glowing eyes and chest emblem
+      - Teal mint (#64FFDA) for achievement and completion states
+      - Muted silver-blue (#8892B0) secondary supporting elements
+
+    Design principle: Dark-first. The app renders as if lit from within.
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Primary — Main actions + progress arc highlight -->
-    <Color x:Key="Primary">#5B4CFF</Color>
-    <Color x:Key="PrimaryDark">#7B6EFF</Color>
-    <Color x:Key="PrimaryContainer">#E8E4FF</Color>
-    <Color x:Key="OnPrimary">#FFFFFF</Color>
-    <Color x:Key="OnPrimaryContainer">#1A006E</Color>
+    <!-- PRIMARY — Cyan energy / main CTA / progress arc
+         Extracted from the glowing eyes and chest emblem in the concept art -->
+    <Color x:Key="Primary">#00C8E8</Color>
+    <Color x:Key="PrimaryDark">#00E5FF</Color>
+    <Color x:Key="PrimaryContainer">#003B47</Color>
+    <Color x:Key="OnPrimary">#001F27</Color>
+    <Color x:Key="OnPrimaryContainer">#7FEFFF</Color>
 
-    <!-- Secondary — Supporting emphasis (metric chips, labels) -->
-    <Color x:Key="Secondary">#605B71</Color>
-    <Color x:Key="SecondaryDark">#CBC3DF</Color>
-    <Color x:Key="SecondaryContainer">#E6DFF9</Color>
-    <Color x:Key="OnSecondary">#FFFFFF</Color>
+    <!-- SECONDARY — Muted blue-grey supporting elements
+         Silver-blue from the costume and barbell chrome -->
+    <Color x:Key="Secondary">#8892B0</Color>
+    <Color x:Key="SecondaryDark">#A8B2D8</Color>
+    <Color x:Key="SecondaryContainer">#1C2340</Color>
+    <Color x:Key="OnSecondary">#0A0F1E</Color>
+    <Color x:Key="OnSecondaryContainer">#CCD6F6</Color>
 
-    <!-- Tertiary — Achievement, streak, completion celebration -->
-    <Color x:Key="Tertiary">#FF6B35</Color>
-    <Color x:Key="TertiaryDark">#FFAB8C</Color>
-    <Color x:Key="TertiaryContainer">#FFE0D5</Color>
-    <Color x:Key="OnTertiary">#FFFFFF</Color>
+    <!-- TERTIARY — Achievement, streak, completion burst
+         Mint-teal: warm complement to cyan in the artwork -->
+    <Color x:Key="Tertiary">#64FFDA</Color>
+    <Color x:Key="TertiaryDark">#64FFDA</Color>
+    <Color x:Key="TertiaryContainer">#003929</Color>
+    <Color x:Key="OnTertiary">#00201A</Color>
+    <Color x:Key="OnTertiaryContainer">#8FFFDF</Color>
 
-    <!-- Surface — Background layers, tonal containers -->
-    <Color x:Key="SurfaceColor">#FDFBFF</Color>
-    <Color x:Key="SurfaceColorDark">#1C1B1F</Color>
-    <Color x:Key="SurfaceVariant">#E7E0EC</Color>
-    <Color x:Key="SurfaceVariantDark">#49454F</Color>
-    <Color x:Key="OnSurface">#1C1B1F</Color>
-    <Color x:Key="OnSurfaceDark">#E6E1E5</Color>
-    <Color x:Key="OnSurfaceVariant">#49454F</Color>
+    <!-- SURFACE — Background layers (dark-first design)
+         Deep navy charcoal from the concept art background -->
+    <Color x:Key="SurfaceColorDark">#0D1117</Color>
+    <Color x:Key="SurfaceVariantDark">#1E2535</Color>
+    <Color x:Key="SurfaceElevated1">#161B27</Color>
+    <Color x:Key="SurfaceElevated2">#1A2030</Color>
+    <Color x:Key="SurfaceElevated3">#212840</Color>
+    <Color x:Key="OnSurfaceDark">#E6EDF3</Color>
+    <Color x:Key="OnSurfaceVariantDark">#8892B0</Color>
 
-    <!-- Error states -->
-    <Color x:Key="Error">#B3261E</Color>
-    <Color x:Key="ErrorContainer">#F9DEDC</Color>
+    <!-- Light mode — technical off-white, not bright white -->
+    <Color x:Key="SurfaceColor">#F0F4F8</Color>
+    <Color x:Key="SurfaceVariant">#D8E0EC</Color>
+    <Color x:Key="OnSurface">#0D1117</Color>
+    <Color x:Key="OnSurfaceVariant">#3D4D6A</Color>
+
+    <!-- BRAND IDENTITY — RepWizard specific tokens -->
+    <Color x:Key="BrandEmblem">#00C8E8</Color>
+    <Color x:Key="BrandChrome">#A0B4CC</Color>
+    <Color x:Key="BrandDeepSpace">#060B12</Color>
+    <Color x:Key="BrandGlow">#00D4FF</Color>
+    <Color x:Key="BrandStrength">#FF8C42</Color>
+
+    <!-- ERROR & STATUS -->
+    <Color x:Key="Error">#FF4D4D</Color>
+    <Color x:Key="ErrorContainer">#3A0000</Color>
     <Color x:Key="OnError">#FFFFFF</Color>
+    <Color x:Key="Success">#00E676</Color>
+    <Color x:Key="Warning">#FFD740</Color>
 
-    <!-- Outline -->
-    <Color x:Key="Outline">#79747E</Color>
-    <Color x:Key="OutlineVariant">#CAC4D0</Color>
+    <!-- OUTLINE — Circuit-board structural tones -->
+    <Color x:Key="Outline">#2C3554</Color>
+    <Color x:Key="OutlineVariant">#1A2140</Color>
+    <Color x:Key="OutlineBright">#3D5080</Color>
 
 </ResourceDictionary>

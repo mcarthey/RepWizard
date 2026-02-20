@@ -39,4 +39,23 @@ public class WorkoutSessionRepository : Repository<WorkoutSession>, IWorkoutSess
                 .ThenInclude(se => se.Sets.OrderBy(set => set.SetNumber))
             .Include(s => s.Template)
             .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+
+    public async Task<(IReadOnlyList<WorkoutSession> Items, int TotalCount)> GetSessionHistoryAsync(
+        Guid userId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var query = _dbSet
+            .Where(s => s.UserId == userId && s.CompletedAt != null)
+            .Include(s => s.Template)
+            .Include(s => s.SessionExercises)
+                .ThenInclude(se => se.Sets)
+            .OrderByDescending(s => s.StartedAt);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
 }

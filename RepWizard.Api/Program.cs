@@ -59,6 +59,7 @@ app.UseCors();
 app.MapHealthEndpoints();
 app.MapExerciseEndpoints();
 app.MapWorkoutEndpoints();
+app.MapMeasurementEndpoints();
 
 app.Run();
 

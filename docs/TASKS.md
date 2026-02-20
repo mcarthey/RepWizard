@@ -41,7 +41,7 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 
 ---
 
-## Phase 2 — Workout Logging 🔄 IN PROGRESS
+## Phase 2 — Workout Logging ✅ COMPLETE
 
 > Target: A user can start a session, log a set to SQLite, complete the session, and have it queued for sync.
 
@@ -104,29 +104,73 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 - [x] `LogSetCommandValidatorTests`
 - [x] `ValidationBehaviorTests`
 
-**Phase 2 target test count: 88 (existing) + ~30 new handler/validator tests**
+**Phase 2 test count: 123 ✅**
 
 ---
 
-## Phase 3 — Progress & History ⏳ PENDING
+## Phase 3 — Progress & History ✅ COMPLETE
 
 > Target: Users can review their workout history, body measurements, and strength charts.
 
-- [ ] `GetSessionHistoryQuery` + handler (paginated session list for user)
-- [ ] `GetSessionDetailQuery` + handler (full session with sets for review)
-- [ ] `LogBodyMeasurementCommand` + handler + validator
-- [ ] `GetMeasurementHistoryQuery` + handler
-- [ ] `GetProgressChartDataQuery` + handler (strength curves, volume trends)
-- [ ] `GetExercisePRQuery` + handler (personal record tracking per exercise)
-- [ ] Implement `SessionDetailPage` / `SessionDetailViewModel` with real data
-- [ ] Implement `MeasurementsPage` / `MeasurementsViewModel` with log + history
-- [ ] Implement `ChartsPage` / `ChartsViewModel` with Microcharts or LiveCharts
-- [ ] `POST /api/v1/measurements` endpoint
-- [ ] `GET /api/v1/measurements` endpoint
-- [ ] `GET /api/v1/measurements/progress-chart` endpoint
-- [ ] `GET /api/v1/workouts/sessions` history list endpoint
-- [ ] `GET /api/v1/workouts/sessions/{id}` detail endpoint (if not already in Phase 2)
-- [ ] Write handler tests for all Phase 3 commands/queries
+### 3.1 Shared DTOs
+
+- [x] `BodyMeasurementDto`, `LogBodyMeasurementRequest` in `RepWizard.Shared/DTOs/MeasurementDtos.cs`
+- [x] `WorkoutHistoryDto` — lightweight DTO for history list items
+- [x] `ExercisePRDto` — personal record per exercise (best load, weight, reps, date)
+- [x] `ProgressChartDataDto`, `VolumeDataPoint`, `StrengthDataPoint`, `BodyCompositionDataPoint`
+
+### 3.2 Core Interfaces
+
+- [x] `IBodyMeasurementRepository` — `GetForUserAsync`, `GetLatestForUserAsync`
+- [x] `IWorkoutSessionRepository` extended with `GetSessionHistoryAsync` (paginated)
+
+### 3.3 Infrastructure
+
+- [x] `BodyMeasurementRepository` — concrete implementation of `IBodyMeasurementRepository`
+- [x] `WorkoutSessionRepository` extended with `GetSessionHistoryAsync`
+- [x] Both repositories registered in `DependencyInjection.cs`
+
+### 3.4 CQRS Commands & Queries
+
+- [x] `LogBodyMeasurementCommand` + handler + validator (at least one metric required, range validation)
+- [x] `GetSessionHistoryQuery` + handler (paginated, completed sessions only)
+- [x] `GetMeasurementHistoryQuery` + handler
+- [x] `GetProgressChartDataQuery` + handler — weekly volume (Monday-start), strength trends (top 3 exercises by frequency), body composition timeline
+- [x] `GetExercisePRQuery` + handler — personal records by total load (weight × reps), optional per-exercise filter
+
+### 3.5 API Endpoints
+
+- [x] `POST /api/v1/measurements` — log new body measurement
+- [x] `GET /api/v1/measurements` — measurement history list
+- [x] `GET /api/v1/measurements/progress-chart` — chart data aggregate
+- [x] `GET /api/v1/workouts/sessions` — paginated session history list
+- [x] `GET /api/v1/workouts/prs` — personal records per exercise
+
+### 3.6 Brand Design System Update
+
+- [x] `Colors.xaml` — updated to RepWizard brand palette: Primary `#00C8E8` (cyan), SurfaceColorDark `#0D1117` (deep navy), Tertiary `#64FFDA` (mint-teal), Secondary `#8892B0` (silver-blue), BrandGlow, BrandDeepSpace, BrandChrome, BrandStrength, Outline
+- [x] `Styles.xaml` — dark-first M3E: `HeadingLabel`, `SubheadingLabel`, `MetricValueLabel`, `SecondaryButton`, `TonalSurface`, `ElevatedSurface`, `HeroSurface` (cyan stroke)
+
+### 3.7 MAUI ViewModels & Pages
+
+- [x] `ProgressViewModel` — paginated session history via `GetSessionHistoryQuery`, `LoadMoreCommand`, `HasMorePages`
+- [x] `SessionDetailViewModel` — new; derives `DurationDisplay`, `VolumeDisplay`, `DateDisplay` from session data
+- [x] `MeasurementsViewModel` — new; `SaveMeasurementAsync` → `LogBodyMeasurementCommand`, `IsLoggingForm` toggle
+- [x] `ChartsViewModel` — new; parallel load of chart data + PRs via `Task.WhenAll`, derives weekly summary stats
+- [x] `ProgressPage.xaml` — full `CollectionView` of `WorkoutHistoryDto`, Load More, Charts/Body nav buttons
+- [x] `SessionDetailPage.xaml` — hero summary, nested sets grid with weight/reps/RPE
+- [x] `MeasurementsPage.xaml` — latest measurement hero, inline logging form, history list
+- [x] `ChartsPage.xaml` — summary metrics, time range selector, PR list, chart placeholder
+
+### 3.8 Tests
+
+- [x] `LogBodyMeasurementCommandHandlerTests` (3 tests)
+- [x] `LogBodyMeasurementCommandValidatorTests` (8 tests)
+- [x] `GetSessionHistoryQueryHandlerTests` (3 tests)
+- [x] `GetProgressChartDataQueryHandlerTests` (3 tests)
+- [x] `GetExercisePRQueryHandlerTests` (4 tests)
+
+**Phase 3 test count: 146 ✅**
 
 ---
 
