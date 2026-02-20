@@ -1,0 +1,59 @@
+## .NET Core
+bin/
+obj/
+*.user
+*.suo
+*.vs
+.vs/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+
+## Publish
+publish/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+
+## MSBuild
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## User-specific files
+*.rsuser
+*.userosscache
+*.sln.docstates
+.idea/
+
+## SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride

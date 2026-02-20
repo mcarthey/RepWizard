@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    TodayPage — Primary command center screen.
+
+    Design per M3E spec (Section 13):
+    - Context Header (top 10-15%): Date, greeting
+    - Hero Performance Zone (center ~40%): Circular progress arc (SkiaSharp GraphicsView) + Start Workout CTA
+    - Weekly Status Band (10-15%): Goal strip, streak indicator
+    - Secondary Metrics Zone (lower third): 2x2 grid of MetricChipView controls
+    - Bottom Navigation: TabBar (rendered by Shell)
+
+    The Start Workout button uses breathing scale animation (ScaleXTo/ScaleYTo loop).
+    Animations respect IMotionPreferenceService.IsReduceMotionEnabled.
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels;assembly=RepWizard.UI"
+             xmlns:controls="clr-namespace:RepWizard.UI.Controls;assembly=RepWizard.UI"
+             x:Class="RepWizard.UI.Pages.TodayPage"
+             x:DataType="vm:TodayViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
+
+    <Shell.TitleView>
+        <!-- Custom title bar omitted in Phase 1; uses default Shell title -->
+    </Shell.TitleView>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+        <!-- Context Header Band -->
+        <VerticalStackLayout Grid.Row="0" Padding="24,16,24,8">
+            <Label Text="{Binding Source={x:Static sys:DateTime.Now}, StringFormat='{0:dddd, MMMM d}'}"
+                   FontSize="13" Opacity="0.6" />
+            <Label Text="{Binding GreetingText}" FontSize="22" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <!-- Hero Performance Zone: Circular Progress + CTA -->
+        <Grid Grid.Row="1" Padding="24">
+            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="20">
+
+                <!-- Circular Progress Arc — Phase 1 placeholder; Phase 2+ uses SkiaSharp GraphicsView -->
+                <Border StrokeShape="RoundRectangle 999"
+                        Stroke="{StaticResource Primary}"
+                        StrokeThickness="4"
+                        BackgroundColor="{StaticResource SurfaceVariant}"
+                        WidthRequest="200"
+                        HeightRequest="200"
+                        HorizontalOptions="Center">
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="{Binding WeeklyProgressPercent, StringFormat='{0:F0}%'}"
+                               FontSize="40" FontAttributes="Bold" HorizontalOptions="Center" />
+                        <Label Text="Weekly Complete" FontSize="13" Opacity="0.6" HorizontalOptions="Center" />
+                        <Label Text="{Binding WorkoutsThisWeek, StringFormat='{0} / {1} workouts'}"
+                               FontSize="13" HorizontalOptions="Center">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding WorkoutsThisWeek}" FontAttributes="Bold" />
+                                    <Span Text=" / " />
+                                    <Span Text="{Binding WeeklyWorkoutGoal}" />
+                                    <Span Text=" workouts" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Primary CTA — Start Workout -->
+                <Button x:Name="StartWorkoutButton"
+                        Text="START WORKOUT"
+                        Command="{Binding StartWorkoutCommand}"
+                        CornerRadius="32"
+                        HeightRequest="60"
+                        MinimumWidthRequest="280"
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        Shadow="{Shadow Brush={StaticResource Primary}, Offset='0,4', Radius=12, Opacity=0.4}" />
+
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Weekly Status Band -->
+        <Border Grid.Row="2"
+                BackgroundColor="{StaticResource SurfaceVariant}"
+                Padding="24,12"
+                StrokeThickness="0">
+            <HorizontalStackLayout Spacing="16">
+                <Label Text="🔥" FontSize="20" IsVisible="{Binding CurrentStreakDays, Converter={StaticResource GreaterThanZeroConverter}}" />
+                <Label VerticalOptions="Center">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{Binding CurrentStreakDays}" FontAttributes="Bold" />
+                            <Span Text="-day streak" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </HorizontalStackLayout>
+        </Border>
+
+        <!-- Secondary Metrics Zone — 2x2 grid -->
+        <Grid Grid.Row="3" Padding="16" ColumnDefinitions="*,*" RowDefinitions="*,*" ColumnSpacing="12" RowSpacing="12">
+            <controls:MetricChipView Grid.Row="0" Grid.Column="0"
+                                     Icon="icon_workouts.png"
+                                     Label="Workouts"
+                                     Value="{Binding WorkoutsThisWeek}" />
+            <controls:MetricChipView Grid.Row="0" Grid.Column="1"
+                                     Icon="icon_time.png"
+                                     Label="Minutes"
+                                     Value="{Binding MinutesTrainedThisWeek}" />
+            <controls:MetricChipView Grid.Row="1" Grid.Column="0"
+                                     Icon="icon_volume.png"
+                                     Label="Volume (kg)"
+                                     Value="{Binding TotalVolumeThisWeek}" />
+            <controls:MetricChipView Grid.Row="1" Grid.Column="1"
+                                     Icon="icon_streak.png"
+                                     Label="Streak"
+                                     Value="{Binding CurrentStreakDays}" />
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

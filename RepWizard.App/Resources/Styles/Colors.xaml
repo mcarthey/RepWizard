@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    Material 3 Expressive Color System for RepWizard
+    Follows the M3E spec in Section 13.6.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Primary — Main actions + progress arc highlight -->
+    <Color x:Key="Primary">#5B4CFF</Color>
+    <Color x:Key="PrimaryDark">#7B6EFF</Color>
+    <Color x:Key="PrimaryContainer">#E8E4FF</Color>
+    <Color x:Key="OnPrimary">#FFFFFF</Color>
+    <Color x:Key="OnPrimaryContainer">#1A006E</Color>
+
+    <!-- Secondary — Supporting emphasis (metric chips, labels) -->
+    <Color x:Key="Secondary">#605B71</Color>
+    <Color x:Key="SecondaryDark">#CBC3DF</Color>
+    <Color x:Key="SecondaryContainer">#E6DFF9</Color>
+    <Color x:Key="OnSecondary">#FFFFFF</Color>
+
+    <!-- Tertiary — Achievement, streak, completion celebration -->
+    <Color x:Key="Tertiary">#FF6B35</Color>
+    <Color x:Key="TertiaryDark">#FFAB8C</Color>
+    <Color x:Key="TertiaryContainer">#FFE0D5</Color>
+    <Color x:Key="OnTertiary">#FFFFFF</Color>
+
+    <!-- Surface — Background layers, tonal containers -->
+    <Color x:Key="SurfaceColor">#FDFBFF</Color>
+    <Color x:Key="SurfaceColorDark">#1C1B1F</Color>
+    <Color x:Key="SurfaceVariant">#E7E0EC</Color>
+    <Color x:Key="SurfaceVariantDark">#49454F</Color>
+    <Color x:Key="OnSurface">#1C1B1F</Color>
+    <Color x:Key="OnSurfaceDark">#E6E1E5</Color>
+    <Color x:Key="OnSurfaceVariant">#49454F</Color>
+
+    <!-- Error states -->
+    <Color x:Key="Error">#B3261E</Color>
+    <Color x:Key="ErrorContainer">#F9DEDC</Color>
+    <Color x:Key="OnError">#FFFFFF</Color>
+
+    <!-- Outline -->
+    <Color x:Key="Outline">#79747E</Color>
+    <Color x:Key="OutlineVariant">#CAC4D0</Color>
+
+</ResourceDictionary>

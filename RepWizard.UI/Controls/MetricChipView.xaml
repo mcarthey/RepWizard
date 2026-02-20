@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    MetricChipView — Expressive Metric Chip per M3E spec (Section 13.5E).
+    Layout: tonal fill, icon left, large number right.
+    Motion: Number roll animation only when value changes. No idle animation.
+    Reuse this control — do not duplicate it across pages.
+-->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RepWizard.UI.Controls.MetricChipView">
+
+    <Border StrokeShape="RoundRectangle 16"
+            BackgroundColor="{StaticResource SurfaceVariant}"
+            Padding="12,10"
+            StrokeThickness="0">
+        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+            <Image x:Name="ChipIcon"
+                   Source="{Binding Source={RelativeSource AncestorType={x:Type local:MetricChipView}}, Path=Icon}"
+                   WidthRequest="20"
+                   HeightRequest="20"
+                   VerticalOptions="Center" />
+            <VerticalStackLayout VerticalOptions="Center">
+                <Label x:Name="ValueLabel"
+                       Text="{Binding Source={RelativeSource AncestorType={x:Type local:MetricChipView}}, Path=Value}"
+                       FontSize="20"
+                       FontAttributes="Bold" />
+                <Label Text="{Binding Source={RelativeSource AncestorType={x:Type local:MetricChipView}}, Path=Label}"
+                       FontSize="11"
+                       Opacity="0.6" />
+            </VerticalStackLayout>
+        </HorizontalStackLayout>
+    </Border>
+
+</ContentView>
