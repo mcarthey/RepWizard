@@ -1,0 +1,6 @@
+@RepWizard.Api_HostAddress = http://localhost:5085
+
+GET {{RepWizard.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

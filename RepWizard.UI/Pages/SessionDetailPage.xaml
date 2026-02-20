@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             x:Class="RepWizard.UI.Pages.SessionDetailPage"
+             x:DataType="vm:SessionDetailViewModel"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+             Title="Session Detail">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <!-- Session header summary -->
+            <Border Style="{StaticResource HeroSurface}" Padding="20">
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*">
+                    <Label Grid.Row="0" Grid.ColumnSpan="3"
+                           Text="{Binding DateDisplay}"
+                           Style="{StaticResource HeadingLabel}"
+                           HorizontalOptions="Center"
+                           Margin="0,0,0,12" />
+
+                    <!-- Duration -->
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="0" HorizontalOptions="Center">
+                        <Label Text="{Binding DurationDisplay}"
+                               Style="{StaticResource MetricValueLabel}"
+                               HorizontalOptions="Center" />
+                        <Label Text="DURATION"
+                               Style="{StaticResource SubheadingLabel}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+
+                    <!-- Volume -->
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="1" HorizontalOptions="Center">
+                        <Label Text="{Binding VolumeDisplay}"
+                               Style="{StaticResource MetricValueLabel}"
+                               HorizontalOptions="Center" />
+                        <Label Text="VOLUME"
+                               Style="{StaticResource SubheadingLabel}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+
+                    <!-- Set count -->
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="2" HorizontalOptions="Center">
+                        <Label Text="{Binding Session.SessionExercises.Count, StringFormat='{0}'}"
+                               Style="{StaticResource MetricValueLabel}"
+                               HorizontalOptions="Center" />
+                        <Label Text="EXERCISES"
+                               Style="{StaticResource SubheadingLabel}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Exercise list -->
+            <CollectionView ItemsSource="{Binding Session.SessionExercises}"
+                            IsVisible="{Binding IsEmpty, Converter={x:Static BoolConverter.FalseToTrue}}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:SessionExerciseDto"
+                                  xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared">
+                        <Border Style="{StaticResource TonalSurface}" Margin="0,0,0,8">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding ExerciseName}"
+                                       Style="{StaticResource HeadingLabel}"
+                                       FontSize="16" />
+
+                                <!-- Sets grid -->
+                                <CollectionView ItemsSource="{Binding Sets}">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate x:DataType="dto:ExerciseSetDto"
+                                                      xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared">
+                                            <Grid ColumnDefinitions="32,*,*,*" Padding="0,4">
+                                                <Label Grid.Column="0"
+                                                       Text="{Binding SetNumber, StringFormat='#{0}'}"
+                                                       Style="{StaticResource SubheadingLabel}" />
+                                                <Label Grid.Column="1"
+                                                       Text="{Binding WeightKg, StringFormat='{0} kg'}"
+                                                       HorizontalOptions="Center" />
+                                                <Label Grid.Column="2"
+                                                       Text="{Binding Reps, StringFormat='{0} reps'}"
+                                                       HorizontalOptions="Center" />
+                                                <Label Grid.Column="3"
+                                                       Text="{Binding RPE, StringFormat='RPE {0}'}"
+                                                       IsVisible="{Binding RPE, Converter={x:Static ObjectToBoolConverter.Default}}"
+                                                       Style="{StaticResource SubheadingLabel}"
+                                                       HorizontalOptions="End" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{StaticResource Error}"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

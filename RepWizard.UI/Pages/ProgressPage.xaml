@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             x:Class="RepWizard.UI.Pages.ProgressPage"
+             x:DataType="vm:ProgressViewModel"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+             Title="Progress">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource TonalSurface}" Margin="16,16,16,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0"
+                       Text="PROGRESS"
+                       Style="{StaticResource SubheadingLabel}"
+                       VerticalOptions="Center" />
+                <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                    <Button Text="Charts"
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding OpenChartsCommand}" />
+                    <Button Text="Body"
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding OpenMeasurementsCommand}" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- Session history list -->
+        <CollectionView Grid.Row="1"
+                        Margin="16,12,16,0"
+                        ItemsSource="{Binding Sessions}"
+                        EmptyView="No completed sessions yet. Start a workout!">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:WorkoutHistoryDto"
+                              xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared">
+                    <Border Style="{StaticResource ElevatedSurface}" Margin="0,0,0,8">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <!-- Session name / date -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding TemplateName, StringFormat='{0}'}"
+                                   Style="{StaticResource HeadingLabel}"
+                                   FontSize="16" />
+                            <Label Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding StartedAt, StringFormat='{0:ddd MMM d}'}"
+                                   Style="{StaticResource SubheadingLabel}" />
+
+                            <!-- Stats column -->
+                            <VerticalStackLayout Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                                 HorizontalOptions="End" Spacing="2">
+                                <Label Text="{Binding DurationMinutes, StringFormat='{0}m'}"
+                                       Style="{StaticResource MetricValueLabel}"
+                                       FontSize="18"
+                                       HorizontalOptions="End" />
+                                <Label Text="{Binding TotalVolume, StringFormat='{0:N0} kg'}"
+                                       Style="{StaticResource SubheadingLabel}"
+                                       HorizontalOptions="End" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.Footer>
+                <Button Text="Load More"
+                        Command="{Binding LoadMoreCommand}"
+                        IsVisible="{Binding HasMorePages}"
+                        Style="{StaticResource SecondaryButton}"
+                        Margin="0,8,0,16" />
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.Row="1"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+
+    </Grid>
+</ContentPage>

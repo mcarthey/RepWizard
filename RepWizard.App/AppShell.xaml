@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    AppShell.xaml
+
+    Three-tab Shell navigation per the spec:
+      - Today: Active workout / next session command center
+      - Progress: History, charts, measurements
+      - Coach: AI coaching, programs, exercise library
+
+    Routes are registered in AppShell.xaml.cs.
+    Navigation is handled via INavigationService (injected into ViewModels).
+-->
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:RepWizard.UI.Pages;assembly=RepWizard.UI"
+       x:Class="RepWizard.App.AppShell"
+       Shell.FlyoutBehavior="Disabled">
+
+    <TabBar>
+        <!-- TODAY TAB -->
+        <Tab Title="Today" Icon="tab_today.png">
+            <ShellContent
+                Title="Today"
+                ContentTemplate="{DataTemplate pages:TodayPage}"
+                Route="today" />
+        </Tab>
+
+        <!-- PROGRESS TAB -->
+        <Tab Title="Progress" Icon="tab_progress.png">
+            <ShellContent
+                Title="Progress"
+                ContentTemplate="{DataTemplate pages:ProgressPage}"
+                Route="progress" />
+        </Tab>
+
+        <!-- COACH TAB -->
+        <Tab Title="Coach" Icon="tab_coach.png">
+            <ShellContent
+                Title="Coach"
+                ContentTemplate="{DataTemplate pages:CoachPage}"
+                Route="coach" />
+        </Tab>
+    </TabBar>
+</Shell>

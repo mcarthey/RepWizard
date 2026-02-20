@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             x:Class="RepWizard.UI.Pages.MeasurementsPage"
+             x:DataType="vm:MeasurementsViewModel"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+             Title="Body Measurements">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Latest measurement summary -->
+        <Border Grid.Row="0" Style="{StaticResource HeroSurface}" Margin="16,16,16,0" Padding="20">
+            <Grid ColumnDefinitions="*,*,*">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                    <Label Text="{Binding LatestMeasurement.WeightKg, StringFormat='{0:N1} kg'}"
+                           Style="{StaticResource MetricValueLabel}"
+                           HorizontalOptions="Center" />
+                    <Label Text="WEIGHT"
+                           Style="{StaticResource SubheadingLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                    <Label Text="{Binding LatestMeasurement.BodyFatPercent, StringFormat='{0:N1}%'}"
+                           Style="{StaticResource MetricValueLabel}"
+                           HorizontalOptions="Center" />
+                    <Label Text="BODY FAT"
+                           Style="{StaticResource SubheadingLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+                    <Label Text="{Binding LatestMeasurement.LeanBodyMassKg, StringFormat='{0:N1} kg'}"
+                           Style="{StaticResource MetricValueLabel}"
+                           HorizontalOptions="Center" />
+                    <Label Text="LEAN MASS"
+                           Style="{StaticResource SubheadingLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- Log new measurement form -->
+        <Border Grid.Row="1" Style="{StaticResource ElevatedSurface}"
+                Margin="16,12,16,0"
+                IsVisible="{Binding IsLoggingForm}">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="LOG MEASUREMENT" Style="{StaticResource SubheadingLabel}" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Entry Grid.Column="0" Text="{Binding WeightKgText}"
+                           Placeholder="Weight (kg)" Keyboard="Numeric" />
+                    <Entry Grid.Column="1" Text="{Binding BodyFatPercentText}"
+                           Placeholder="Body fat %" Keyboard="Numeric" />
+                    <Entry Grid.Column="2" Text="{Binding MuscleKgText}"
+                           Placeholder="Muscle (kg)" Keyboard="Numeric" />
+                </Grid>
+                <Entry Text="{Binding MeasurementNotes}" Placeholder="Notes (optional)" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0" Text="CANCEL"
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding HideLoggingFormCommand}" />
+                    <Button Grid.Column="1" Text="SAVE"
+                            Command="{Binding SaveMeasurementCommand}" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Measurement history -->
+        <CollectionView Grid.Row="2"
+                        Margin="16,12,16,0"
+                        ItemsSource="{Binding Measurements}"
+                        EmptyView="No measurements yet. Log your first measurement above.">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:BodyMeasurementDto"
+                              xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared">
+                    <Border Style="{StaticResource ElevatedSurface}" Margin="0,0,0,8">
+                        <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding RecordedAt, StringFormat='{0:MMM d, yyyy}'}"
+                                   Style="{StaticResource SubheadingLabel}" />
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding WeightKg, StringFormat='{0:N1} kg'}"
+                                   HorizontalOptions="End" Margin="0,0,12,0" />
+                            <Label Grid.Row="0" Grid.Column="2"
+                                   Text="{Binding BodyFatPercent, StringFormat='{0:N1}%'}"
+                                   HorizontalOptions="End" Margin="0,0,12,0" />
+                            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4"
+                                   Text="{Binding MeasurementNotes}"
+                                   IsVisible="{Binding MeasurementNotes, Converter={x:Static StringToBoolConverter.Default}}"
+                                   Style="{StaticResource SubheadingLabel}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

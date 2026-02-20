@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RepWizard.UI.Pages.ProgramDetailPage"
+             Title="Program Detail">
+
+    <VerticalStackLayout Padding="16" Spacing="12">
+        <Label Text="Program Detail"
+               FontSize="28"
+               FontAttributes="Bold"
+               HorizontalOptions="Center" />
+        <Label Text="Week-by-week program view will appear here."
+               FontSize="16"
+               HorizontalOptions="Center"
+               TextColor="Gray" />
+    </VerticalStackLayout>
+
+</ContentPage>
