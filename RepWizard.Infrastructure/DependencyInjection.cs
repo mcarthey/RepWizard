@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RepWizard.Core.Interfaces;
 using RepWizard.Core.Interfaces.Repositories;
 using RepWizard.Infrastructure.Data;
 using RepWizard.Infrastructure.Repositories;
+using RepWizard.Infrastructure.Services;
 
 namespace RepWizard.Infrastructure;
 
@@ -61,5 +63,6 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IWorkoutSessionRepository, WorkoutSessionRepository>();
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
+        services.AddScoped<ISyncService, SyncService>();
     }
 }

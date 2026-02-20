@@ -1,6 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using RepWizard.Application.Queries.Exercises.GetExerciseById;
+using RepWizard.Application.Queries.Exercises.GetExercises;
 using RepWizard.Core.Enums;
-using RepWizard.Core.Interfaces.Repositories;
 using RepWizard.Shared.DTOs;
 
 namespace RepWizard.Api.Endpoints;
@@ -18,32 +20,21 @@ public static class ExerciseEndpoints
             [FromQuery] Equipment? equipment,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
-            IExerciseRepository repo = default!,
+            IMediator mediator = default!,
             CancellationToken ct = default) =>
         {
-            IReadOnlyList<Core.Entities.Exercise> exercises;
+            var result = await mediator.Send(
+                new GetExercisesQuery(search, category, equipment, page, pageSize), ct);
 
-            if (!string.IsNullOrWhiteSpace(search))
-                exercises = await repo.SearchAsync(search, ct);
-            else if (category.HasValue)
-                exercises = await repo.GetByCategoryAsync(category.Value, ct);
-            else if (equipment.HasValue)
-                exercises = await repo.GetByEquipmentAsync(equipment.Value, ct);
-            else
-                exercises = await repo.GetAllAsync(ct);
+            if (result.IsFailure)
+                return Results.BadRequest(ApiResponse<object>.Fail(result.Error!));
 
-            var totalCount = exercises.Count;
-            var paged = exercises
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
-
+            var paged = result.Value!;
             return Results.Ok(new ApiResponse<IList<ExerciseDto>>
             {
                 Success = true,
-                Data = paged,
-                Pagination = new PaginationInfo(page, pageSize, totalCount)
+                Data = paged.Items.ToList(),
+                Pagination = new PaginationInfo(paged.Page, paged.PageSize, paged.TotalCount)
             });
         })
         .WithName("GetExercises")
@@ -51,34 +42,18 @@ public static class ExerciseEndpoints
 
         group.MapGet("/{id:guid}", async (
             Guid id,
-            IExerciseRepository repo,
+            IMediator mediator,
             CancellationToken ct) =>
         {
-            var exercise = await repo.GetByIdAsync(id, ct);
-            if (exercise == null)
-                return Results.NotFound(ApiResponse<object>.Fail("Exercise not found."));
+            var result = await mediator.Send(new GetExerciseByIdQuery(id), ct);
 
-            return Results.Ok(ApiResponse<ExerciseDto>.Ok(MapToDto(exercise)));
+            return result.IsSuccess
+                ? Results.Ok(ApiResponse<ExerciseDto>.Ok(result.Value!))
+                : Results.NotFound(ApiResponse<object>.Fail(result.Error!));
         })
         .WithName("GetExerciseById")
         .WithSummary("Get a single exercise by ID");
 
         return app;
     }
-
-    private static ExerciseDto MapToDto(Core.Entities.Exercise e) => new()
-    {
-        Id = e.Id,
-        Name = e.Name,
-        Description = e.Description,
-        Category = e.Category.ToString(),
-        PrimaryMuscles = e.PrimaryMuscles.Select(m => m.ToString()).ToList(),
-        SecondaryMuscles = e.SecondaryMuscles.Select(m => m.ToString()).ToList(),
-        Equipment = e.Equipment.ToString(),
-        Difficulty = e.Difficulty.ToString(),
-        IsCompound = e.IsCompound,
-        VideoUrl = e.VideoUrl,
-        Instructions = e.Instructions.ToList(),
-        ResearchNotes = e.ResearchNotes
-    };
 }
