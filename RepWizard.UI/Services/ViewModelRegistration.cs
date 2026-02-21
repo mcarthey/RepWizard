@@ -23,6 +23,7 @@ public static class ViewModelRegistration
         services.AddTransient<ProgramDetailViewModel>();
         services.AddTransient<ExerciseLibraryViewModel>();
         services.AddTransient<ExerciseDetailViewModel>();
+        services.AddTransient<SettingsViewModel>();
         return services;
     }
 

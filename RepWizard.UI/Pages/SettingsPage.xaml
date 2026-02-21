@@ -1,18 +1,168 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
              x:Class="RepWizard.UI.Pages.SettingsPage"
-             Title="Settings">
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings"
+             BackgroundColor="{StaticResource SurfaceColorDark}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Settings"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="Profile, sync, and notifications will appear here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
 
+            <!-- Header -->
+            <Label Text="Settings"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Primary}" />
+
+            <!-- Profile Section -->
+            <Border StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{StaticResource BrandDeepSpace}"
+                    Stroke="{StaticResource Outline}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Profile"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                        <Button Grid.Column="1"
+                                Text="{Binding IsEditing, StringFormat='{}{0:Edit|Cancel}'}"
+                                Command="{Binding ToggleEditCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Primary}"
+                                FontSize="14" />
+                    </Grid>
+
+                    <!-- Name -->
+                    <Label Text="Name" TextColor="{StaticResource Secondary}" FontSize="12" />
+                    <Entry Text="{Binding Name}"
+                           IsEnabled="{Binding IsEditing}"
+                           TextColor="White"
+                           BackgroundColor="{StaticResource SurfaceColorDark}"
+                           PlaceholderColor="{StaticResource Secondary}"
+                           Placeholder="Your name" />
+
+                    <!-- Email (read-only) -->
+                    <Label Text="Email" TextColor="{StaticResource Secondary}" FontSize="12" />
+                    <Label Text="{Binding Email}" TextColor="White" FontSize="16" />
+
+                    <!-- Height & Weight -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <VerticalStackLayout>
+                            <Label Text="Height (cm)" TextColor="{StaticResource Secondary}" FontSize="12" />
+                            <Entry Text="{Binding HeightCmText}"
+                                   IsEnabled="{Binding IsEditing}"
+                                   Keyboard="Numeric"
+                                   TextColor="White"
+                                   BackgroundColor="{StaticResource SurfaceColorDark}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Weight (kg)" TextColor="{StaticResource Secondary}" FontSize="12" />
+                            <Entry Text="{Binding WeightKgText}"
+                                   IsEnabled="{Binding IsEditing}"
+                                   Keyboard="Numeric"
+                                   TextColor="White"
+                                   BackgroundColor="{StaticResource SurfaceColorDark}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- Fitness Goal -->
+                    <Label Text="Fitness Goal" TextColor="{StaticResource Secondary}" FontSize="12" />
+                    <Picker ItemsSource="{Binding FitnessGoals}"
+                            SelectedItem="{Binding SelectedFitnessGoal}"
+                            IsEnabled="{Binding IsEditing}"
+                            TextColor="White"
+                            BackgroundColor="{StaticResource SurfaceColorDark}" />
+
+                    <!-- Experience Level -->
+                    <Label Text="Experience Level" TextColor="{StaticResource Secondary}" FontSize="12" />
+                    <Picker ItemsSource="{Binding ExperienceLevels}"
+                            SelectedItem="{Binding SelectedExperienceLevel}"
+                            IsEnabled="{Binding IsEditing}"
+                            TextColor="White"
+                            BackgroundColor="{StaticResource SurfaceColorDark}" />
+
+                    <!-- Medical Notes -->
+                    <Label Text="Medical Notes" TextColor="{StaticResource Secondary}" FontSize="12"
+                           IsVisible="{Binding IsEditing}" />
+                    <Editor Text="{Binding MedicalNotes}"
+                            IsVisible="{Binding IsEditing}"
+                            TextColor="White"
+                            BackgroundColor="{StaticResource SurfaceColorDark}"
+                            HeightRequest="80"
+                            Placeholder="Any injuries or medical conditions..." />
+
+                    <!-- Save Button -->
+                    <Button Text="Save Profile"
+                            Command="{Binding SaveProfileCommand}"
+                            IsVisible="{Binding IsEditing}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="{StaticResource SurfaceColorDark}"
+                            FontAttributes="Bold"
+                            CornerRadius="12"
+                            HeightRequest="48" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Sync Section -->
+            <Border StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{StaticResource BrandDeepSpace}"
+                    Stroke="{StaticResource Outline}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Data Sync"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding SyncStatusText}"
+                                   TextColor="{StaticResource Secondary}"
+                                   FontSize="14" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Sync Now"
+                                Command="{Binding SyncNowCommand}"
+                                IsEnabled="{Binding IsSyncing, Converter={StaticResource InverseBoolConverter}}"
+                                BackgroundColor="{StaticResource Tertiary}"
+                                TextColor="{StaticResource SurfaceColorDark}"
+                                FontAttributes="Bold"
+                                CornerRadius="12"
+                                HeightRequest="40"
+                                Padding="16,0" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- App Info -->
+            <Border StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{StaticResource BrandDeepSpace}"
+                    Stroke="{StaticResource Outline}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="About"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Label Text="RepWizard v1.0"
+                           TextColor="{StaticResource Secondary}"
+                           FontSize="14" />
+                    <Label Text="Science-based workout tracking"
+                           TextColor="{StaticResource Secondary}"
+                           FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="#FF6B6B"
+                   FontSize="14"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource GreaterThanZeroConverter}}"
+                   HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RepWizard.Api.Endpoints;
 using RepWizard.Application;
 using RepWizard.Application.Services;
@@ -27,6 +30,28 @@ builder.Services.AddHttpClient();
 // AI Coach services
 builder.Services.AddScoped<AiContextBuilder>();
 builder.Services.AddAiChatService();
+
+// Auth services (JWT)
+builder.Services.AddAuthService();
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"]
+    ?? "RepWizard-Dev-Secret-Key-Must-Be-At-Least-32-Bytes!";
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "RepWizard.Api",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "RepWizard.App",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+        };
+    });
+builder.Services.AddAuthorization();
 
 // CORS for development
 builder.Services.AddCors(options =>
@@ -58,13 +83,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map endpoint groups
 app.MapHealthEndpoints();
+app.MapAuthEndpoints();
+app.MapUserEndpoints();
 app.MapExerciseEndpoints();
 app.MapWorkoutEndpoints();
 app.MapMeasurementEndpoints();
 app.MapAiEndpoints();
+app.MapSyncEndpoints();
 
 app.Run();
 

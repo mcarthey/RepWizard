@@ -1,9 +1,21 @@
+using RepWizard.UI.ViewModels;
+
 namespace RepWizard.UI.Pages;
 
 public partial class SettingsPage : ContentPage
 {
-    public SettingsPage()
+    private readonly SettingsViewModel _viewModel;
+
+    public SettingsPage(SettingsViewModel viewModel)
     {
         InitializeComponent();
+        _viewModel = viewModel;
+        BindingContext = viewModel;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _viewModel.LoadCommand.ExecuteAsync(null);
     }
 }

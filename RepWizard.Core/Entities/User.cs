@@ -9,6 +9,9 @@ public class User : BaseEntity
 {
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public decimal? HeightCm { get; set; }
     public decimal? WeightKg { get; set; }

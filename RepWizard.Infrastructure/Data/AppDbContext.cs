@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<BodyMeasurement> BodyMeasurements => Set<BodyMeasurement>();
     public DbSet<AiConversation> AiConversations => Set<AiConversation>();
     public DbSet<AiMessage> AiMessages => Set<AiMessage>();
+    public DbSet<ConflictLog> ConflictLogs => Set<ConflictLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<BodyMeasurement>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<AiConversation>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<AiMessage>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<ConflictLog>().HasQueryFilter(e => !e.IsDeleted);
 
         // User configuration
         modelBuilder.Entity<User>(b =>
@@ -55,8 +57,22 @@ public class AppDbContext : DbContext
             b.HasIndex(u => u.Email).IsUnique();
             b.Property(u => u.Email).HasMaxLength(256).IsRequired();
             b.Property(u => u.Name).HasMaxLength(100).IsRequired();
+            b.Property(u => u.PasswordHash).HasMaxLength(256).IsRequired();
+            b.Property(u => u.RefreshToken).HasMaxLength(256);
             b.Property(u => u.HeightCm).HasPrecision(5, 2);
             b.Property(u => u.WeightKg).HasPrecision(6, 2);
+        });
+
+        // ConflictLog configuration
+        modelBuilder.Entity<ConflictLog>(b =>
+        {
+            b.HasKey(c => c.Id);
+            b.HasIndex(c => c.UserId);
+            b.HasIndex(c => new { c.EntityType, c.EntityId });
+            b.HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         // Exercise configuration - serialize collections as JSON

@@ -1,4 +1,5 @@
 using CommunityToolkit.Maui;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using RepWizard.Application;
 using RepWizard.Core.Interfaces;
@@ -35,14 +36,13 @@ public static class MauiProgram
         builder.Services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(typeof(Application.DependencyInjection).Assembly));
 
-        // HttpClient factory — named client for API communication
-        // Never instantiate raw HttpClient to prevent socket exhaustion
+        // HttpClient factory with Polly resilience (retry + circuit breaker)
         builder.Services.AddHttpClient("RepWizardApi", client =>
         {
-            // ApiBaseUrl is read from app config or hardcoded for development
             client.BaseAddress = new Uri("https://localhost:7001");
             client.Timeout = TimeSpan.FromSeconds(30);
-        });
+        })
+        .AddStandardResilienceHandler();
 
         // Navigation service
         builder.Services.AddSingleton<INavigationService, ShellNavigationService>();

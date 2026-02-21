@@ -87,6 +87,15 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Registers the JWT auth service. Call in API host.
+    /// </summary>
+    public static IServiceCollection AddAuthService(this IServiceCollection services)
+    {
+        services.AddScoped<IAuthService, JwtAuthService>();
+        return services;
+    }
+
     private static void RegisterRepositories(IServiceCollection services)
     {
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

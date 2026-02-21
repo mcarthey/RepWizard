@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RepWizard.Api\RepWizard.Api.csproj" />
     <ProjectReference Include="..\RepWizard.Core\RepWizard.Core.csproj" />
     <ProjectReference Include="..\RepWizard.Application\RepWizard.Application.csproj" />
     <ProjectReference Include="..\RepWizard.Infrastructure\RepWizard.Infrastructure.csproj" />
