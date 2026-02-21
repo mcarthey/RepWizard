@@ -37,7 +37,7 @@ public partial class CoachViewModel : BaseViewModel
         var userMessage = UserInput;
         UserInput = string.Empty;
 
-        Messages.Add(new ChatMessageItem(userMessage, isUser: true));
+        Messages.Add(new ChatMessageItem(userMessage, IsUser: true));
 
         await ExecuteSafeAsync(async () =>
         {

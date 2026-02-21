@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.SessionDetailPage"
              x:DataType="vm:SessionDetailViewModel"
              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
@@ -52,8 +53,7 @@
             </Border>
 
             <!-- Exercise list -->
-            <CollectionView ItemsSource="{Binding Session.SessionExercises}"
-                            IsVisible="{Binding IsEmpty, Converter={x:Static BoolConverter.FalseToTrue}}">
+            <CollectionView ItemsSource="{Binding Session.SessionExercises}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="dto:SessionExerciseDto"
                                   xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared">
@@ -80,7 +80,6 @@
                                                        HorizontalOptions="Center" />
                                                 <Label Grid.Column="3"
                                                        Text="{Binding RPE, StringFormat='RPE {0}'}"
-                                                       IsVisible="{Binding RPE, Converter={x:Static ObjectToBoolConverter.Default}}"
                                                        Style="{StaticResource SubheadingLabel}"
                                                        HorizontalOptions="End" />
                                             </Grid>

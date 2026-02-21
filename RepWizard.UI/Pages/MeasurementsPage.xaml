@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.MeasurementsPage"
              x:DataType="vm:MeasurementsViewModel"
              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
@@ -70,8 +71,7 @@
                         ItemsSource="{Binding Measurements}"
                         EmptyView="No measurements yet. Log your first measurement above.">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="dto:BodyMeasurementDto"
-                              xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared">
+                <DataTemplate x:DataType="dto:BodyMeasurementDto">
                     <Border Style="{StaticResource ElevatedSurface}" Margin="0,0,0,8">
                         <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
                             <Label Grid.Row="0" Grid.Column="0"
@@ -85,7 +85,6 @@
                                    HorizontalOptions="End" Margin="0,0,12,0" />
                             <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4"
                                    Text="{Binding MeasurementNotes}"
-                                   IsVisible="{Binding MeasurementNotes, Converter={x:Static StringToBoolConverter.Default}}"
                                    Style="{StaticResource SubheadingLabel}" />
                         </Grid>
                     </Border>

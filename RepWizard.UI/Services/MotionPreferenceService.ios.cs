@@ -1,3 +1,4 @@
+#if IOS || MACCATALYST
 using UIKit;
 
 namespace RepWizard.UI.Services;
@@ -9,3 +10,4 @@ public partial class MotionPreferenceService
         result = UIAccessibility.IsReduceMotionEnabled;
     }
 }
+#endif

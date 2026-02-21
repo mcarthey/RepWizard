@@ -1,3 +1,4 @@
+#if ANDROID
 using Android.Provider;
 
 namespace RepWizard.UI.Services;
@@ -14,3 +15,4 @@ public partial class MotionPreferenceService
         result = scale == 0f;
     }
 }
+#endif
