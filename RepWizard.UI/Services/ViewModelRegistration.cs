@@ -19,6 +19,8 @@ public static class ViewModelRegistration
         services.AddTransient<MeasurementsViewModel>();
         services.AddTransient<ChartsViewModel>();
         services.AddTransient<CoachViewModel>();
+        services.AddTransient<ProgramsViewModel>();
+        services.AddTransient<ProgramDetailViewModel>();
         services.AddTransient<ExerciseLibraryViewModel>();
         services.AddTransient<ExerciseDetailViewModel>();
         return services;

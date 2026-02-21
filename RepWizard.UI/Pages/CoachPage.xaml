@@ -4,17 +4,245 @@
              xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
              x:Class="RepWizard.UI.Pages.CoachPage"
              x:DataType="vm:CoachViewModel"
-             Title="Coach">
+             Title="Coach"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+             Shell.NavBarIsVisible="False">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Coach"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="AI chat interface will appear here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Top Navigation Bar -->
+        <Border Grid.Row="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                StrokeThickness="0"
+                Padding="12,8">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+
+                <!-- New Chat button -->
+                <Button Grid.Column="0"
+                        Text="+ New"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding NewConversationCommand}"
+                        FontSize="13"
+                        Padding="12,6"
+                        MinimumHeightRequest="36" />
+
+                <!-- Conversation Title -->
+                <Label Grid.Column="1"
+                       Text="{Binding ConversationTitle}"
+                       Style="{StaticResource HeadingLabel}"
+                       FontSize="16"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       LineBreakMode="TailTruncation"
+                       MaxLines="1" />
+
+                <!-- Programs button -->
+                <Button Grid.Column="2"
+                        Text="Programs"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding NavigateToProgramsCommand}"
+                        FontSize="13"
+                        Padding="12,6"
+                        MinimumHeightRequest="36" />
+
+                <!-- Library button -->
+                <Button Grid.Column="3"
+                        Text="Library"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding NavigateToLibraryCommand}"
+                        FontSize="13"
+                        Padding="12,6"
+                        MinimumHeightRequest="36" />
+            </Grid>
+        </Border>
+
+        <!-- Chat Messages -->
+        <CollectionView Grid.Row="1"
+                        x:Name="MessagesCollectionView"
+                        ItemsSource="{Binding Messages}"
+                        Margin="0,4,0,0"
+                        ItemsUpdatingScrollMode="KeepLastItemInView">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ChatMessageItem">
+
+                    <Grid Padding="12,4">
+                        <Border Padding="14,10"
+                                MaximumWidthRequest="320"
+                                StrokeThickness="0"
+                                HorizontalOptions="{Binding IsUser, Converter={StaticResource BoolToAlignmentConverter}}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16,16,4,16" />
+                            </Border.StrokeShape>
+                            <Border.Triggers>
+                                <!-- User message styling -->
+                                <DataTrigger TargetType="Border"
+                                             Binding="{Binding IsUser}"
+                                             Value="True">
+                                    <Setter Property="BackgroundColor"
+                                            Value="{StaticResource PrimaryContainer}" />
+                                    <Setter Property="StrokeShape">
+                                        <RoundRectangle CornerRadius="16,16,16,4" />
+                                    </Setter>
+                                </DataTrigger>
+                                <!-- Assistant message styling -->
+                                <DataTrigger TargetType="Border"
+                                             Binding="{Binding IsUser}"
+                                             Value="False">
+                                    <Setter Property="BackgroundColor"
+                                            Value="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated2}}" />
+                                </DataTrigger>
+                            </Border.Triggers>
+
+                            <VerticalStackLayout Spacing="4">
+                                <!-- Sender label -->
+                                <Label FontSize="11"
+                                       FontAttributes="Bold"
+                                       Opacity="0.6"
+                                       Margin="0,0,0,2">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding IsUser}"
+                                                     Value="True">
+                                            <Setter Property="Text" Value="You" />
+                                            <Setter Property="TextColor"
+                                                    Value="{StaticResource Primary}" />
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding IsUser}"
+                                                     Value="False">
+                                            <Setter Property="Text" Value="RepWizard Coach" />
+                                            <Setter Property="TextColor"
+                                                    Value="{StaticResource Tertiary}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+
+                                <!-- Message content -->
+                                <Label Text="{Binding Content}"
+                                       FontSize="14"
+                                       LineBreakMode="WordWrap" />
+
+                                <!-- Streaming indicator -->
+                                <ActivityIndicator IsRunning="{Binding IsStreaming}"
+                                                   IsVisible="{Binding IsStreaming}"
+                                                   Color="{StaticResource Tertiary}"
+                                                   HeightRequest="16"
+                                                   WidthRequest="16"
+                                                   HorizontalOptions="Start" />
+
+                                <!-- Timestamp -->
+                                <Label Text="{Binding Timestamp, StringFormat='{0:h:mm tt}'}"
+                                       FontSize="10"
+                                       Opacity="0.4"
+                                       HorizontalOptions="End" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty state: welcome message -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Padding="40"
+                                     Spacing="12">
+                    <Label Text="RepWizard Coach"
+                           Style="{StaticResource HeadingLabel}"
+                           HorizontalOptions="Center" />
+                    <Label Text="Your AI-powered training coach. Ask me about:"
+                           FontSize="14"
+                           Opacity="0.7"
+                           HorizontalOptions="Center" />
+                    <VerticalStackLayout Spacing="6" Margin="0,8,0,0">
+                        <Label Text="- Program design and periodization"
+                               FontSize="13" Opacity="0.5"
+                               HorizontalOptions="Center" />
+                        <Label Text="- Exercise technique and alternatives"
+                               FontSize="13" Opacity="0.5"
+                               HorizontalOptions="Center" />
+                        <Label Text="- Training volume and intensity"
+                               FontSize="13" Opacity="0.5"
+                               HorizontalOptions="Center" />
+                        <Label Text="- Recovery and deload strategies"
+                               FontSize="13" Opacity="0.5"
+                               HorizontalOptions="Center" />
+                        <Label Text="- Generate a custom training program"
+                               FontSize="13" Opacity="0.5"
+                               HorizontalOptions="Center"
+                               TextColor="{StaticResource Primary}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Error Banner -->
+        <Border Grid.Row="1"
+                VerticalOptions="End"
+                IsVisible="{Binding HasError}"
+                BackgroundColor="{StaticResource ErrorContainer}"
+                StrokeThickness="0"
+                Padding="12,8"
+                Margin="12,0,12,4">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource Error}"
+                   FontSize="12"
+                   LineBreakMode="WordWrap" />
+        </Border>
+
+        <!-- Bottom Input Bar -->
+        <Border Grid.Row="2"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                StrokeThickness="0"
+                Padding="8,8,8,12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+
+                <!-- Message input -->
+                <Border Grid.Column="0"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+                        StrokeShape="RoundRectangle 22"
+                        Stroke="{StaticResource Outline}"
+                        StrokeThickness="1"
+                        Padding="12,0">
+                    <Entry Text="{Binding UserInput}"
+                           Placeholder="Ask your coach..."
+                           ReturnCommand="{Binding SendMessageCommand}"
+                           ReturnType="Send"
+                           FontSize="15"
+                           IsEnabled="{Binding IsStreaming, Converter={StaticResource InverseBoolConverter}}" />
+                </Border>
+
+                <!-- Send / Cancel button container -->
+                <Grid Grid.Column="1">
+                    <!-- Send button (visible when not streaming) -->
+                    <Button Text="Send"
+                            Command="{Binding SendMessageCommand}"
+                            CornerRadius="22"
+                            Padding="16,10"
+                            MinimumHeightRequest="44"
+                            MinimumWidthRequest="70"
+                            FontSize="14"
+                            IsVisible="{Binding IsStreaming, Converter={StaticResource InverseBoolConverter}}" />
+
+                    <!-- Cancel streaming button (visible when streaming) -->
+                    <Button Text="Stop"
+                            Command="{Binding CancelStreamCommand}"
+                            BackgroundColor="{StaticResource Error}"
+                            TextColor="White"
+                            CornerRadius="22"
+                            Padding="16,10"
+                            MinimumHeightRequest="44"
+                            MinimumWidthRequest="70"
+                            FontSize="14"
+                            IsVisible="{Binding IsStreaming}" />
+                </Grid>
+            </Grid>
+        </Border>
+
+    </Grid>
 
 </ContentPage>

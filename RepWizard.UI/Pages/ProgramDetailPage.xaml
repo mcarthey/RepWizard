@@ -1,18 +1,276 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.ProgramDetailPage"
-             Title="Program Detail">
+             x:DataType="vm:ProgramDetailViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Program Detail"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="Week-by-week program view will appear here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <ScrollView>
+        <VerticalStackLayout Spacing="0" Padding="0,0,0,24">
+
+            <!-- Program Header -->
+            <Border Margin="16,16,16,0"
+                    Style="{StaticResource HeroSurface}"
+                    Padding="20,18">
+                <VerticalStackLayout Spacing="8">
+                    <!-- Program Name -->
+                    <Label Text="{Binding Program.Name}"
+                           Style="{StaticResource HeadingLabel}"
+                           FontSize="24" />
+
+                    <!-- Goal Description -->
+                    <Label Text="{Binding GoalDisplay}"
+                           FontSize="14"
+                           Opacity="0.8"
+                           LineBreakMode="WordWrap" />
+
+                    <!-- Meta Info Row -->
+                    <HorizontalStackLayout Spacing="12" Margin="0,4,0,0">
+                        <!-- Duration -->
+                        <Border Padding="10,5"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{StaticResource PrimaryContainer}"
+                                StrokeThickness="0">
+                            <Label Text="{Binding DurationDisplay}"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource Primary}" />
+                        </Border>
+
+                        <!-- Status -->
+                        <Border Padding="10,5"
+                                StrokeShape="RoundRectangle 10"
+                                StrokeThickness="0">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border"
+                                             Binding="{Binding Program.IsActive}"
+                                             Value="True">
+                                    <Setter Property="BackgroundColor"
+                                            Value="{StaticResource TertiaryContainer}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Border"
+                                             Binding="{Binding Program.IsActive}"
+                                             Value="False">
+                                    <Setter Property="BackgroundColor"
+                                            Value="{StaticResource SecondaryContainer}" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Label Text="{Binding StatusDisplay}"
+                                   FontSize="12"
+                                   FontAttributes="Bold">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding Program.IsActive}"
+                                                 Value="True">
+                                        <Setter Property="TextColor"
+                                                Value="{StaticResource Tertiary}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding Program.IsActive}"
+                                                 Value="False">
+                                        <Setter Property="TextColor"
+                                                Value="{StaticResource Secondary}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+
+                        <!-- AI Generated -->
+                        <Border Padding="10,5"
+                                StrokeShape="RoundRectangle 10"
+                                BackgroundColor="{StaticResource TertiaryContainer}"
+                                StrokeThickness="0"
+                                IsVisible="{Binding Program.GeneratedByAi}">
+                            <Label Text="AI Generated"
+                                   FontSize="12"
+                                   TextColor="{StaticResource Tertiary}" />
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <!-- Activated date if applicable -->
+                    <Label FontSize="11"
+                           Opacity="0.4"
+                           IsVisible="{Binding Program.IsActive}"
+                           Margin="0,2,0,0">
+                        <Label.Text>
+                            <Binding Path="Program.ActivatedAt"
+                                     StringFormat="Activated: {0:MMM d, yyyy}" />
+                        </Label.Text>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- AI Reasoning Section -->
+            <Border Margin="16,12,16,0"
+                    Style="{StaticResource ElevatedSurface}"
+                    IsVisible="{Binding HasAiReasoning}"
+                    Padding="16,14">
+                <VerticalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="6">
+                        <Label Text="AI REASONING"
+                               Style="{StaticResource SubheadingLabel}"
+                               TextColor="{StaticResource Tertiary}" />
+                    </HorizontalStackLayout>
+
+                    <BoxView Style="{StaticResource Divider}" Margin="0,2" />
+
+                    <Label Text="{Binding AiReasoningDisplay}"
+                           FontSize="13"
+                           Opacity="0.8"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Week-by-Week Section Header -->
+            <Label Text="PROGRAM SCHEDULE"
+                   Style="{StaticResource SubheadingLabel}"
+                   Margin="20,20,16,8" />
+
+            <!-- Weeks List -->
+            <CollectionView ItemsSource="{Binding Program.Weeks}"
+                            Margin="0,0,0,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:ProgramWeekDto">
+                        <Border Margin="16,4"
+                                Padding="16,12"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                                StrokeShape="RoundRectangle 14"
+                                StrokeThickness="0">
+
+                            <VerticalStackLayout Spacing="8">
+                                <!-- Week Header -->
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <Label Grid.Column="0"
+                                           Text="{Binding WeekNumber, StringFormat='Week {0}'}"
+                                           FontSize="16"
+                                           FontAttributes="Bold" />
+
+                                    <!-- Volume Multiplier -->
+                                    <Border Grid.Column="1"
+                                            Padding="8,3"
+                                            StrokeShape="RoundRectangle 8"
+                                            BackgroundColor="{StaticResource PrimaryContainer}"
+                                            StrokeThickness="0"
+                                            Margin="4,0">
+                                        <Label Text="{Binding VolumeMultiplier, StringFormat='{0:P0} vol'}"
+                                               FontSize="10"
+                                               TextColor="{StaticResource Primary}" />
+                                    </Border>
+
+                                    <!-- Deload badge -->
+                                    <Border Grid.Column="2"
+                                            Padding="8,3"
+                                            StrokeShape="RoundRectangle 8"
+                                            BackgroundColor="{StaticResource TertiaryContainer}"
+                                            StrokeThickness="0"
+                                            IsVisible="{Binding DeloadWeek}">
+                                        <Label Text="DELOAD"
+                                               FontSize="10"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource Tertiary}"
+                                               CharacterSpacing="0.8" />
+                                    </Border>
+                                </Grid>
+
+                                <BoxView Style="{StaticResource Divider}" />
+
+                                <!-- Days within the week -->
+                                <CollectionView ItemsSource="{Binding Days}"
+                                                Margin="0,2,0,0">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate x:DataType="dto:ProgramDayDto">
+                                            <Grid ColumnDefinitions="80,*,Auto"
+                                                  Padding="4,6"
+                                                  RowDefinitions="Auto">
+
+                                                <!-- Day of Week -->
+                                                <Label Grid.Column="0"
+                                                       Text="{Binding DayOfWeek}"
+                                                       FontSize="13"
+                                                       FontAttributes="Bold"
+                                                       VerticalOptions="Center" />
+
+                                                <!-- Focus / Workout Name or Rest -->
+                                                <VerticalStackLayout Grid.Column="1"
+                                                                     VerticalOptions="Center"
+                                                                     Spacing="2">
+                                                    <Label FontSize="13"
+                                                           LineBreakMode="TailTruncation">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label"
+                                                                         Binding="{Binding RestDay}"
+                                                                         Value="True">
+                                                                <Setter Property="Text"
+                                                                        Value="Rest Day" />
+                                                                <Setter Property="Opacity"
+                                                                        Value="0.4" />
+                                                                <Setter Property="FontAttributes"
+                                                                        Value="Italic" />
+                                                            </DataTrigger>
+                                                            <DataTrigger TargetType="Label"
+                                                                         Binding="{Binding RestDay}"
+                                                                         Value="False">
+                                                                <Setter Property="Text"
+                                                                        Value="{Binding Focus}" />
+                                                                <Setter Property="Opacity"
+                                                                        Value="1.0" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                    <Label Text="{Binding WorkoutTemplateName}"
+                                                           FontSize="11"
+                                                           Opacity="0.5"
+                                                           IsVisible="{Binding RestDay, Converter={StaticResource InverseBoolConverter}}" />
+                                                </VerticalStackLayout>
+
+                                                <!-- Rest Day indicator -->
+                                                <Border Grid.Column="2"
+                                                        Padding="6,2"
+                                                        StrokeShape="RoundRectangle 6"
+                                                        BackgroundColor="{StaticResource SecondaryContainer}"
+                                                        StrokeThickness="0"
+                                                        IsVisible="{Binding RestDay}"
+                                                        VerticalOptions="Center">
+                                                    <Label Text="REST"
+                                                           FontSize="9"
+                                                           FontAttributes="Bold"
+                                                           TextColor="{StaticResource Secondary}"
+                                                           CharacterSpacing="0.5" />
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Padding="40">
+                        <Label Text="No schedule data available"
+                               FontSize="14"
+                               Opacity="0.5"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+    <!-- Loading Overlay -->
+    <ContentPage.Triggers>
+        <DataTrigger TargetType="ContentPage"
+                     Binding="{Binding IsLoading}"
+                     Value="True">
+            <Setter Property="IsBusy" Value="True" />
+        </DataTrigger>
+    </ContentPage.Triggers>
 
 </ContentPage>

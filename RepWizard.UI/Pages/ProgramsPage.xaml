@@ -1,18 +1,194 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.ProgramsPage"
-             Title="Programs">
+             x:DataType="vm:ProgramsViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Programs"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="View and manage training programs here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource TonalSurface}" Margin="16,16,16,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0"
+                       Text="TRAINING PROGRAMS"
+                       Style="{StaticResource SubheadingLabel}"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="1"
+                        Text="+ Generate"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding NavigateToCoachCommand}"
+                        FontSize="13"
+                        Padding="12,6" />
+            </Grid>
+        </Border>
+
+        <!-- Summary Stats -->
+        <HorizontalStackLayout Grid.Row="1"
+                               Margin="16,12"
+                               Spacing="16"
+                               HorizontalOptions="Start">
+            <Border Padding="10,6"
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated2}}"
+                    StrokeThickness="0">
+                <HorizontalStackLayout Spacing="6">
+                    <Label Text="Total:"
+                           FontSize="12"
+                           Opacity="0.6"
+                           VerticalOptions="Center" />
+                    <Label Text="{Binding Programs.Count}"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource Primary}"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Border>
+        </HorizontalStackLayout>
+
+        <!-- Program List -->
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Programs}"
+                        Margin="0,0,0,0">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:TrainingProgramDto">
+                    <Border Margin="16,4"
+                            Padding="16,14"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                            StrokeShape="RoundRectangle 14"
+                            StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProgramsViewModel}}, Path=NavigateToDetailCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+
+                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+
+                            <!-- Program Name -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   FontSize="17"
+                                   FontAttributes="Bold" />
+
+                            <!-- Active Badge -->
+                            <Border Grid.Row="0" Grid.Column="1"
+                                    Padding="8,3"
+                                    StrokeShape="RoundRectangle 10"
+                                    StrokeThickness="0"
+                                    IsVisible="{Binding IsActive}"
+                                    BackgroundColor="{StaticResource TertiaryContainer}"
+                                    VerticalOptions="Center">
+                                <Label Text="ACTIVE"
+                                       FontSize="10"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource Tertiary}"
+                                       CharacterSpacing="1" />
+                            </Border>
+
+                            <!-- Goal Description -->
+                            <Label Grid.Row="1" Grid.ColumnSpan="2"
+                                   Text="{Binding GoalDescription}"
+                                   FontSize="13"
+                                   Opacity="0.7"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="2"
+                                   Margin="0,4,0,0" />
+
+                            <!-- Meta info row -->
+                            <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2"
+                                                   Spacing="12"
+                                                   Margin="0,8,0,0">
+                                <!-- Duration -->
+                                <Border Padding="8,4"
+                                        StrokeShape="RoundRectangle 8"
+                                        BackgroundColor="{StaticResource PrimaryContainer}"
+                                        StrokeThickness="0">
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label Text="{Binding DurationWeeks, StringFormat='{0} weeks'}"
+                                               FontSize="11"
+                                               TextColor="{StaticResource Primary}" />
+                                    </HorizontalStackLayout>
+                                </Border>
+
+                                <!-- Training Days -->
+                                <Border Padding="8,4"
+                                        StrokeShape="RoundRectangle 8"
+                                        BackgroundColor="{StaticResource SecondaryContainer}"
+                                        StrokeThickness="0">
+                                    <Label Text="{Binding TotalTrainingDays, StringFormat='{0} days'}"
+                                           FontSize="11"
+                                           TextColor="{StaticResource Secondary}" />
+                                </Border>
+
+                                <!-- AI Generated badge -->
+                                <Border Padding="8,4"
+                                        StrokeShape="RoundRectangle 8"
+                                        BackgroundColor="{StaticResource TertiaryContainer}"
+                                        StrokeThickness="0"
+                                        IsVisible="{Binding GeneratedByAi}">
+                                    <Label Text="AI Generated"
+                                           FontSize="11"
+                                           TextColor="{StaticResource Tertiary}" />
+                                </Border>
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty state -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Padding="40"
+                                     Spacing="12">
+                    <Label Text="No programs yet"
+                           Style="{StaticResource HeadingLabel}"
+                           HorizontalOptions="Center" />
+                    <Label Text="Use the AI Coach to generate a personalized training program tailored to your goals."
+                           FontSize="14"
+                           Opacity="0.6"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           LineBreakMode="WordWrap" />
+                    <Button Text="Generate Program"
+                            Command="{Binding NavigateToCoachCommand}"
+                            HorizontalOptions="Center"
+                            Margin="0,8,0,0" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="2"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Color="{StaticResource Primary}" />
+
+        <!-- Error Display -->
+        <Border Grid.Row="2"
+                VerticalOptions="End"
+                IsVisible="{Binding HasError}"
+                BackgroundColor="{StaticResource ErrorContainer}"
+                StrokeThickness="0"
+                Padding="12,8"
+                Margin="16,0,16,8">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource Error}"
+                   FontSize="12"
+                   LineBreakMode="WordWrap" />
+        </Border>
+
+    </Grid>
 
 </ContentPage>

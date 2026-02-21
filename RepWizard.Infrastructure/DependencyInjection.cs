@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RepWizard.Core.Interfaces;
 using RepWizard.Core.Interfaces.Repositories;
+using RepWizard.Core.Interfaces.Services;
 using RepWizard.Infrastructure.Data;
 using RepWizard.Infrastructure.Repositories;
 using RepWizard.Infrastructure.Services;
@@ -74,6 +75,18 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Registers the AnthropicChatService as IAiChatService.
+    /// Call this separately in API host — not needed for MAUI client.
+    /// Requires IHttpClientFactory and AiCoach:ApiKey in configuration.
+    /// </summary>
+    public static IServiceCollection AddAiChatService(this IServiceCollection services)
+    {
+        services.AddHttpClient("Anthropic");
+        services.AddScoped<IAiChatService, AnthropicChatService>();
+        return services;
+    }
+
     private static void RegisterRepositories(IServiceCollection services)
     {
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -81,6 +94,8 @@ public static class DependencyInjection
         services.AddScoped<IWorkoutSessionRepository, WorkoutSessionRepository>();
         services.AddScoped<IExerciseRepository, ExerciseRepository>();
         services.AddScoped<IBodyMeasurementRepository, BodyMeasurementRepository>();
+        services.AddScoped<IAiConversationRepository, AiConversationRepository>();
+        services.AddScoped<ITrainingProgramRepository, TrainingProgramRepository>();
         services.AddScoped<ISyncService, SyncService>();
     }
 }

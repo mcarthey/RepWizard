@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RepWizard.Api.Endpoints;
 using RepWizard.Application;
+using RepWizard.Application.Services;
 using RepWizard.Infrastructure;
 using RepWizard.Infrastructure.Data;
 using Scalar.AspNetCore;
@@ -22,6 +23,10 @@ builder.Services.AddMediatR(cfg =>
 
 // HttpClient factory — never instantiate raw HttpClient
 builder.Services.AddHttpClient();
+
+// AI Coach services
+builder.Services.AddScoped<AiContextBuilder>();
+builder.Services.AddAiChatService();
 
 // CORS for development
 builder.Services.AddCors(options =>
@@ -59,6 +64,7 @@ app.MapHealthEndpoints();
 app.MapExerciseEndpoints();
 app.MapWorkoutEndpoints();
 app.MapMeasurementEndpoints();
+app.MapAiEndpoints();
 
 app.Run();
 

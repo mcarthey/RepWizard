@@ -11,6 +11,7 @@
             </ResourceDictionary.MergedDictionaries>
             <converters:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
