@@ -29,6 +29,23 @@ public static class DependencyInjection
     }
 
     /// <summary>
+    /// Registers Infrastructure services for the ASP.NET Core API (SQL Server / LocalDB).
+    /// </summary>
+    public static IServiceCollection AddInfrastructureSqlServer(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("SqlServer")
+            ?? throw new InvalidOperationException("SqlServer connection string not found.");
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(connectionString));
+
+        RegisterRepositories(services);
+        return services;
+    }
+
+    /// <summary>
     /// Registers Infrastructure services for the MAUI client (SQLite, offline-first).
     /// </summary>
     public static IServiceCollection AddInfrastructureSqlite(

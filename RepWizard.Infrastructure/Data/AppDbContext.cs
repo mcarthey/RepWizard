@@ -127,7 +127,7 @@ public class AppDbContext : DbContext
             b.HasOne(s => s.Template)
                 .WithMany()
                 .HasForeignKey(s => s.TemplateId)
-                .OnDelete(DeleteBehavior.SetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired(false);
         });
 
@@ -190,7 +190,7 @@ public class AppDbContext : DbContext
             b.HasOne(d => d.WorkoutTemplate)
                 .WithMany(t => t.ProgramDays)
                 .HasForeignKey(d => d.WorkoutTemplateId)
-                .OnDelete(DeleteBehavior.SetNull)
+                .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired(false);
         });
 

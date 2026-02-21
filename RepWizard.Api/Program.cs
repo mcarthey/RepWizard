@@ -10,8 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 // OpenAPI
 builder.Services.AddOpenApi();
 
-// Infrastructure — PostgreSQL for API server
-builder.Services.AddInfrastructurePostgres(builder.Configuration);
+// Infrastructure — SQL Server LocalDB for API server
+builder.Services.AddInfrastructureSqlServer(builder.Configuration);
 
 // Application layer — validators + pipeline behaviors
 builder.Services.AddApplication();
@@ -32,13 +32,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply migrations on startup in development
+// Ensure database is created on startup in development
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // Note: in production, run migrations separately via dotnet ef database update
-    // db.Database.Migrate();
+    db.Database.EnsureCreated();
 }
 
 // OpenAPI / Scalar docs
