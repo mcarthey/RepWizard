@@ -1,9 +1,21 @@
+using RepWizard.UI.ViewModels;
+
 namespace RepWizard.UI.Pages;
 
 public partial class ExerciseDetailPage : ContentPage
 {
-    public ExerciseDetailPage()
+    private readonly ExerciseDetailViewModel _viewModel;
+
+    public ExerciseDetailPage(ExerciseDetailViewModel viewModel)
     {
         InitializeComponent();
+        _viewModel = viewModel;
+        BindingContext = viewModel;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await _viewModel.LoadCommand.ExecuteAsync(null);
     }
 }

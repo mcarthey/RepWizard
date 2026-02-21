@@ -1,18 +1,108 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
              x:Class="RepWizard.UI.Pages.ExerciseDetailPage"
-             Title="Exercise Detail">
+             x:DataType="vm:ExerciseDetailViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Exercise Detail"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="Exercise info and history will appear here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <!-- Exercise Name + Category -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding Exercise.Name}"
+                       FontSize="28"
+                       FontAttributes="Bold" />
+                <HorizontalStackLayout Spacing="12">
+                    <Border Padding="8,4"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{StaticResource PrimaryContainer}"
+                            StrokeThickness="0">
+                        <Label Text="{Binding Exercise.Category}"
+                               FontSize="13"
+                               TextColor="{StaticResource Primary}" />
+                    </Border>
+                    <Border Padding="8,4"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{StaticResource SurfaceVariant}"
+                            StrokeThickness="0">
+                        <Label Text="{Binding Exercise.Equipment}" FontSize="13" />
+                    </Border>
+                    <Border Padding="8,4"
+                            StrokeShape="RoundRectangle 10"
+                            BackgroundColor="{StaticResource SurfaceVariant}"
+                            StrokeThickness="0">
+                        <Label Text="{Binding Exercise.Difficulty}" FontSize="13" />
+                    </Border>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Description -->
+            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                    StrokeShape="RoundRectangle 12"
+                    StrokeThickness="0"
+                    Padding="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Description" Style="{StaticResource SubheadingLabel}" />
+                    <Label Text="{Binding Exercise.Description}"
+                           FontSize="15"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Muscles -->
+            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                    StrokeShape="RoundRectangle 12"
+                    StrokeThickness="0"
+                    Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Primary Muscles" Style="{StaticResource SubheadingLabel}" />
+                        <Label Text="{Binding MusclesDisplay}" FontSize="15" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Secondary Muscles" Style="{StaticResource SubheadingLabel}" />
+                        <Label Text="{Binding SecondaryMusclesDisplay}" FontSize="15" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Instructions -->
+            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                    StrokeShape="RoundRectangle 12"
+                    StrokeThickness="0"
+                    Padding="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Instructions" Style="{StaticResource SubheadingLabel}" />
+                    <Label Text="{Binding InstructionsDisplay}"
+                           FontSize="15"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Research Notes -->
+            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                    StrokeShape="RoundRectangle 12"
+                    StrokeThickness="0"
+                    Padding="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Research Notes" Style="{StaticResource SubheadingLabel}" />
+                    <Label Text="{Binding Exercise.ResearchNotes}"
+                           FontSize="14"
+                           Opacity="0.8"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Loading -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center"
+                               Color="{StaticResource Primary}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 
 </ContentPage>

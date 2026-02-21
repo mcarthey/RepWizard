@@ -174,6 +174,26 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 
 ---
 
+## Phase 3 Gaps — Completed ✅
+
+> These items were partially done or stub-only at Phase 3 completion. Now fully implemented.
+
+- [x] **ActiveSessionPage XAML** — full workout logging UI: exercise picker, set input form (weight/reps/RPE/RIR/SetType), logged sets list, rest timer overlay with countdown, elapsed time, session notes, complete session button
+- [x] **ActiveSessionViewModel** — extended with form state, exercise loading via `GetExercisesQuery`, `LogSetFromFormCommand`, progressive overload default pre-fill, `IQueryAttributable` for Shell navigation params, elapsed time timer
+- [x] **TodayViewModel wired to real data** — injected `IMediator`, `LoadAsync` queries `GetSessionHistoryQuery` + `GetActiveSessionQuery`, calculates `WorkoutsThisWeek`, `WeeklyProgressPercent`, `MinutesTrainedThisWeek`, `TotalVolumeThisWeek`, `CurrentStreakDays`; `StartWorkoutAsync` sends `StartWorkoutSessionCommand` and navigates with session ID
+- [x] **ExerciseLibraryPage** — searchable exercise list with category filter chips, paginated `CollectionView`, tap-to-detail navigation
+- [x] **ExerciseLibraryViewModel** — search, category filter, paginated loading via `GetExercisesQuery`, `LoadMoreCommand`
+- [x] **ExerciseDetailPage** — full exercise detail view (name, category, equipment, difficulty, description, muscles, instructions, research notes)
+- [x] **ExerciseDetailViewModel** — `IQueryAttributable` for exercise ID, loads via `GetExerciseByIdQuery`
+- [x] **GetActiveSessionQuery** — new CQRS query + handler for checking active sessions
+- [x] **InverseBoolConverter** — added to converters, registered in App.xaml
+- [x] DI registration updated for `ExerciseLibraryViewModel`, `ExerciseDetailViewModel`
+- [x] Route `coach/library/detail` registered for exercise detail navigation from library
+
+**Post-gap test count: 146 ✅ (no regressions)**
+
+---
+
 ## Phase 4 — AI Coach ⏳ PENDING
 
 > Target: Users can chat with the AI coach and generate a science-validated training program.

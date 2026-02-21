@@ -4,17 +4,252 @@
              xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
              x:Class="RepWizard.UI.Pages.ActiveSessionPage"
              x:DataType="vm:ActiveSessionViewModel"
-             Title="Active Session">
+             Title="Active Session"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Active Session"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="Log your workout sets here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ========== HEADER: Elapsed Time ========== -->
+        <Grid Grid.Row="0" Padding="20,12" ColumnDefinitions="*,Auto">
+            <Label Text="Active Session"
+                   Style="{StaticResource HeadingLabel}"
+                   VerticalOptions="Center" />
+            <Border Grid.Column="1"
+                    BackgroundColor="{StaticResource SurfaceVariant}"
+                    StrokeShape="RoundRectangle 12"
+                    StrokeThickness="0"
+                    Padding="12,6">
+                <Label Text="{Binding ElapsedTime}"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}" />
+            </Border>
+        </Grid>
+
+        <!-- ========== MAIN CONTENT (Scrollable) ========== -->
+        <ScrollView Grid.Row="1" Padding="16,0">
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Exercise Picker -->
+                <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                        StrokeShape="RoundRectangle 12"
+                        StrokeThickness="0"
+                        Padding="12">
+                    <Picker Title="Select Exercise"
+                            ItemsSource="{Binding AvailableExercises}"
+                            SelectedItem="{Binding SelectedExercise}"
+                            ItemDisplayBinding="{Binding Name}"
+                            TextColor="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+                </Border>
+
+                <!-- Set Input Form -->
+                <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                        StrokeShape="RoundRectangle 16"
+                        StrokeThickness="0"
+                        Padding="16">
+                    <VerticalStackLayout Spacing="12">
+
+                        <!-- Weight + Reps Row -->
+                        <Grid ColumnDefinitions="*,16,*">
+                            <VerticalStackLayout>
+                                <Label Text="Weight (kg)" Style="{StaticResource SubheadingLabel}" />
+                                <Entry Text="{Binding WeightKgText}"
+                                       Placeholder="0"
+                                       Keyboard="Numeric"
+                                       FontSize="18" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2">
+                                <Label Text="Reps" Style="{StaticResource SubheadingLabel}" />
+                                <Entry Text="{Binding RepsText}"
+                                       Placeholder="8"
+                                       Keyboard="Numeric"
+                                       FontSize="18" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- RPE + RIR Row -->
+                        <Grid ColumnDefinitions="*,16,*">
+                            <VerticalStackLayout>
+                                <Label Text="RPE (1-10)" Style="{StaticResource SubheadingLabel}" />
+                                <Entry Text="{Binding RpeText}"
+                                       Placeholder="optional"
+                                       Keyboard="Numeric"
+                                       FontSize="18" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2">
+                                <Label Text="RIR" Style="{StaticResource SubheadingLabel}" />
+                                <Entry Text="{Binding RirText}"
+                                       Placeholder="optional"
+                                       Keyboard="Numeric"
+                                       FontSize="18" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Set Type Picker -->
+                        <VerticalStackLayout>
+                            <Label Text="Set Type" Style="{StaticResource SubheadingLabel}" />
+                            <Picker ItemsSource="{Binding SetTypeOptions}"
+                                    SelectedItem="{Binding SelectedSetType}"
+                                    TextColor="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+                        </VerticalStackLayout>
+
+                        <!-- Log Set Button -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Button Text="LOG SET"
+                                    Command="{Binding LogSetFromFormCommand}"
+                                    CornerRadius="24"
+                                    HeightRequest="52"
+                                    FontAttributes="Bold"
+                                    FontSize="16"
+                                    BackgroundColor="{StaticResource Primary}"
+                                    TextColor="White" />
+                            <Label Grid.Column="1"
+                                   VerticalOptions="Center"
+                                   Padding="12,0,0,0"
+                                   Opacity="0.6">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Set #" />
+                                        <Span Text="{Binding CurrentSetNumber}" FontAttributes="Bold" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Error Display -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource Error}"
+                       IsVisible="{Binding HasError}"
+                       FontSize="14"
+                       Padding="4,0" />
+
+                <!-- Logged Sets -->
+                <Label Text="Logged Sets"
+                       Style="{StaticResource SubheadingLabel}" />
+
+                <CollectionView ItemsSource="{Binding LoggedSets}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LoggedSetDisplayItem">
+                            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                                    StrokeShape="RoundRectangle 10"
+                                    StrokeThickness="0"
+                                    Padding="12,8"
+                                    Margin="0,2">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <!-- Exercise + Set # -->
+                                    <VerticalStackLayout VerticalOptions="Center">
+                                        <Label Text="{Binding ExerciseName}"
+                                               FontSize="14"
+                                               FontAttributes="Bold" />
+                                        <Label FontSize="11" Opacity="0.6">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding SetType}" />
+                                                    <Span Text=" #" />
+                                                    <Span Text="{Binding SetNumber}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </VerticalStackLayout>
+
+                                    <!-- Weight x Reps -->
+                                    <HorizontalStackLayout Grid.Column="1"
+                                                           HorizontalOptions="Center"
+                                                           VerticalOptions="Center"
+                                                           Spacing="4">
+                                        <Label Text="{Binding WeightDisplay}"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource Primary}" />
+                                        <Label Text="x" FontSize="14" Opacity="0.5"
+                                               VerticalOptions="Center" />
+                                        <Label Text="{Binding RepsDisplay}"
+                                               FontSize="16"
+                                               FontAttributes="Bold" />
+                                    </HorizontalStackLayout>
+
+                                    <!-- Intensity -->
+                                    <Label Grid.Column="2"
+                                           Text="{Binding IntensityDisplay}"
+                                           FontSize="13"
+                                           Opacity="0.7"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Session Notes -->
+                <VerticalStackLayout>
+                    <Label Text="Session Notes" Style="{StaticResource SubheadingLabel}" />
+                    <Editor Text="{Binding SessionNotes}"
+                            Placeholder="How did the session feel?"
+                            HeightRequest="80"
+                            BackgroundColor="{StaticResource SurfaceVariant}" />
+                </VerticalStackLayout>
+
+                <!-- Spacer for bottom button -->
+                <BoxView HeightRequest="80" Color="Transparent" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- ========== BOTTOM: Complete Session ========== -->
+        <Grid Grid.Row="2" Padding="16,8,16,16">
+            <Button Text="COMPLETE SESSION"
+                    Command="{Binding CompleteSessionCommand}"
+                    CornerRadius="28"
+                    HeightRequest="56"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    BackgroundColor="{StaticResource Tertiary}"
+                    TextColor="{StaticResource SurfaceColorDark}" />
+        </Grid>
+
+        <!-- ========== REST TIMER OVERLAY ========== -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                IsVisible="{Binding IsRestTimerActive}"
+                BackgroundColor="#CC0D1117"
+                StrokeThickness="0">
+            <VerticalStackLayout HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 Spacing="16">
+                <Label Text="REST"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       Opacity="0.6" />
+
+                <Border StrokeShape="RoundRectangle 999"
+                        Stroke="{StaticResource Primary}"
+                        StrokeThickness="4"
+                        BackgroundColor="{StaticResource SurfaceVariant}"
+                        WidthRequest="160"
+                        HeightRequest="160"
+                        HorizontalOptions="Center">
+                    <Label Text="{Binding RestTimerDisplay}"
+                           FontSize="48"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="{StaticResource Primary}" />
+                </Border>
+
+                <Button Text="SKIP"
+                        Command="{Binding SkipRestTimerCommand}"
+                        CornerRadius="20"
+                        HeightRequest="44"
+                        MinimumWidthRequest="120"
+                        FontAttributes="Bold"
+                        BackgroundColor="{StaticResource SurfaceVariant}"
+                        TextColor="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
+            </VerticalStackLayout>
+        </Border>
+
+    </Grid>
 
 </ContentPage>

@@ -1,18 +1,124 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.ExerciseLibraryPage"
-             Title="Exercise Library">
+             x:DataType="vm:ExerciseLibraryViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
 
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="Exercise Library"
-               FontSize="28"
-               FontAttributes="Bold"
-               HorizontalOptions="Center" />
-        <Label Text="Browse and search the exercise database here."
-               FontSize="16"
-               HorizontalOptions="Center"
-               TextColor="Gray" />
-    </VerticalStackLayout>
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Search Bar -->
+        <Border Grid.Row="0"
+                Margin="16,12"
+                BackgroundColor="{StaticResource SurfaceVariant}"
+                StrokeShape="RoundRectangle 16"
+                StrokeThickness="0"
+                Padding="4,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <Entry Text="{Binding SearchText}"
+                       Placeholder="Search exercises..."
+                       ReturnCommand="{Binding SearchCommand}"
+                       ClearButtonVisibility="WhileEditing"
+                       FontSize="16" />
+                <Button Grid.Column="1"
+                        Text="Search"
+                        Command="{Binding SearchCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource Primary}"
+                        FontSize="14" />
+            </Grid>
+        </Border>
+
+        <!-- Category Filter -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never"
+                    Margin="16,0,16,8">
+            <HorizontalStackLayout Spacing="8">
+                <BindableLayout.ItemsSource>
+                    <x:Array Type="{x:Type x:String}">
+                        <x:String>All</x:String>
+                        <x:String>Strength</x:String>
+                        <x:String>Cardio</x:String>
+                        <x:String>Flexibility</x:String>
+                        <x:String>Power</x:String>
+                    </x:Array>
+                </BindableLayout.ItemsSource>
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Border Padding="12,6"
+                                StrokeShape="RoundRectangle 14"
+                                BackgroundColor="{StaticResource SurfaceVariant}"
+                                StrokeThickness="0">
+                            <Label Text="{Binding .}" FontSize="13" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <!-- Exercise List -->
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Exercises}"
+                        RemainingItemsThreshold="5"
+                        RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="dto:ExerciseDto">
+                    <Border Margin="16,4"
+                            Padding="16,12"
+                            BackgroundColor="{StaticResource SurfaceVariant}"
+                            StrokeShape="RoundRectangle 12"
+                            StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExerciseLibraryViewModel}}, Path=NavigateToDetailCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Text="{Binding Name}"
+                                   FontSize="16"
+                                   FontAttributes="Bold" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding Equipment}"
+                                   FontSize="12"
+                                   Opacity="0.6"
+                                   VerticalOptions="Center" />
+                            <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2"
+                                                   Spacing="8" Margin="0,4,0,0">
+                                <Border Padding="6,2"
+                                        StrokeShape="RoundRectangle 8"
+                                        BackgroundColor="{StaticResource PrimaryContainer}"
+                                        StrokeThickness="0">
+                                    <Label Text="{Binding Category}" FontSize="11"
+                                           TextColor="{StaticResource Primary}" />
+                                </Border>
+                                <Label Text="{Binding Difficulty}" FontSize="12" Opacity="0.5"
+                                       VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Padding="40">
+                    <Label Text="No exercises found"
+                           FontSize="16" HorizontalOptions="Center" Opacity="0.5" />
+                    <Label Text="Try adjusting your search or filters"
+                           FontSize="13" HorizontalOptions="Center" Opacity="0.4" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="2"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Color="{StaticResource Primary}" />
+
+    </Grid>
 
 </ContentPage>

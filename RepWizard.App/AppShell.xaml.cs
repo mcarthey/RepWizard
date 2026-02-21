@@ -25,6 +25,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("coach/programs", typeof(ProgramsPage));
         Routing.RegisterRoute("coach/program", typeof(ProgramDetailPage));
         Routing.RegisterRoute("coach/library", typeof(ExerciseLibraryPage));
+        Routing.RegisterRoute("coach/library/detail", typeof(ExerciseDetailPage));
 
         // Settings
         Routing.RegisterRoute("settings", typeof(SettingsPage));
