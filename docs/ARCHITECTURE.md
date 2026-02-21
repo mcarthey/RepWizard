@@ -41,7 +41,7 @@ RepWizard.UI (MAUI)     ←  Application, Core, Shared
 | Mobile/Desktop UI | .NET MAUI + CommunityToolkit.Maui |
 | MVVM | CommunityToolkit.Mvvm (source generators, ObservableObject, RelayCommand) |
 | REST API | ASP.NET Core Minimal APIs with endpoint groups |
-| ORM | Entity Framework Core 9 — SQLite (local) + PostgreSQL (server) |
+| ORM | Entity Framework Core 9 — SQLite (local) + SQL Server LocalDB (server dev) |
 | CQRS Mediator | MediatR 12 |
 | Validation | FluentValidation 11 |
 | HTTP Client | IHttpClientFactory + Polly resilience (never raw HttpClient) |
@@ -219,9 +219,10 @@ All enums live in `RepWizard.Core.Enums`. Every value has `[EnumMember(Value=...
 | Environment | Database | Provider |
 |---|---|---|
 | MAUI client | SQLite (`RepWizard.db` in LocalApplicationData) | Microsoft.EntityFrameworkCore.Sqlite |
-| API server | PostgreSQL | Npgsql.EntityFrameworkCore.PostgreSQL |
+| API server (dev) | SQL Server LocalDB (`(localdb)\MSSQLLocalDB`) | Microsoft.EntityFrameworkCore.SqlServer |
+| API server (prod) | PostgreSQL or SQL Server | Configurable via DI (`AddInfrastructurePostgres` / `AddInfrastructureSqlServer`) |
 
-Both use the same `AppDbContext` class — provider is swapped via DI at startup. The MAUI client uses `EnsureCreated()` (no migrations), the server uses full EF Core migrations via `dotnet ef database update`.
+Both use the same `AppDbContext` class — provider is swapped via DI at startup. The MAUI client uses `EnsureCreated()` (no migrations). The API uses `EnsureCreated()` in development; production should use full EF Core migrations via `dotnet ef database update`.
 
 ### 5.2 AppDbContext Behaviours
 

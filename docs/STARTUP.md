@@ -2,25 +2,63 @@ Here's exactly what you need to run locally:
 
 ---
 
-**Terminal 1 — start the API**
+## Prerequisites
+
+- .NET 9 SDK (global.json pins to 9.0.x)
+- SQL Server LocalDB (ships with Visual Studio, or install separately)
+- For Android: Android emulator with the `android` workload installed
+
+Verify setup:
+```bash
+dotnet --version          # Should show 9.0.x
+sqllocaldb info           # Should list MSSQLLocalDB
+adb devices               # Should show emulator if running
+```
+
+---
+
+## Terminal 1 — Start the API
+
 ```bash
 cd RepWizard.Api
 dotnet run --launch-profile https
 # API is now at https://localhost:7001
 # Scalar docs at https://localhost:7001/scalar
+# Health check at https://localhost:7001/health
 ```
 
-**Terminal 2 — run the MAUI app** (Windows desktop is the easiest target without a phone/emulator)
+The API uses SQL Server LocalDB (`(localdb)\MSSQLLocalDB`) and auto-creates the `RepWizard_Dev` database on first run.
+
+---
+
+## Terminal 2 — Run the MAUI app
+
+### Option A: Windows desktop (easiest)
 ```bash
 cd RepWizard.App
 dotnet run -f net9.0-windows10.0.19041.0
 ```
 
-Or launch both from your IDE with multiple startup projects.
+### Option B: Android emulator
+```bash
+# 1. Start the emulator (if not already running)
+emulator -avd Pixel_7_API_36 &
+
+# 2. Build and deploy to emulator
+dotnet build RepWizard.App/RepWizard.App.csproj -f net9.0-android -t:Run -p:AndroidAttachDebugger=false
+
+# Verify the app is running
+adb shell ps -A | grep repwizard
+```
+
+**Note:** Do NOT use `adb install` with the debug APK — .NET MAUI uses Fast Deployment which requires `dotnet build -t:Run` for proper assembly deployment.
+
+### Option C: IDE
+Launch both API and App from Visual Studio with multiple startup projects.
 
 ---
 
-**Do you need the API running?** It depends on what you're doing:
+## Do you need the API running?
 
 | Feature | API required? |
 |---|---|
