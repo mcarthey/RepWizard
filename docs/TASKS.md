@@ -329,6 +329,137 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 
 ---
 
+## Test Gap Closure ✅ COMPLETE
+
+> Closed gaps identified in `docs/TEST-GAP-PLAN.md` against `docs/TESTING-STRATEGY.md`. Added 36 tests across 5 new files + 1 extended file.
+
+### Phase 1: Auth Integration Tests (+5 tests)
+
+- [x] `Register_DuplicateEmail_ReturnsBadRequest` — second registration with same email → 400
+- [x] `Login_ValidCredentials_ReturnsOkWithTokens` — register then login, verify tokens + email match
+- [x] `Refresh_ValidToken_ReturnsNewTokens` — register, refresh with valid tokens → 200
+- [x] `Refresh_InvalidToken_ReturnsUnauthorized` — fake tokens → 401
+- [x] `Register_MissingPassword_ReturnsBadRequest` — empty password → 400
+- [ ] `ProtectedEndpoint_NoToken_ReturnsUnauthorized` — **SKIPPED**: no endpoints enforce `[Authorize]` (see Known Bugs below)
+- [x] `RegisterAndGetAuth()` helper added to `AuthEndpointTests`
+- [x] `RegisterTestUser()` helper added to `IntegrationTestBase` for cross-class reuse
+- [x] `Factory` accessor exposed on `IntegrationTestBase` for test data seeding
+
+**Post-Phase 1: 195 tests ✅**
+
+### Phase 2: Core Endpoint Integration Tests (+18 tests)
+
+**ExerciseEndpointTests (5 tests):**
+- [x] `GetExercises_ReturnsOkWithPaginatedList`
+- [x] `GetExercises_WithSearch_FiltersResults`
+- [x] `GetExercises_WithCategoryFilter_FiltersResults`
+- [x] `GetExerciseById_ExistingId_ReturnsExercise`
+- [x] `GetExerciseById_NonExistentId_ReturnsNotFound`
+
+**WorkoutEndpointTests (8 tests):**
+- [x] `StartSession_ValidRequest_ReturnsCreated`
+- [x] `StartSession_EmptyUserId_ReturnsBadRequest`
+- [x] `GetSession_ExistingId_ReturnsSessionDetail`
+- [x] `GetSession_NonExistentId_ReturnsNotFound`
+- [x] `LogSet_ValidRequest_ReturnsOk`
+- [x] `LogSet_InvalidReps_ReturnsBadRequest`
+- [x] `CompleteSession_ActiveSession_ReturnsOk`
+- [x] `GetSessionHistory_ReturnsOkWithPagination` (see Known Bugs: cannot verify completed session appears in history)
+
+**MeasurementEndpointTests (5 tests):**
+- [x] `LogMeasurement_ValidRequest_ReturnsCreated`
+- [x] `LogMeasurement_NoMetrics_ReturnsBadRequest`
+- [x] `GetMeasurementHistory_ReturnsList`
+- [x] `GetMeasurementHistory_WithLimit_RespectsLimit`
+- [x] `GetProgressChart_ReturnsChartData`
+
+**Post-Phase 2: 213 tests ✅**
+
+### Phase 3: Middleware Integration Tests (+5 tests)
+
+**MiddlewareTests (3 tests):**
+- [x] `Request_WithoutCorrelationId_GeneratesAndReturnsOne`
+- [x] `Request_WithCorrelationId_EchoesItBack`
+- [x] `MultipleRequests_GetDifferentCorrelationIds`
+
+**GlobalExceptionMiddlewareTests (2 tests):**
+- [x] `UnhandledException_Returns500WithSupportId` — verifies `{ success, error, supportId }` shape
+- [x] `UnhandledException_IncludesCorrelationIdInResponse` — correlation ID survives exception path
+- [x] Uses `IStartupFilter` to inject `/test/throw` endpoint into existing pipeline
+
+**Post-Phase 3: 218 tests ✅**
+
+### Phase 4: SyncService Unit Tests (+8 tests)
+
+- [x] `HasPendingChanges_NoPendingSessions_ReturnsFalse`
+- [x] `HasPendingChanges_NewSession_ReturnsTrue`
+- [x] `SyncAsync_PendingSessions_PushesAndReturnsCounts`
+- [x] `SyncAsync_NoPendingSessions_SkipsPush`
+- [x] `SyncAsync_ServerReturnsConflict_MarksSessionAsConflict`
+- [x] `SyncAsync_ApiUnreachable_FallsBackToLocalSync`
+- [x] `SyncAsync_Cancelled_ReturnsCancelledResult`
+- [x] `SyncAsync_UnexpectedException_ReturnsFailure`
+- [x] Uses `MockHttpMessageHandler` + real SQLite in-memory `AppDbContext`
+- [x] `ChangeTracker.Clear()` after seeding to avoid circular reference during serialization
+
+**Post-Phase 4: 226 tests ✅**
+
+### Test Ratio Improvement
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Total tests | 190 | 226 |
+| Unit tests | ~162 (85%) | ~162 (72%) |
+| Integration tests | ~25 (13%) | ~61 (27%) |
+| E2E / Smoke | ~3 (2%) | ~3 (1%) |
+
+Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
+
+---
+
+## Known Bugs (Discovered During Test Gap Closure)
+
+> These bugs were discovered through integration testing. They are pre-existing — not introduced by the test gap work.
+
+### BUG-1: No endpoints enforce `[Authorize]` or `RequireAuthorization()`
+
+**Impact:** All API endpoints accept anonymous requests. JWT auth middleware is configured (`UseAuthentication`, `UseAuthorization` in `Program.cs`) but no endpoint groups call `.RequireAuthorization()`.
+
+**Blocked tests (from `docs/TESTING-STRATEGY.md` Section 12):**
+- `ProtectedEndpoint_NoToken_ReturnsUnauthorized`
+- `ProtectedEndpoint_ExpiredToken_ReturnsUnauthorized`
+- `Endpoint_WrongAuthScheme_ReturnsUnauthorized`
+
+**Fix:** Add `.RequireAuthorization()` to endpoint groups that should be protected (workouts, measurements, user profile, AI, sync). Auth and health endpoints should remain anonymous.
+
+### BUG-2: `CompleteWorkoutSessionCommandHandler` loads session with `AsNoTracking()`
+
+**Location:** `RepWizard.Application/Commands/Workouts/CompleteWorkoutSession/CompleteWorkoutSessionCommandHandler.cs`
+
+**Impact:** The handler calls `_sessions.GetWithExercisesAndSetsAsync()` which uses `.AsNoTracking()`. The returned session entity is detached. When `session.Complete()` modifies `CompletedAt` and `SyncState`, those changes are not tracked by EF Core. The subsequent `_sessions.SaveChangesAsync()` persists nothing. The API returns a correct DTO (built from the in-memory object) but the database is never updated.
+
+**Symptoms:**
+- `POST /complete` returns 200 with correct `CompletedAt` — appears to work
+- `GET /sessions?userId=...` (history, filters `CompletedAt != null`) returns empty — session was never actually completed in DB
+- Sessions remain active forever in the database
+
+**Fix:** Either remove `.AsNoTracking()` from `GetWithExercisesAndSetsAsync()`, or re-attach the entity before saving: `_sessions.Update(session)` before `SaveChangesAsync()`.
+
+### BUG-3: `SyncService.PushChangesAsync` circular reference during JSON serialization
+
+**Location:** `RepWizard.Infrastructure/Services/SyncService.cs:102`
+
+**Impact:** `JsonSerializer.Serialize(s)` serializes the full `WorkoutSession` entity including navigation properties. When EF Core change tracker has fixed up `User ↔ WorkoutSessions` navigation properties, serialization hits a circular reference: `Session.User.WorkoutSessions[0].User.WorkoutSessions[0]...`
+
+**Symptoms:** `SyncAsync` falls through to the generic `catch (Exception)` handler with a `JsonException` instead of reaching the HTTP call. The sync appears to fail with an opaque error.
+
+**Fix options:**
+1. Use `JsonSerializerOptions { ReferenceHandler = ReferenceHandler.IgnoreCycles }` when serializing
+2. Project to a DTO before serializing (preferred — avoids leaking entity internals)
+3. Clear navigation properties before serialization
+
+---
+
 ## Deferred Items
 
 > These items were intentionally deferred. Each requires either design decisions, platform-specific work, or is release-phase scope.
