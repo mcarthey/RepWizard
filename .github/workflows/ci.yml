@@ -2,12 +2,23 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "claude/**", "feature/**", "fix/**"]
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
-    uses: mcarthey/shared-workflows/.github/workflows/dotnet-ci-reusable.yml@main
+    uses: ./.github/workflows/dotnet-ci-reusable.yml
     with:
+      dotnet-version: "9.0.x"
       solution-filter: "RepWizard.CI.slnf"
+      maui-project: "RepWizard.App/RepWizard.App.csproj"
+      maui-ui-project: "RepWizard.UI/RepWizard.UI.csproj"
+      smoke-test-url: "http://localhost:5099/health"
+      smoke-test-cwd: "RepWizard.Api"
+      smoke-test-env: "ASPNETCORE_URLS=http://localhost:5099 Jwt__Secret=CI-Smoke-Test-JWT-Key-Must-Be-At-Least-32-Bytes!"
+    secrets: inherit

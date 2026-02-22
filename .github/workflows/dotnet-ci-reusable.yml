@@ -136,8 +136,11 @@ jobs:
             export "$pair"
           done
 
-          export ASPNETCORE_ENVIRONMENT=Development
-          dotnet run --no-build -c Release &
+          # Do NOT set ASPNETCORE_ENVIRONMENT=Development -- that triggers
+          # EnsureCreated() or other dev-only startup that fails in CI
+          # (e.g., LocalDB not available on Linux). Use --no-launch-profile
+          # to prevent launchSettings.json from overriding env vars.
+          dotnet run --no-build -c Release --no-launch-profile &
           API_PID=$!
 
           for i in $(seq 1 30); do
@@ -205,12 +208,17 @@ jobs:
 
       - name: Restore & Build MAUI
         run: |
+          # Pass -p:TargetFramework to restore only the target we build.
+          # Without this, restore resolves ALL target frameworks (including
+          # net9.0-windows) which fails on non-Windows runners (NETSDK1100).
           if [ -n "${{ inputs.maui-ui-project }}" ]; then
-            dotnet restore ${{ inputs.maui-ui-project }}
+            dotnet restore ${{ inputs.maui-ui-project }} \
+              -p:TargetFramework=${{ inputs.maui-target-framework }}
             dotnet build ${{ inputs.maui-ui-project }} \
               --no-restore -c Release -f ${{ inputs.maui-target-framework }}
           fi
-          dotnet restore ${{ inputs.maui-project }}
+          dotnet restore ${{ inputs.maui-project }} \
+            -p:TargetFramework=${{ inputs.maui-target-framework }}
           dotnet build ${{ inputs.maui-project }} \
             --no-restore -c Release -f ${{ inputs.maui-target-framework }}
 
