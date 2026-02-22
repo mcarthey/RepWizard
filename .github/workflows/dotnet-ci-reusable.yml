@@ -84,7 +84,7 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.test-timeout-minutes }}
+    timeout-minutes: ${{ fromJSON(inputs.test-timeout-minutes) }}
     permissions:
       contents: read
 
@@ -176,7 +176,7 @@ jobs:
   build-maui:
     name: Build MAUI (compile check)
     runs-on: ${{ inputs.maui-runner }}
-    timeout-minutes: ${{ inputs.maui-timeout-minutes }}
+    timeout-minutes: ${{ fromJSON(inputs.maui-timeout-minutes) }}
     if: >-
       inputs.maui-project != '' &&
       (github.ref == 'refs/heads/main' || github.event_name == 'pull_request')
