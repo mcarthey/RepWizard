@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Coverage configuration: excludes generated code, migrations, and test assemblies -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+
+          <!-- Exclude auto-generated and framework code -->
+          <Exclude>
+            <!-- EF Core Migrations (auto-generated) -->
+            [*]*.Migrations.*
+
+            <!-- Designer files -->
+            [*]*.Designer
+
+            <!-- Assembly info -->
+            [*]*AssemblyInfo
+
+            <!-- Global usings -->
+            [*]*GlobalUsings*
+
+            <!-- MAUI source generators -->
+            [*]*.XamlG.*
+          </Exclude>
+
+          <!-- Exclude specific files by path pattern -->
+          <ExcludeByFile>
+            **/Migrations/*.cs
+            **/*.Designer.cs
+            **/*.g.cs
+            **/*.g.i.cs
+          </ExcludeByFile>
+
+          <!-- Exclude code marked with specific attributes -->
+          <ExcludeByAttribute>
+            System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute
+            System.CodeDom.Compiler.GeneratedCodeAttribute
+            System.Runtime.CompilerServices.CompilerGeneratedAttribute
+          </ExcludeByAttribute>
+
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+          <SkipAutoProps>true</SkipAutoProps>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

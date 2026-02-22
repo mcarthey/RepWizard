@@ -18,17 +18,21 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
-  # Job 1: Build and test the non-MAUI projects (Core, Shared, Application,
-  #         Infrastructure, Api, Tests). Runs on every push/PR in ~60 s.
+  # Job 1: Build and test the non-MAUI projects using a solution filter.
+  #         Runs on every push/PR. Includes smoke test for DI verification.
   # ─────────────────────────────────────────────────────────────────────────────
   build-and-test:
     name: Build & Test (.NET 9)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET ${{ env.DOTNET_VERSION }}
         uses: actions/setup-dotnet@v4
@@ -43,33 +47,62 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
-      # Restore only the projects that can build without MAUI workloads
-      - name: Restore (non-MAUI projects)
-        run: |
-          dotnet restore RepWizard.Core/RepWizard.Core.csproj
-          dotnet restore RepWizard.Shared/RepWizard.Shared.csproj
-          dotnet restore RepWizard.Application/RepWizard.Application.csproj
-          dotnet restore RepWizard.Infrastructure/RepWizard.Infrastructure.csproj
-          dotnet restore RepWizard.Api/RepWizard.Api.csproj
-          dotnet restore RepWizard.Tests/RepWizard.Tests.csproj
+      - name: Restore (non-MAUI via solution filter)
+        run: dotnet restore RepWizard.CI.slnf
 
-      - name: Build (non-MAUI projects)
-        run: |
-          dotnet build RepWizard.Core/RepWizard.Core.csproj             --no-restore -c Release
-          dotnet build RepWizard.Shared/RepWizard.Shared.csproj         --no-restore -c Release
-          dotnet build RepWizard.Application/RepWizard.Application.csproj --no-restore -c Release
-          dotnet build RepWizard.Infrastructure/RepWizard.Infrastructure.csproj --no-restore -c Release
-          dotnet build RepWizard.Api/RepWizard.Api.csproj               --no-restore -c Release
-          dotnet build RepWizard.Tests/RepWizard.Tests.csproj           --no-restore -c Release
+      - name: Build
+        run: dotnet build RepWizard.CI.slnf --no-restore -c Release
 
       - name: Test with coverage
         run: |
-          dotnet test RepWizard.Tests/RepWizard.Tests.csproj \
+          dotnet test RepWizard.CI.slnf \
             --no-build -c Release \
+            --settings ./coverage.runsettings \
             --logger "trx;LogFileName=test-results.trx" \
             --logger "console;verbosity=normal" \
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults
+
+      - name: Smoke test API startup
+        run: |
+          cd RepWizard.Api
+          ASPNETCORE_ENVIRONMENT=Development \
+          ASPNETCORE_URLS="http://localhost:5099" \
+          Jwt__Secret="CI-Smoke-Test-JWT-Key-Must-Be-At-Least-32-Bytes!" \
+          dotnet run --no-build -c Release &
+          API_PID=$!
+
+          # Wait for API to start (max 30 seconds)
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:5099/health > /dev/null 2>&1; then
+              echo "API started after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "API failed to start within 30s"
+              kill $API_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+          # Verify health endpoint
+          RESPONSE=$(curl -s -f http://localhost:5099/health)
+          echo "Health response: $RESPONSE"
+
+          # Verify auth gate returns 401 (not 500) on protected endpoint
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            http://localhost:5099/api/v1/users/00000000-0000-0000-0000-000000000000)
+          if [ "$HTTP_CODE" = "401" ]; then
+            echo "Auth gate working (401 on protected endpoint)"
+          else
+            echo "Unexpected status $HTTP_CODE on protected endpoint (expected 401)"
+            kill $API_PID 2>/dev/null || true
+            exit 1
+          fi
+
+          kill $API_PID 2>/dev/null || true
+          echo "Smoke test passed"
 
       - name: Upload test results
         if: always()
@@ -97,6 +130,8 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -125,17 +160,12 @@ jobs:
 
       # Build for a single RID to keep the job fast (Android release is the
       # canonical compile check; iOS would require signing certificates)
-      - name: Build RepWizard.UI
+      - name: Build MAUI (Android)
         run: |
           dotnet build RepWizard.UI/RepWizard.UI.csproj \
-            --no-restore -c Release \
-            -f net9.0-android
-
-      - name: Build RepWizard.App
-        run: |
+            --no-restore -c Release -f net9.0-android
           dotnet build RepWizard.App/RepWizard.App.csproj \
-            --no-restore -c Release \
-            -f net9.0-android
+            --no-restore -c Release -f net9.0-android
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 3: Publish a summary comment on PRs with test / coverage results.
@@ -147,6 +177,7 @@ jobs:
     if: github.event_name == 'pull_request'
     permissions:
       pull-requests: write
+      checks: write
 
     steps:
       - name: Download test results
