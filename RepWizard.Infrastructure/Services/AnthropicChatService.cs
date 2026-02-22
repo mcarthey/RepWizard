@@ -4,7 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RepWizard.Core.Interfaces.Services;
+using RepWizard.Shared.Helpers;
 
 namespace RepWizard.Infrastructure.Services;
 
@@ -19,6 +21,7 @@ public class AnthropicChatService : IAiChatService
     private const string DefaultModel = "claude-sonnet-4-20250514";
 
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<AnthropicChatService> _logger;
     private readonly string _apiKey;
     private readonly string _model;
 
@@ -28,9 +31,10 @@ public class AnthropicChatService : IAiChatService
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public AnthropicChatService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public AnthropicChatService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<AnthropicChatService> logger)
     {
         _httpClientFactory = httpClientFactory;
+        _logger = logger;
         _apiKey = configuration["AiCoach:ApiKey"]
             ?? throw new InvalidOperationException("AiCoach:ApiKey configuration is required.");
         _model = configuration["AiCoach:Model"] ?? DefaultModel;
@@ -55,16 +59,8 @@ public class AnthropicChatService : IAiChatService
         {
             var line = await reader.ReadLineAsync(ct);
 
-            if (string.IsNullOrEmpty(line))
+            if (!SseParser.TryParseDataLine(line, out var data))
                 continue;
-
-            if (!line.StartsWith("data: "))
-                continue;
-
-            var data = line["data: ".Length..];
-
-            if (data == "[DONE]")
-                break;
 
             var text = ExtractTextFromSseEvent(data);
             if (text is not null)
@@ -140,7 +136,7 @@ public class AnthropicChatService : IAiChatService
     /// Extracts text content from an SSE event JSON payload.
     /// Handles content_block_delta events with text_delta type.
     /// </summary>
-    private static string? ExtractTextFromSseEvent(string json)
+    private string? ExtractTextFromSseEvent(string json)
     {
         try
         {
@@ -162,8 +158,9 @@ public class AnthropicChatService : IAiChatService
 
             return null;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
+            _logger.LogDebug(ex, "Malformed SSE event JSON, skipping: {Json}", json);
             return null;
         }
     }

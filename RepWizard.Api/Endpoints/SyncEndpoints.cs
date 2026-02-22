@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using RepWizard.Core.Enums;
 using RepWizard.Infrastructure.Data;
+using RepWizard.Shared.Constants;
 using RepWizard.Shared.DTOs;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -75,9 +76,9 @@ public static class SyncEndpoints
             {
                 entities.Add(new SyncEntityPayload
                 {
-                    EntityType = "WorkoutSession",
+                    EntityType = SyncEntityTypes.WorkoutSession,
                     EntityId = s.Id,
-                    Action = s.IsDeleted ? "Delete" : "Update",
+                    Action = s.IsDeleted ? SyncActions.Delete : SyncActions.Update,
                     JsonData = JsonSerializer.Serialize(s, SafeJsonOptions),
                     ClientUpdatedAt = s.UpdatedAt
                 });
@@ -91,9 +92,9 @@ public static class SyncEndpoints
             {
                 entities.Add(new SyncEntityPayload
                 {
-                    EntityType = "BodyMeasurement",
+                    EntityType = SyncEntityTypes.BodyMeasurement,
                     EntityId = m.Id,
-                    Action = m.IsDeleted ? "Delete" : "Update",
+                    Action = m.IsDeleted ? SyncActions.Delete : SyncActions.Update,
                     JsonData = JsonSerializer.Serialize(m, SafeJsonOptions),
                     ClientUpdatedAt = m.UpdatedAt
                 });
@@ -119,7 +120,7 @@ public static class SyncEndpoints
         CancellationToken ct)
     {
         // Check for conflicts: if server version was updated after client version
-        if (entity.EntityType == "WorkoutSession")
+        if (entity.EntityType == SyncEntityTypes.WorkoutSession)
         {
             var serverSession = await db.WorkoutSessions
                 .IgnoreQueryFilters()
@@ -168,7 +169,7 @@ public static class SyncEndpoints
                 // Update existing
                 serverSession.SyncState = SyncState.Synced;
                 serverSession.LastSyncedAt = DateTime.UtcNow;
-                if (entity.Action == "Delete")
+                if (entity.Action == SyncActions.Delete)
                     serverSession.IsDeleted = true;
             }
         }

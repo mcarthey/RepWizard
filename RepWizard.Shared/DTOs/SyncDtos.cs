@@ -10,7 +10,7 @@ public class SyncEntityPayload
 {
     public string EntityType { get; set; } = string.Empty;
     public Guid EntityId { get; set; }
-    public string Action { get; set; } = string.Empty; // "Create", "Update", "Delete"
+    public string Action { get; set; } = string.Empty; // Use SyncActions constants
     public string JsonData { get; set; } = string.Empty;
     public DateTime ClientUpdatedAt { get; set; }
 }

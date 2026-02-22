@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RepWizard.Core.Interfaces;
 using RepWizard.Shared.DTOs;
+using RepWizard.Shared.Helpers;
 
 namespace RepWizard.UI.ViewModels;
 
@@ -143,15 +144,9 @@ public partial class CoachViewModel : BaseViewModel
                 while (!reader.EndOfStream && !token.IsCancellationRequested)
                 {
                     var line = await reader.ReadLineAsync(token);
-                    if (string.IsNullOrEmpty(line)) continue;
 
-                    if (line.StartsWith("data: "))
+                    if (SseParser.TryParseDataLine(line, out var data))
                     {
-                        var data = line["data: ".Length..];
-
-                        // Check for stream-end marker
-                        if (data == "[DONE]") break;
-
                         try
                         {
                             using var doc = JsonDocument.Parse(data);
@@ -185,9 +180,9 @@ public partial class CoachViewModel : BaseViewModel
                                     ConversationTitle = title;
                             }
                         }
-                        catch (JsonException)
+                        catch (JsonException ex)
                         {
-                            // Malformed SSE data line -- skip
+                            System.Diagnostics.Debug.WriteLine($"CoachViewModel: Malformed SSE data, skipping: {ex.Message}");
                         }
                     }
                 }

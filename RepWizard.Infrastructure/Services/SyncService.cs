@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using RepWizard.Core.Enums;
 using RepWizard.Core.Interfaces;
 using RepWizard.Infrastructure.Data;
+using RepWizard.Shared.Constants;
 using RepWizard.Shared.DTOs;
 
 namespace RepWizard.Infrastructure.Services;
@@ -102,9 +103,9 @@ public class SyncService : ISyncService
             UserId = userId,
             Entities = pending.Select(s => new SyncEntityPayload
             {
-                EntityType = "WorkoutSession",
+                EntityType = SyncEntityTypes.WorkoutSession,
                 EntityId = s.Id,
-                Action = s.SyncState == SyncState.New ? "Create" : "Update",
+                Action = s.SyncState == SyncState.New ? SyncActions.Create : SyncActions.Update,
                 JsonData = JsonSerializer.Serialize(s, SafeJsonOptions),
                 ClientUpdatedAt = s.UpdatedAt
             }).ToList()

@@ -9,6 +9,7 @@ using RepWizard.Core.Entities;
 using RepWizard.Core.Enums;
 using RepWizard.Infrastructure.Data;
 using RepWizard.Infrastructure.Services;
+using RepWizard.Shared.Constants;
 using RepWizard.Shared.DTOs;
 
 namespace RepWizard.Tests.Infrastructure.Services;
@@ -139,7 +140,7 @@ public class SyncServiceTests : IDisposable
                     new()
                     {
                         EntityId = sessionId,
-                        EntityType = "WorkoutSession",
+                        EntityType = SyncEntityTypes.WorkoutSession,
                         Resolution = "ServerWins"
                     }
                 }
