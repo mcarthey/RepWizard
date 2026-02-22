@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   ci:
-    uses: mcarthey/.github/.github/workflows/dotnet-ci-reusable.yml@main
+    uses: mcarthey/shared-workflows/.github/workflows/dotnet-ci-reusable.yml@main
     with:
       dotnet-version: "9.0.x"
       solution-filter: "RepWizard.CI.slnf"
