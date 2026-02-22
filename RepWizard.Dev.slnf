@@ -1,0 +1,14 @@
+{
+  "solution": {
+    "path": "RepWizard.sln",
+    "projects": [
+      "RepWizard.Core\\RepWizard.Core.csproj",
+      "RepWizard.Shared\\RepWizard.Shared.csproj",
+      "RepWizard.Application\\RepWizard.Application.csproj",
+      "RepWizard.Infrastructure\\RepWizard.Infrastructure.csproj",
+      "RepWizard.Api\\RepWizard.Api.csproj",
+      "RepWizard.UI\\RepWizard.UI.csproj",
+      "RepWizard.Tests\\RepWizard.Tests.csproj"
+    ]
+  }
+}

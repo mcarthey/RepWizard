@@ -1,0 +1,114 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/RepWizard.Dev.slnf",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "detail": "Builds all projects including UI (excludes MAUI app host)",
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/RepWizard.Tests/RepWizard.Tests.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build: Android",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/RepWizard.App/RepWizard.App.csproj",
+                "-f", "net9.0-android",
+                "-c", "Debug",
+                "/property:GenerateFullPaths=true"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "MAUI: Start Emulator",
+            "type": "shell",
+            "command": "emulator -avd Pixel_7_API_36 -no-snapshot-load",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "MAUI: Deploy to Emulator",
+            "type": "shell",
+            "command": "dotnet build ${workspaceFolder}/RepWizard.App/RepWizard.App.csproj -f net9.0-android -c Debug -t:Run -p:AndroidAttachDebugger=false",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "MAUI: Start Emulator and Deploy",
+            "type": "shell",
+            "command": "emulator -avd Pixel_7_API_36 -no-snapshot-load & adb wait-for-device && adb shell 'while [ \"$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done' && dotnet build ${workspaceFolder}/RepWizard.App/RepWizard.App.csproj -f net9.0-android -c Debug -t:Run -p:AndroidAttachDebugger=false",
+            "isBackground": true,
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run: API (localhost:7001)",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--no-build",
+                "--project",
+                "${workspaceFolder}/RepWizard.Api/RepWizard.Api.csproj",
+                "--launch-profile", "https"
+            ],
+            "dependsOn": ["Build (CI — excludes MAUI)"],
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "dev"
+            }
+        },
+        {
+            "label": "Start: API + Emulator",
+            "dependsOn": [
+                "Run: API (localhost:7001)",
+                "MAUI: Start Emulator and Deploy"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}
