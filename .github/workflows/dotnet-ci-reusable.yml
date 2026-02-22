@@ -8,10 +8,13 @@
 #   jobs:
 #     ci:
 #       uses: mcarthey/shared-workflows/.github/workflows/dotnet-ci-reusable.yml@main
+#       permissions:
+#         contents: read
+#         pull-requests: write
+#         checks: write
 #       with:
 #         solution-filter: "MyProject.CI.slnf"
 #         maui-project: "MyProject.App/MyProject.App.csproj"
-#         maui-ui-project: "MyProject.UI/MyProject.UI.csproj"
 #         smoke-test-url: "http://localhost:5099/health"
 #         smoke-test-cwd: "MyProject.Api"
 #         smoke-test-env: "Jwt__Secret=CI-Key-32-Chars-Minimum-For-HMAC!"
@@ -24,6 +27,10 @@
 #       contents: read
 #       pull-requests: write   # for pr-summary job
 #       checks: write          # for pr-summary job
+#
+# Codecov:
+#   Set codecov-enabled: true and ensure CODECOV_TOKEN is in repo secrets.
+#   Test projects need JunitXml.TestLogger NuGet package for test analytics.
 
 name: .NET CI (Reusable)
 
@@ -42,6 +49,14 @@ on:
         description: "Path to coverage.runsettings file"
         type: string
         default: "./coverage.runsettings"
+      node-version:
+        description: "Node.js version (skip if empty)"
+        type: string
+        default: ""
+      pre-build-script:
+        description: "Shell script to run before restore (e.g., Tailwind CSS, custom setup)"
+        type: string
+        default: ""
       maui-project:
         description: "MAUI App .csproj path (skip MAUI job if empty)"
         type: string
@@ -58,6 +73,14 @@ on:
         description: "Target framework for MAUI compile check"
         type: string
         default: "net9.0-android"
+      maui-workload:
+        description: "MAUI workload to install (maui, maui-android, etc.)"
+        type: string
+        default: "maui"
+      maui-pre-build-script:
+        description: "Shell script to run in MAUI job before build (e.g., Tailwind CSS)"
+        type: string
+        default: ""
       smoke-test-url:
         description: "Health check URL for smoke test (skip if empty)"
         type: string
@@ -71,7 +94,7 @@ on:
         type: string
         default: ""
       codecov-enabled:
-        description: "Upload coverage to Codecov"
+        description: "Upload coverage to Codecov (requires CODECOV_TOKEN secret)"
         type: boolean
         default: false
       test-timeout-minutes:
@@ -116,6 +139,16 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
+      - name: Setup Node.js
+        if: inputs.node-version != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Pre-build setup
+        if: inputs.pre-build-script != ''
+        run: ${{ inputs.pre-build-script }}
+
       - name: Restore
         run: dotnet restore ${{ inputs.solution-filter }}
 
@@ -124,11 +157,16 @@ jobs:
 
       - name: Test with coverage
         run: |
+          EXTRA_LOGGERS=""
+          if [ "${{ inputs.codecov-enabled }}" = "true" ]; then
+            EXTRA_LOGGERS='--logger "junit;LogFileName=test-results.xml"'
+          fi
           dotnet test ${{ inputs.solution-filter }} \
             --no-build -c Release \
             --settings ${{ inputs.test-settings }} \
             --logger "trx;LogFileName=test-results.trx" \
             --logger "console;verbosity=normal" \
+            $EXTRA_LOGGERS \
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults
 
@@ -142,10 +180,9 @@ jobs:
             export "$pair"
           done
 
-          # Do NOT set ASPNETCORE_ENVIRONMENT=Development -- that triggers
-          # EnsureCreated() or other dev-only startup that fails in CI
-          # (e.g., LocalDB not available on Linux). Use --no-launch-profile
-          # to prevent launchSettings.json from overriding env vars.
+          # Use --no-launch-profile to prevent launchSettings.json from
+          # overriding env vars. The caller controls ASPNETCORE_ENVIRONMENT
+          # via smoke-test-env (some projects need Development, others don't).
           dotnet run --no-build -c Release --no-launch-profile &
           API_PID=$!
 
@@ -182,6 +219,24 @@ jobs:
           path: TestResults/**/coverage.cobertura.xml
           retention-days: 14
 
+      - name: Upload coverage to Codecov
+        if: inputs.codecov-enabled
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./TestResults/**/coverage.cobertura.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: Upload test results to Codecov
+        if: inputs.codecov-enabled && !cancelled()
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./TestResults/**/*.xml
+          flags: unittests
+          fail_ci_if_error: false
+
   build-maui:
     name: Build MAUI (compile check)
     runs-on: ${{ inputs.maui-runner }}
@@ -202,7 +257,7 @@ jobs:
           dotnet-version: ${{ inputs.dotnet-version }}
 
       - name: Install MAUI workloads
-        run: dotnet workload install maui
+        run: dotnet workload install ${{ inputs.maui-workload }}
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
@@ -211,6 +266,16 @@ jobs:
           key: nuget-maui-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/global.json', '**/Directory.Build.props') }}
           restore-keys: |
             nuget-maui-${{ runner.os }}-
+
+      - name: Setup Node.js
+        if: inputs.node-version != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: MAUI pre-build setup
+        if: inputs.maui-pre-build-script != ''
+        run: ${{ inputs.maui-pre-build-script }}
 
       - name: Restore & Build MAUI
         run: |
