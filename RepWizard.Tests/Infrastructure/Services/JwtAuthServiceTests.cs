@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
 using RepWizard.Infrastructure.Services;
 
 namespace RepWizard.Tests.Infrastructure.Services;
@@ -21,7 +23,7 @@ public class JwtAuthServiceTests
             })
             .Build();
 
-        _authService = new JwtAuthService(config);
+        _authService = new JwtAuthService(config, new Mock<ILogger<JwtAuthService>>().Object);
     }
 
     [Fact]

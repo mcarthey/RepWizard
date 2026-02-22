@@ -7,11 +7,16 @@ public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionMiddleware> _logger;
+    private readonly bool _includeDetails;
 
-    public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
+    public GlobalExceptionMiddleware(
+        RequestDelegate next,
+        ILogger<GlobalExceptionMiddleware> logger,
+        IHostEnvironment environment)
     {
         _next = next;
         _logger = logger;
+        _includeDetails = environment.IsDevelopment();
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -34,12 +39,21 @@ public class GlobalExceptionMiddleware
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Response.ContentType = "application/json";
 
-            var response = new
-            {
-                success = false,
-                error = "An unexpected error occurred.",
-                supportId
-            };
+            var response = _includeDetails
+                ? new
+                {
+                    success = false,
+                    error = ex.Message,
+                    exceptionType = (string?)ex.GetType().Name,
+                    supportId
+                }
+                : new
+                {
+                    success = false,
+                    error = "An unexpected error occurred.",
+                    exceptionType = (string?)null,
+                    supportId
+                };
 
             await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }

@@ -105,7 +105,9 @@ public class GlobalExceptionMiddlewareTests : IDisposable
         var content = await response.Content.ReadAsStringAsync();
         var json = JsonDocument.Parse(content).RootElement;
         json.GetProperty("success").GetBoolean().Should().BeFalse();
-        json.GetProperty("error").GetString().Should().Be("An unexpected error occurred.");
+        // In Development (test default), middleware exposes actual exception details
+        json.GetProperty("error").GetString().Should().Be("Test exception");
+        json.GetProperty("exceptionType").GetString().Should().Be("InvalidOperationException");
         json.GetProperty("supportId").GetString().Should().HaveLength(12);
     }
 

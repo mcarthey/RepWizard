@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using RepWizard.Core.Interfaces.Services;
 
@@ -19,8 +20,9 @@ public class JwtAuthService : IAuthService
     private readonly string _audience;
     private readonly int _accessTokenMinutes;
     private readonly int _refreshTokenDays;
+    private readonly ILogger<JwtAuthService> _logger;
 
-    public JwtAuthService(IConfiguration configuration)
+    public JwtAuthService(IConfiguration configuration, ILogger<JwtAuthService> logger)
     {
         var jwtSection = configuration.GetSection("Jwt");
         _secret = jwtSection["Secret"]
@@ -30,6 +32,7 @@ public class JwtAuthService : IAuthService
         _audience = jwtSection["Audience"] ?? "RepWizard.App";
         _accessTokenMinutes = int.TryParse(jwtSection["AccessTokenMinutes"], out var atm) ? atm : 60;
         _refreshTokenDays = int.TryParse(jwtSection["RefreshTokenDays"], out var rtd) ? rtd : 30;
+        _logger = logger;
     }
 
     public string HashPassword(string password)
@@ -126,8 +129,14 @@ public class JwtAuthService : IAuthService
 
             return new AuthTokenClaims(userId, email, name);
         }
-        catch
+        catch (SecurityTokenExpiredException ex)
         {
+            _logger.LogDebug(ex, "Token validation failed: token expired");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Token validation failed: {Message}", ex.Message);
             return null;
         }
     }
