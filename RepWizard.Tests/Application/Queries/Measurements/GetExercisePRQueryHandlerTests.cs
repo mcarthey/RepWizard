@@ -53,10 +53,10 @@ public class GetExercisePRQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
-        result.Value[0].ExerciseId.Should().Be(exerciseId);
-        result.Value[0].BestWeightKg.Should().Be(110m); // session3 wins by total load (110*8=880 > 120*5=600)
-        result.Value[0].BestReps.Should().Be(8);
-        result.Value[0].BestLoad.Should().Be(880m); // 110 * 8
+        result.Value![0].ExerciseId.Should().Be(exerciseId);
+        result.Value![0].BestWeightKg.Should().Be(110m); // session3 wins by total load (110*8=880 > 120*5=600)
+        result.Value![0].BestReps.Should().Be(8);
+        result.Value![0].BestLoad.Should().Be(880m); // 110 * 8
     }
 
     [Fact]
@@ -87,8 +87,8 @@ public class GetExercisePRQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
         // Should be ordered by best load descending: deadlift (540) > squat (420)
-        result.Value[0].ExerciseName.Should().Be("Deadlift");
-        result.Value[1].ExerciseName.Should().Be("Squat");
+        result.Value![0].ExerciseName.Should().Be("Deadlift");
+        result.Value![1].ExerciseName.Should().Be("Squat");
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class GetExercisePRQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
-        result.Value[0].ExerciseId.Should().Be(squatId);
+        result.Value![0].ExerciseId.Should().Be(squatId);
     }
 
     // Helpers

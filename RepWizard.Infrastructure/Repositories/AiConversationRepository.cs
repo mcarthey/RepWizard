@@ -13,13 +13,13 @@ public class AiConversationRepository : Repository<AiConversation>, IAiConversat
 
     public async Task<AiConversation?> GetWithMessagesAsync(
         Guid conversationId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Include(c => c.Messages.OrderBy(m => m.Timestamp))
             .FirstOrDefaultAsync(c => c.Id == conversationId, ct);
 
     public async Task<IReadOnlyList<AiConversation>> GetForUserAsync(
         Guid userId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(c => c.UserId == userId)
             .OrderByDescending(c => c.StartedAt)
             .ToListAsync(ct);

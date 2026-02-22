@@ -37,9 +37,10 @@ public static class MauiProgram
             cfg.RegisterServicesFromAssembly(typeof(Application.DependencyInjection).Assembly));
 
         // HttpClient factory with Polly resilience (retry + circuit breaker)
+        var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7001";
         builder.Services.AddHttpClient("RepWizardApi", client =>
         {
-            client.BaseAddress = new Uri("https://localhost:7001");
+            client.BaseAddress = new Uri(apiBaseUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
         .AddStandardResilienceHandler();

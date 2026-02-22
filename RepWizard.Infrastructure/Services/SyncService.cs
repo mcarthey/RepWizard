@@ -60,6 +60,16 @@ public class SyncService : ISyncService
             _logger.LogWarning(ex, "SyncService: API unreachable, falling back to local-only sync");
             return await FallbackLocalSync(userId, ct);
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("SyncService: sync cancelled for user {UserId}", userId);
+            return new SyncResult(
+                Success: false,
+                EntitiesPushed: 0,
+                EntitiesPulled: 0,
+                ConflictsDetected: 0,
+                ErrorMessage: "Sync was cancelled.");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "SyncService: sync failed for user {UserId}", userId);

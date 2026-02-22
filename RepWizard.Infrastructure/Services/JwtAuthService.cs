@@ -23,7 +23,9 @@ public class JwtAuthService : IAuthService
     public JwtAuthService(IConfiguration configuration)
     {
         var jwtSection = configuration.GetSection("Jwt");
-        _secret = jwtSection["Secret"] ?? "RepWizard-Dev-Secret-Key-Must-Be-At-Least-32-Bytes!";
+        _secret = jwtSection["Secret"]
+            ?? throw new InvalidOperationException(
+                "Jwt:Secret is not configured. Set it in appsettings.Development.json or via environment variable Jwt__Secret.");
         _issuer = jwtSection["Issuer"] ?? "RepWizard.Api";
         _audience = jwtSection["Audience"] ?? "RepWizard.App";
         _accessTokenMinutes = int.TryParse(jwtSection["AccessTokenMinutes"], out var atm) ? atm : 60;

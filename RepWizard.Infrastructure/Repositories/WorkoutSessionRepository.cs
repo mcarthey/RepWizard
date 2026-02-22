@@ -23,7 +23,7 @@ public class WorkoutSessionRepository : Repository<WorkoutSession>, IWorkoutSess
         Guid userId, int days = 14, CancellationToken ct = default)
     {
         var cutoff = DateTime.UtcNow.AddDays(-days);
-        return await _dbSet
+        return await _dbSet.AsNoTracking()
             .Where(s => s.UserId == userId && s.StartedAt >= cutoff)
             .Include(s => s.Template)
             .OrderByDescending(s => s.StartedAt)
@@ -32,7 +32,7 @@ public class WorkoutSessionRepository : Repository<WorkoutSession>, IWorkoutSess
 
     public async Task<WorkoutSession?> GetWithExercisesAndSetsAsync(
         Guid sessionId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Include(s => s.SessionExercises.OrderBy(se => se.OrderIndex))
                 .ThenInclude(se => se.Exercise)
             .Include(s => s.SessionExercises)
@@ -43,7 +43,7 @@ public class WorkoutSessionRepository : Repository<WorkoutSession>, IWorkoutSess
     public async Task<(IReadOnlyList<WorkoutSession> Items, int TotalCount)> GetSessionHistoryAsync(
         Guid userId, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = _dbSet
+        var query = _dbSet.AsNoTracking()
             .Where(s => s.UserId == userId && s.CompletedAt != null)
             .Include(s => s.Template)
             .Include(s => s.SessionExercises)

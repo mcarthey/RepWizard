@@ -12,7 +12,7 @@ public class BodyMeasurementRepository : Repository<BodyMeasurement>, IBodyMeasu
     public async Task<IReadOnlyList<BodyMeasurement>> GetForUserAsync(
         Guid userId, int? limit = null, CancellationToken ct = default)
     {
-        var query = _dbSet
+        var query = _dbSet.AsNoTracking()
             .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.RecordedAt);
 
@@ -23,7 +23,7 @@ public class BodyMeasurementRepository : Repository<BodyMeasurement>, IBodyMeasu
     }
 
     public async Task<BodyMeasurement?> GetLatestForUserAsync(Guid userId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.RecordedAt)
             .FirstOrDefaultAsync(ct);

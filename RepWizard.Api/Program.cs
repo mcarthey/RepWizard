@@ -34,9 +34,10 @@ builder.Services.AddAiChatService();
 // Auth services (JWT)
 builder.Services.AddAuthService();
 
-// JWT Authentication
+// JWT Authentication — secret MUST be configured via appsettings.Development.json or environment variable
 var jwtSecret = builder.Configuration["Jwt:Secret"]
-    ?? "RepWizard-Dev-Secret-Key-Must-Be-At-Least-32-Bytes!";
+    ?? throw new InvalidOperationException(
+        "Jwt:Secret is not configured. Set it in appsettings.Development.json or via environment variable Jwt__Secret.");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -80,6 +81,10 @@ if (app.Environment.IsDevelopment())
         options.Theme = ScalarTheme.DeepSpace;
     });
 }
+
+// Middleware pipeline (order matters)
+app.UseMiddleware<RepWizard.Api.Middleware.CorrelationIdMiddleware>();
+app.UseMiddleware<RepWizard.Api.Middleware.GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseCors();

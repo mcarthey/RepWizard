@@ -14,7 +14,7 @@ public class ExerciseRepository : Repository<Exercise>, IExerciseRepository
 
     public async Task<IReadOnlyList<Exercise>> GetByCategoryAsync(
         ExerciseCategory category, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(e => e.Category == category)
             .OrderBy(e => e.Name)
             .ToListAsync(ct);
@@ -24,7 +24,7 @@ public class ExerciseRepository : Repository<Exercise>, IExerciseRepository
     {
         // Since PrimaryMuscles is stored as JSON, we need to filter in memory
         // In a production PostgreSQL setup, this could use jsonb operators for performance
-        var all = await _dbSet.ToListAsync(ct);
+        var all = await _dbSet.AsNoTracking().ToListAsync(ct);
         return all
             .Where(e => e.PrimaryMuscles.Contains(muscle))
             .OrderBy(e => e.Name)
@@ -35,7 +35,7 @@ public class ExerciseRepository : Repository<Exercise>, IExerciseRepository
         string query, CancellationToken ct = default)
     {
         var lowerQuery = query.ToLowerInvariant();
-        return await _dbSet
+        return await _dbSet.AsNoTracking()
             .Where(e => EF.Functions.Like(e.Name.ToLower(), $"%{lowerQuery}%")
                 || EF.Functions.Like(e.Description.ToLower(), $"%{lowerQuery}%"))
             .OrderBy(e => e.Name)
@@ -44,7 +44,7 @@ public class ExerciseRepository : Repository<Exercise>, IExerciseRepository
 
     public async Task<IReadOnlyList<Exercise>> GetByEquipmentAsync(
         Equipment equipment, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(e => e.Equipment == equipment)
             .OrderBy(e => e.Name)
             .ToListAsync(ct);

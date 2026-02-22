@@ -13,7 +13,7 @@ public class TrainingProgramRepository : Repository<TrainingProgram>, ITrainingP
 
     public async Task<TrainingProgram?> GetWithWeeksAndDaysAsync(
         Guid programId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Include(p => p.Weeks.OrderBy(w => w.WeekNumber))
                 .ThenInclude(w => w.Days.OrderBy(d => d.DayOfWeek))
                     .ThenInclude(d => d.WorkoutTemplate)
@@ -21,14 +21,14 @@ public class TrainingProgramRepository : Repository<TrainingProgram>, ITrainingP
 
     public async Task<IReadOnlyList<TrainingProgram>> GetForUserAsync(
         Guid userId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync(ct);
 
     public async Task<TrainingProgram?> GetActiveForUserAsync(
         Guid userId, CancellationToken ct = default)
-        => await _dbSet
+        => await _dbSet.AsNoTracking()
             .Include(p => p.Weeks.OrderBy(w => w.WeekNumber))
                 .ThenInclude(w => w.Days.OrderBy(d => d.DayOfWeek))
                     .ThenInclude(d => d.WorkoutTemplate)
