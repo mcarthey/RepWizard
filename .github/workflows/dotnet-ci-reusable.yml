@@ -16,6 +16,14 @@
 #         smoke-test-cwd: "MyProject.Api"
 #         smoke-test-env: "Jwt__Secret=CI-Key-32-Chars-Minimum-For-HMAC!"
 #       secrets: inherit
+#
+# IMPORTANT — Caller permissions:
+#   The caller must grant permissions that this workflow's jobs need.
+#   Repos with default_workflow_permissions=read (recommended) require:
+#     permissions:
+#       contents: read
+#       pull-requests: write   # for pr-summary job
+#       checks: write          # for pr-summary job
 
 name: .NET CI (Reusable)
 
@@ -84,6 +92,7 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    # fromJSON required: type=number inputs arrive as strings in expressions
     timeout-minutes: ${{ fromJSON(inputs.test-timeout-minutes) }}
     permissions:
       contents: read

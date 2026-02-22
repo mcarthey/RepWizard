@@ -13,6 +13,10 @@ concurrency:
 jobs:
   ci:
     uses: ./.github/workflows/dotnet-ci-reusable.yml
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
     with:
       solution-filter: "RepWizard.CI.slnf"
       maui-project: "RepWizard.App/RepWizard.App.csproj"
