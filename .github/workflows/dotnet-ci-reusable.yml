@@ -212,18 +212,24 @@ jobs:
           restore-keys: |
             nuget-maui-${{ runner.os }}-
 
-      - name: Build MAUI
+      - name: Restore & Build MAUI
         run: |
-          # Use dotnet build -f (not separate restore with -p:TargetFramework).
-          # -p:TargetFramework is a global MSBuild property that overrides ALL
-          # projects in the graph, corrupting assets for transitive net9.0 deps.
-          # -f only scopes the framework to the top-level project.
+          # Restore with EnableWindowsTargeting so all TFMs resolve on macOS
+          # (suppresses NETSDK1100 for net9.0-windows without affecting build).
+          # Then build with -f to compile only the target framework we want.
+          # Do NOT use -p:TargetFramework on restore — it's a global property
+          # that overrides ALL projects in the graph including transitive
+          # net9.0 deps, corrupting their assets.json (NETSDK1005).
           if [ -n "${{ inputs.maui-ui-project }}" ]; then
+            dotnet restore ${{ inputs.maui-ui-project }} \
+              -p:EnableWindowsTargeting=true
             dotnet build ${{ inputs.maui-ui-project }} \
-              -c Release -f ${{ inputs.maui-target-framework }}
+              --no-restore -c Release -f ${{ inputs.maui-target-framework }}
           fi
+          dotnet restore ${{ inputs.maui-project }} \
+            -p:EnableWindowsTargeting=true
           dotnet build ${{ inputs.maui-project }} \
-            -c Release -f ${{ inputs.maui-target-framework }}
+            --no-restore -c Release -f ${{ inputs.maui-target-framework }}
 
   pr-summary:
     name: PR test summary
