@@ -1,50 +1,244 @@
+# Reusable CI workflow for .NET MAUI + API projects
+#
+# Convergence target for RepWizard and CrewTrack. Implements the principles
+# from https://learnedgeek.com/Blog/Post/anatomy-of-a-ci-workflow
+#
+# Usage in a consuming repository:
+#
+#   jobs:
+#     ci:
+#       uses: mcarthey/shared-workflows/.github/workflows/dotnet-ci-reusable.yml@main
+#       with:
+#         solution-filter: "MyProject.CI.slnf"
+#         maui-project: "MyProject.App/MyProject.App.csproj"
+#         maui-ui-project: "MyProject.UI/MyProject.UI.csproj"
+#         smoke-test-url: "http://localhost:5099/health"
+#         smoke-test-cwd: "MyProject.Api"
+#         smoke-test-env: "Jwt__Secret=CI-Key-32-Chars-Minimum-For-HMAC!"
+#       secrets: inherit
+
 name: .NET CI (Reusable)
 
 on:
   workflow_call:
     inputs:
       dotnet-version:
+        description: ".NET SDK version"
         type: string
         default: "9.0.x"
       solution-filter:
+        description: "Solution filter (.slnf) for non-MAUI build+test"
         type: string
         required: true
       test-settings:
+        description: "Path to coverage.runsettings file"
         type: string
         default: "./coverage.runsettings"
       maui-project:
+        description: "MAUI App .csproj path (skip MAUI job if empty)"
         type: string
         default: ""
       maui-ui-project:
+        description: "MAUI UI .csproj path (skip if empty)"
         type: string
         default: ""
       maui-runner:
+        description: "Runner for MAUI build (macos-15 or ubuntu-latest)"
         type: string
         default: "macos-15"
       maui-target-framework:
+        description: "Target framework for MAUI compile check"
         type: string
         default: "net9.0-android"
       smoke-test-url:
+        description: "Health check URL for smoke test (skip if empty)"
         type: string
         default: ""
       smoke-test-cwd:
+        description: "Working directory for smoke test (API project folder)"
         type: string
         default: ""
       smoke-test-env:
+        description: "Space-separated KEY=VALUE env vars for smoke test"
         type: string
         default: ""
       codecov-enabled:
+        description: "Upload coverage to Codecov"
         type: boolean
         default: false
       test-timeout-minutes:
+        description: "Timeout for build-and-test job"
         type: number
         default: 15
       maui-timeout-minutes:
+        description: "Timeout for MAUI build job"
         type: number
         default: 30
 
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
 jobs:
-  test:
+  build-and-test:
+    name: Build & Test
     runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.test-timeout-minutes }}
+    permissions:
+      contents: read
+
     steps:
-      - run: echo "solution-filter=${{ inputs.solution-filter }}"
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/global.json', '**/Directory.Build.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore ${{ inputs.solution-filter }}
+
+      - name: Build
+        run: dotnet build ${{ inputs.solution-filter }} --no-restore -c Release
+
+      - name: Test with coverage
+        run: |
+          dotnet test ${{ inputs.solution-filter }} \
+            --no-build -c Release \
+            --settings ${{ inputs.test-settings }} \
+            --logger "trx;LogFileName=test-results.trx" \
+            --logger "console;verbosity=normal" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults
+
+      - name: Smoke test
+        if: inputs.smoke-test-url != ''
+        run: |
+          cd ${{ inputs.smoke-test-cwd }}
+
+          # Export env vars from input
+          for pair in ${{ inputs.smoke-test-env }}; do
+            export "$pair"
+          done
+
+          # Do NOT set ASPNETCORE_ENVIRONMENT=Development -- that triggers
+          # EnsureCreated() or other dev-only startup that fails in CI
+          # (e.g., LocalDB not available on Linux). Use --no-launch-profile
+          # to prevent launchSettings.json from overriding env vars.
+          dotnet run --no-build -c Release --no-launch-profile &
+          API_PID=$!
+
+          for i in $(seq 1 30); do
+            if curl -s ${{ inputs.smoke-test-url }} > /dev/null 2>&1; then
+              echo "API started after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "API failed to start within 30s"
+              kill $API_PID 2>/dev/null || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+          RESPONSE=$(curl -s -f ${{ inputs.smoke-test-url }})
+          echo "Health: $RESPONSE"
+          kill $API_PID 2>/dev/null || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
+          retention-days: 14
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TestResults/**/coverage.cobertura.xml
+          retention-days: 14
+
+  build-maui:
+    name: Build MAUI (compile check)
+    runs-on: ${{ inputs.maui-runner }}
+    timeout-minutes: ${{ inputs.maui-timeout-minutes }}
+    if: >-
+      inputs.maui-project != '' &&
+      (github.ref == 'refs/heads/main' || github.event_name == 'pull_request')
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Install MAUI workloads
+        run: dotnet workload install maui
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-maui-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/global.json', '**/Directory.Build.props') }}
+          restore-keys: |
+            nuget-maui-${{ runner.os }}-
+
+      - name: Restore & Build MAUI
+        run: |
+          # Pass -p:TargetFramework to restore only the target we build.
+          # Without this, restore resolves ALL target frameworks (including
+          # net9.0-windows) which fails on non-Windows runners (NETSDK1100).
+          if [ -n "${{ inputs.maui-ui-project }}" ]; then
+            dotnet restore ${{ inputs.maui-ui-project }} \
+              -p:TargetFramework=${{ inputs.maui-target-framework }}
+            dotnet build ${{ inputs.maui-ui-project }} \
+              --no-restore -c Release -f ${{ inputs.maui-target-framework }}
+          fi
+          dotnet restore ${{ inputs.maui-project }} \
+            -p:TargetFramework=${{ inputs.maui-target-framework }}
+          dotnet build ${{ inputs.maui-project }} \
+            --no-restore -c Release -f ${{ inputs.maui-target-framework }}
+
+  pr-summary:
+    name: PR test summary
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+      checks: write
+
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+      - name: Publish test summary
+        uses: dorny/test-reporter@v1
+        with:
+          name: xUnit test results
+          path: "TestResults/**/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
