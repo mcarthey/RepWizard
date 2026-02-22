@@ -9,3 +9,5 @@ on:
 jobs:
   ci:
     uses: ./.github/workflows/dotnet-ci-reusable.yml
+    with:
+      solution-filter: "RepWizard.CI.slnf"
