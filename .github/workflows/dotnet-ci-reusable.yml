@@ -1,14 +1,55 @@
-name: Test Reusable
+name: .NET CI (Reusable)
 
 on:
   workflow_call:
     inputs:
-      message:
+      dotnet-version:
         type: string
-        default: "hello"
+        default: "9.0.x"
+      solution-filter:
+        type: string
+        required: true
+      test-settings:
+        type: string
+        default: "./coverage.runsettings"
+      maui-project:
+        type: string
+        default: ""
+      maui-ui-project:
+        type: string
+        default: ""
+      maui-runner:
+        type: string
+        default: "macos-15"
+      maui-target-framework:
+        type: string
+        default: "net9.0-android"
+      smoke-test-url:
+        type: string
+        default: ""
+      smoke-test-cwd:
+        type: string
+        default: ""
+      smoke-test-env:
+        type: string
+        default: ""
+      codecov-enabled:
+        type: boolean
+        default: false
+      test-timeout-minutes:
+        type: number
+        default: 15
+      maui-timeout-minutes:
+        type: number
+        default: 30
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "${{ inputs.message }}"
+      - run: echo "solution-filter=${{ inputs.solution-filter }}"
