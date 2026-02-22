@@ -286,9 +286,70 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 
 ---
 
+## Hardening Pass ✅ COMPLETE
+
+> Applied after reviewing codebase against global CLAUDE.md standards, `docs/HARDENING.md`, and `docs/TESTING-STRATEGY.md`.
+
+### Security
+
+- [x] Remove JWT secret from `appsettings.json` (committed to source control)
+- [x] Move JWT secret to `appsettings.Development.json` (git-ignored in production)
+- [x] Fail-fast in `Program.cs` if `Jwt:Secret` is not configured
+- [x] Fail-fast in `JwtAuthService` constructor if `Jwt:Secret` is not configured
+- [x] Move hardcoded API base URL (`https://localhost:7001`) to `IConfiguration` in `MauiProgram.cs`
+
+### Observability
+
+- [x] Add `GlobalExceptionMiddleware` — catches unhandled exceptions, returns `supportId` for incident triage
+- [x] Add `CorrelationIdMiddleware` — propagates `X-Correlation-Id` header, adds to structured log scope
+
+### Test Infrastructure
+
+- [x] Extract `IntegrationTestBase` — shared `WebApplicationFactory` + SQLite in-memory setup
+- [x] Refactor `AuthEndpointTests` to inherit from `IntegrationTestBase`
+
+### Performance
+
+- [x] Add `.AsNoTracking()` to all read-only repository queries (6 repositories, 15 methods)
+- [x] Skipped write-path methods: `UserRepository.GetByEmailAsync`, `WorkoutSessionRepository.GetActiveSessionForUserAsync`
+
+### Code Quality
+
+- [x] Add `OperationCanceledException` catch before generic `Exception` in `SyncService.SyncAsync`
+- [x] Fix CS0618: replace deprecated `MainPage` setter with `CreateWindow` pattern in `App.xaml.cs`
+- [x] Fix CS8602: null-forgiving operators on test assertions in `GetExercisePRQueryHandlerTests`
+- [x] 0 compiler warnings across all buildable targets
+
+### Reference Docs Added
+
+- [x] `docs/HARDENING.md` — production hardening playbook
+- [x] `docs/TESTING-STRATEGY.md` — testing patterns and anti-patterns
+
+**Post-hardening: 190 tests ✅, 0 warnings, Android build clean**
+
+---
+
+## Deferred Items
+
+> These items were intentionally deferred. Each requires either design decisions, platform-specific work, or is release-phase scope.
+
+- [ ] Adaptive layouts for tablet and desktop (Windows/macOS) — requires design specs
+- [ ] Notification service — rest timer alerts, scheduled workout reminders — requires platform-specific implementation
+- [ ] App store packaging (Android APK/AAB, iOS IPA) — release phase
+- [ ] Wire generated AI program into Today tab (scheduled session display)
+- [ ] EF Core migrations (currently using `EnsureCreated` — adequate for dev, not for production)
+- [ ] Rate limiting on API endpoints
+- [ ] Contract testing between MAUI client and API
+- [ ] Input validation at database level (column constraints beyond EF defaults)
+- [ ] `CHANGELOG.md` — not yet created
+- [ ] SkiaSharp hero progress arc on TodayPage (spec calls for gradient stroke + glow)
+- [ ] Motion system — breathing scale animation, morph transitions, celebration sequences (Section 13.7–13.8)
+
+---
+
 ## Cross-Cutting / Ongoing
 
 - [ ] Keep `CHANGELOG.md` updated at every phase gate
-- [ ] Keep `TASKS.md` (this file) updated as tasks are completed
-- [ ] Run full test suite before marking any phase complete
-- [ ] Apply anti-pattern checklist (`IMPLEMENTATION.md` Section 11) at every phase gate
+- [x] Keep `TASKS.md` (this file) updated as tasks are completed
+- [x] Run full test suite before marking any phase complete
+- [x] Apply anti-pattern checklist (`IMPLEMENTATION.md` Section 11) at every phase gate
