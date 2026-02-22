@@ -32,7 +32,7 @@ public class WorkoutSessionRepository : Repository<WorkoutSession>, IWorkoutSess
 
     public async Task<WorkoutSession?> GetWithExercisesAndSetsAsync(
         Guid sessionId, CancellationToken ct = default)
-        => await _dbSet.AsNoTracking()
+        => await _dbSet
             .Include(s => s.SessionExercises.OrderBy(se => se.OrderIndex))
                 .ThenInclude(se => se.Exercise)
             .Include(s => s.SessionExercises)

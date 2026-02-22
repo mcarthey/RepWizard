@@ -14,7 +14,8 @@ public static class WorkoutEndpoints
     public static IEndpointRouteBuilder MapWorkoutEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/workouts")
-            .WithTags("Workouts");
+            .WithTags("Workouts")
+            .RequireAuthorization();
 
         // POST /api/v1/workouts/sessions — start a new session
         group.MapPost("/sessions", async (

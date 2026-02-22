@@ -55,4 +55,7 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
+
+    public void MarkAsNew(BaseEntity entity)
+        => _context.Entry(entity).State = EntityState.Added;
 }

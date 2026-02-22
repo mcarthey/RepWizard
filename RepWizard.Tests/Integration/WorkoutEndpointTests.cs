@@ -36,6 +36,8 @@ public class WorkoutEndpointTests : IntegrationTestBase
     [Fact]
     public async Task StartSession_EmptyUserId_ReturnsBadRequest()
     {
+        await RegisterTestUser(); // authenticate so we get past auth middleware
+
         var request = new StartSessionRequest
         {
             UserId = Guid.Empty
@@ -63,6 +65,8 @@ public class WorkoutEndpointTests : IntegrationTestBase
     [Fact]
     public async Task GetSession_NonExistentId_ReturnsNotFound()
     {
+        await RegisterTestUser(); // authenticate so we get past auth middleware
+
         var response = await Client.GetAsync($"/api/v1/workouts/sessions/{Guid.NewGuid()}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -141,24 +145,41 @@ public class WorkoutEndpointTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetSessionHistory_ReturnsOkWithPagination()
+    public async Task GetSessionHistory_ReturnsCompletedSessions()
     {
-        // NOTE: A full start→log→complete→verify-in-history test is not feasible because
-        // CompleteWorkoutSessionCommandHandler loads via AsNoTracking(), so Complete()
-        // changes are not persisted to the DB. The session history endpoint correctly
-        // filters by CompletedAt != null, but the completion was never saved.
-        // This is a known pre-existing bug (not introduced by these tests).
-        var (auth, _) = await RegisterTestUser();
+        var sessionId = await StartTestSession();
+        var exerciseId = await SeedAndGetExerciseId();
+
+        // Log a set so the session can be completed
+        var logRequest = new LogSetRequest
+        {
+            ExerciseId = exerciseId,
+            SetNumber = 1,
+            Reps = 10,
+            WeightKg = 60
+        };
+        await Client.PutAsJsonAsync($"/api/v1/workouts/sessions/{sessionId}/log-set", logRequest);
+
+        // Complete the session
+        await Client.PostAsJsonAsync(
+            $"/api/v1/workouts/sessions/{sessionId}/complete",
+            new { Notes = "Done" });
+
+        // Verify it appears in session history
+        // Get the userId from the session detail
+        var sessionResponse = await Client.GetAsync($"/api/v1/workouts/sessions/{sessionId}");
+        var sessionBody = await sessionResponse.Content.ReadFromJsonAsync<ApiResponse<WorkoutSessionDto>>();
+        var userId = sessionBody!.Data!.UserId;
 
         var response = await Client.GetAsync(
-            $"/api/v1/workouts/sessions?userId={auth.UserId}");
+            $"/api/v1/workouts/sessions?userId={userId}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<ApiResponse<IList<WorkoutHistoryDto>>>();
         body.Should().NotBeNull();
         body!.Success.Should().BeTrue();
         body.Pagination.Should().NotBeNull();
-        body.Data.Should().NotBeNull();
+        body.Data.Should().NotBeEmpty();
     }
 
     private async Task<Guid> StartTestSession()

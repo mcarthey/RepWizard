@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RepWizard.Core.Enums;
@@ -15,6 +16,11 @@ namespace RepWizard.Infrastructure.Services;
 /// </summary>
 public class SyncService : ISyncService
 {
+    private static readonly JsonSerializerOptions SafeJsonOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
+
     private readonly AppDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<SyncService> _logger;
@@ -99,7 +105,7 @@ public class SyncService : ISyncService
                 EntityType = "WorkoutSession",
                 EntityId = s.Id,
                 Action = s.SyncState == SyncState.New ? "Create" : "Update",
-                JsonData = JsonSerializer.Serialize(s),
+                JsonData = JsonSerializer.Serialize(s, SafeJsonOptions),
                 ClientUpdatedAt = s.UpdatedAt
             }).ToList()
         };

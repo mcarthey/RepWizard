@@ -340,7 +340,7 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 - [x] `Refresh_ValidToken_ReturnsNewTokens` — register, refresh with valid tokens → 200
 - [x] `Refresh_InvalidToken_ReturnsUnauthorized` — fake tokens → 401
 - [x] `Register_MissingPassword_ReturnsBadRequest` — empty password → 400
-- [ ] `ProtectedEndpoint_NoToken_ReturnsUnauthorized` — **SKIPPED**: no endpoints enforce `[Authorize]` (see Known Bugs below)
+- [x] `ProtectedEndpoint_NoToken_ReturnsUnauthorized` — added after BUG-1 fix
 - [x] `RegisterAndGetAuth()` helper added to `AuthEndpointTests`
 - [x] `RegisterTestUser()` helper added to `IntegrationTestBase` for cross-class reuse
 - [x] `Factory` accessor exposed on `IntegrationTestBase` for test data seeding
@@ -408,55 +408,42 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 
 | Metric | Before | After |
 |--------|--------|-------|
-| Total tests | 190 | 226 |
-| Unit tests | ~162 (85%) | ~162 (72%) |
-| Integration tests | ~25 (13%) | ~61 (27%) |
+| Total tests | 190 | 227 |
+| Unit tests | ~162 (85%) | ~162 (71%) |
+| Integration tests | ~25 (13%) | ~62 (27%) |
 | E2E / Smoke | ~3 (2%) | ~3 (1%) |
 
 Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 
 ---
 
-## Known Bugs (Discovered During Test Gap Closure)
+## Known Bugs — Fixed
 
-> These bugs were discovered through integration testing. They are pre-existing — not introduced by the test gap work.
+> These bugs were discovered during test gap closure and have been fixed.
 
-### BUG-1: No endpoints enforce `[Authorize]` or `RequireAuthorization()`
+### BUG-1: No endpoints enforced auth ✅ FIXED
 
-**Impact:** All API endpoints accept anonymous requests. JWT auth middleware is configured (`UseAuthentication`, `UseAuthorization` in `Program.cs`) but no endpoint groups call `.RequireAuthorization()`.
+**Fix applied:** Added `.RequireAuthorization()` to Users, Workouts, Measurements, AI, and Sync endpoint groups. Auth, Health, and Exercises remain anonymous. Updated `IntegrationTestBase.RegisterTestUser()` to set Bearer token on `Client`. Added `ProtectedEndpoint_NoToken_ReturnsUnauthorized` test.
 
-**Blocked tests (from `docs/TESTING-STRATEGY.md` Section 12):**
-- `ProtectedEndpoint_NoToken_ReturnsUnauthorized`
-- `ProtectedEndpoint_ExpiredToken_ReturnsUnauthorized`
-- `Endpoint_WrongAuthScheme_ReturnsUnauthorized`
+**Files changed:** `UserEndpoints.cs`, `WorkoutEndpoints.cs`, `MeasurementEndpoints.cs`, `AiEndpoints.cs`, `SyncEndpoints.cs`, `IntegrationTestBase.cs`, `AuthEndpointTests.cs`, `WorkoutEndpointTests.cs`
 
-**Fix:** Add `.RequireAuthorization()` to endpoint groups that should be protected (workouts, measurements, user profile, AI, sync). Auth and health endpoints should remain anonymous.
+### BUG-2: `AsNoTracking` caused silent write failures ✅ FIXED
 
-### BUG-2: `CompleteWorkoutSessionCommandHandler` loads session with `AsNoTracking()`
+**Root cause:** `GetWithExercisesAndSetsAsync()` used `.AsNoTracking()`, returning detached entities. Both `CompleteWorkoutSessionCommandHandler` and `LogSetCommandHandler` modified the detached graph and called `SaveChangesAsync()` — which persisted nothing. API responses looked correct (built from in-memory objects) but the database was never updated.
 
-**Location:** `RepWizard.Application/Commands/Workouts/CompleteWorkoutSession/CompleteWorkoutSessionCommandHandler.cs`
+**Fix applied:**
+- `CompleteWorkoutSessionCommandHandler`: added `_sessions.Update(session)` to re-attach the detached entity before saving
+- `LogSetCommandHandler`: added `AddSessionExerciseAsync` / `AddExerciseSetAsync` methods to `IWorkoutSessionRepository` to explicitly add new child entities to the EF change tracker as `Added`
+- `GetWithExercisesAndSetsAsync` retains `AsNoTracking()` (used by read-only `GetWorkoutSessionQueryHandler`)
+- Strengthened `GetSessionHistory_ReturnsCompletedSessions` test to verify completed sessions appear in history
 
-**Impact:** The handler calls `_sessions.GetWithExercisesAndSetsAsync()` which uses `.AsNoTracking()`. The returned session entity is detached. When `session.Complete()` modifies `CompletedAt` and `SyncState`, those changes are not tracked by EF Core. The subsequent `_sessions.SaveChangesAsync()` persists nothing. The API returns a correct DTO (built from the in-memory object) but the database is never updated.
+**Files changed:** `IWorkoutSessionRepository.cs`, `WorkoutSessionRepository.cs`, `CompleteWorkoutSessionCommandHandler.cs`, `LogSetCommandHandler.cs`, `LogSetCommandHandlerTests.cs`, `WorkoutEndpointTests.cs`
 
-**Symptoms:**
-- `POST /complete` returns 200 with correct `CompletedAt` — appears to work
-- `GET /sessions?userId=...` (history, filters `CompletedAt != null`) returns empty — session was never actually completed in DB
-- Sessions remain active forever in the database
+### BUG-3: Circular reference in SyncService serialization ✅ FIXED
 
-**Fix:** Either remove `.AsNoTracking()` from `GetWithExercisesAndSetsAsync()`, or re-attach the entity before saving: `_sessions.Update(session)` before `SaveChangesAsync()`.
+**Fix applied:** Added `JsonSerializerOptions { ReferenceHandler = ReferenceHandler.IgnoreCycles }` to `SyncService.PushChangesAsync` and all `JsonSerializer.Serialize` calls in `SyncEndpoints.cs` that serialize entity objects with navigation properties.
 
-### BUG-3: `SyncService.PushChangesAsync` circular reference during JSON serialization
-
-**Location:** `RepWizard.Infrastructure/Services/SyncService.cs:102`
-
-**Impact:** `JsonSerializer.Serialize(s)` serializes the full `WorkoutSession` entity including navigation properties. When EF Core change tracker has fixed up `User ↔ WorkoutSessions` navigation properties, serialization hits a circular reference: `Session.User.WorkoutSessions[0].User.WorkoutSessions[0]...`
-
-**Symptoms:** `SyncAsync` falls through to the generic `catch (Exception)` handler with a `JsonException` instead of reaching the HTTP call. The sync appears to fail with an opaque error.
-
-**Fix options:**
-1. Use `JsonSerializerOptions { ReferenceHandler = ReferenceHandler.IgnoreCycles }` when serializing
-2. Project to a DTO before serializing (preferred — avoids leaking entity internals)
-3. Clear navigation properties before serialization
+**Files changed:** `SyncService.cs`, `SyncEndpoints.cs`
 
 ---
 

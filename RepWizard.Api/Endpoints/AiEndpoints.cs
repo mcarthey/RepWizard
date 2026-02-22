@@ -20,7 +20,8 @@ public static class AiEndpoints
     public static IEndpointRouteBuilder MapAiEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/ai")
-            .WithTags("AI Coach");
+            .WithTags("AI Coach")
+            .RequireAuthorization();
 
         // POST /api/v1/ai/chat — SSE streaming chat
         group.MapPost("/chat", async (

@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -65,7 +66,9 @@ public abstract class IntegrationTestBase : IDisposable
         var response = await Client.PostAsJsonAsync("/api/v1/auth/register", request);
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
-        return (body!.Data!, password);
+        Client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", body!.Data!.AccessToken);
+        return (body.Data!, password);
     }
 
     public void Dispose()

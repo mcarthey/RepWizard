@@ -4,15 +4,22 @@ using RepWizard.Core.Enums;
 using RepWizard.Infrastructure.Data;
 using RepWizard.Shared.DTOs;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace RepWizard.Api.Endpoints;
 
 public static class SyncEndpoints
 {
+    private static readonly JsonSerializerOptions SafeJsonOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
+
     public static IEndpointRouteBuilder MapSyncEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/sync")
-            .WithTags("Sync");
+            .WithTags("Sync")
+            .RequireAuthorization();
 
         // POST /api/v1/sync/push — client pushes local changes to server
         group.MapPost("/push", async (
@@ -71,7 +78,7 @@ public static class SyncEndpoints
                     EntityType = "WorkoutSession",
                     EntityId = s.Id,
                     Action = s.IsDeleted ? "Delete" : "Update",
-                    JsonData = JsonSerializer.Serialize(s),
+                    JsonData = JsonSerializer.Serialize(s, SafeJsonOptions),
                     ClientUpdatedAt = s.UpdatedAt
                 });
             }
@@ -87,7 +94,7 @@ public static class SyncEndpoints
                     EntityType = "BodyMeasurement",
                     EntityId = m.Id,
                     Action = m.IsDeleted ? "Delete" : "Update",
-                    JsonData = JsonSerializer.Serialize(m),
+                    JsonData = JsonSerializer.Serialize(m, SafeJsonOptions),
                     ClientUpdatedAt = m.UpdatedAt
                 });
             }
@@ -127,7 +134,7 @@ public static class SyncEndpoints
                     EntityType = entity.EntityType,
                     EntityId = entity.EntityId,
                     LocalJson = entity.JsonData,
-                    ServerJson = JsonSerializer.Serialize(serverSession),
+                    ServerJson = JsonSerializer.Serialize(serverSession, SafeJsonOptions),
                     Resolution = "ServerWins",
                     ResolvedAt = DateTime.UtcNow
                 };

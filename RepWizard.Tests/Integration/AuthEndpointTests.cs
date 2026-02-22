@@ -112,9 +112,16 @@ public class AuthEndpointTests : IntegrationTestBase
         body.Data.Email.Should().Be(auth.Email);
     }
 
-    // NOTE: Test 1.3 (ProtectedEndpoint_NoToken_ReturnsUnauthorized) is intentionally skipped.
-    // No endpoints currently enforce [Authorize] or RequireAuthorization(). All endpoints accept
-    // anonymous requests. This is a known gap — auth enforcement should be added in a future phase.
+    [Fact]
+    public async Task ProtectedEndpoint_NoToken_ReturnsUnauthorized()
+    {
+        // Use a fresh client without any Bearer token
+        var unauthenticatedClient = Factory.CreateClient();
+
+        var response = await unauthenticatedClient.GetAsync($"/api/v1/users/{Guid.NewGuid()}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 
     [Fact]
     public async Task Refresh_ValidToken_ReturnsNewTokens()

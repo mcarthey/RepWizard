@@ -11,7 +11,8 @@ public static class MeasurementEndpoints
     public static IEndpointRouteBuilder MapMeasurementEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/measurements")
-            .WithTags("Measurements");
+            .WithTags("Measurements")
+            .RequireAuthorization();
 
         // POST /api/v1/measurements — log a body measurement
         group.MapPost("/", async (

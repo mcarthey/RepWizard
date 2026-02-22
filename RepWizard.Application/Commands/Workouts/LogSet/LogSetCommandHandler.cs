@@ -45,6 +45,7 @@ public class LogSetCommandHandler : IRequestHandler<LogSetCommand, Result<Exerci
                 OrderIndex = session.SessionExercises.Count
             };
             session.SessionExercises.Add(sessionExercise);
+            _sessions.MarkAsNew(sessionExercise);
         }
 
         if (!Enum.TryParse<SetType>(request.SetType, ignoreCase: true, out var setType))
@@ -52,7 +53,6 @@ public class LogSetCommandHandler : IRequestHandler<LogSetCommand, Result<Exerci
 
         var set = new ExerciseSet
         {
-            SessionExerciseId = sessionExercise.Id,
             SetNumber = request.SetNumber,
             WeightKg = request.WeightKg,
             Reps = request.Reps,
@@ -64,6 +64,7 @@ public class LogSetCommandHandler : IRequestHandler<LogSetCommand, Result<Exerci
         };
 
         sessionExercise.Sets.Add(set);
+        _sessions.MarkAsNew(set);
         await _sessions.SaveChangesAsync(cancellationToken);
 
         return Result<ExerciseSetDto>.Success(new ExerciseSetDto
