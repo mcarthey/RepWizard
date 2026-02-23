@@ -86,19 +86,19 @@ public partial class ProgressViewModel : BaseViewModel
     [RelayCommand]
     private async Task OpenSessionDetailAsync(Guid sessionId, CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("progress/session",
+        await _navigation.NavigateToAsync("session-detail",
             new Dictionary<string, object> { ["sessionId"] = sessionId });
     }
 
     [RelayCommand]
     private async Task OpenChartsAsync(CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("progress/charts");
+        await _navigation.NavigateToAsync("charts");
     }
 
     [RelayCommand]
     private async Task OpenMeasurementsAsync(CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("progress/measurements");
+        await _navigation.NavigateToAsync("measurements");
     }
 }

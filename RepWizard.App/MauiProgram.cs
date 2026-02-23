@@ -37,7 +37,11 @@ public static class MauiProgram
             cfg.RegisterServicesFromAssembly(typeof(Application.DependencyInjection).Assembly));
 
         // HttpClient factory with Polly resilience (retry + circuit breaker)
-        var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7001";
+        // Android emulator uses 10.0.2.2 to reach host machine's localhost
+        var defaultUrl = DeviceInfo.Platform == DevicePlatform.Android
+            ? "https://10.0.2.2:7001"
+            : "https://localhost:7001";
+        var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? defaultUrl;
         builder.Services.AddHttpClient("RepWizardApi", client =>
         {
             client.BaseAddress = new Uri(apiBaseUrl);
@@ -67,6 +71,21 @@ public static class MauiProgram
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Infrastructure.Data.AppDbContext>();
         db.Database.EnsureCreated();
+
+        // Seed default local user if not exists (pre-auth offline user)
+        var defaultUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        if (!db.Set<Core.Entities.User>().Any(u => u.Id == defaultUserId))
+        {
+            db.Set<Core.Entities.User>().Add(new Core.Entities.User
+            {
+                Id = defaultUserId,
+                Name = "Local User",
+                Email = "local@repwizard.app",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+            db.SaveChanges();
+        }
 
         return app;
     }

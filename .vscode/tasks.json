@@ -49,12 +49,31 @@
         {
             "label": "MAUI: Start Emulator",
             "type": "shell",
-            "command": "emulator -avd Pixel_7_API_36 -no-snapshot-load",
+            "command": "emulator -avd pixel_7_-_api_36 -no-snapshot-load",
             "isBackground": true,
-            "problemMatcher": [],
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*emulator.*$",
+                    "endsPattern": "^.*boot completed.*$"
+                }
+            },
             "presentation": {
                 "reveal": "silent",
                 "panel": "dedicated"
+            }
+        },
+        {
+            "label": "MAUI: Wait for Emulator",
+            "type": "shell",
+            "command": "adb wait-for-device && adb shell 'while [ \"$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done' && echo 'Emulator ready'",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
             }
         },
         {
@@ -69,14 +88,21 @@
         },
         {
             "label": "MAUI: Start Emulator and Deploy",
-            "type": "shell",
-            "command": "emulator -avd Pixel_7_API_36 -no-snapshot-load & adb wait-for-device && adb shell 'while [ \"$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done' && dotnet build ${workspaceFolder}/RepWizard.App/RepWizard.App.csproj -f net9.0-android -c Debug -t:Run -p:AndroidAttachDebugger=false",
-            "isBackground": true,
-            "problemMatcher": "$msCompile",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated"
-            }
+            "dependsOn": [
+                "MAUI: Start Emulator",
+                "MAUI: Wait for Emulator"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "MAUI: Deploy (emulator already running)",
+            "dependsOn": [
+                "MAUI: Wait for Emulator",
+                "MAUI: Deploy to Emulator"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
         },
         {
             "label": "Run: API (localhost:7001)",
@@ -84,12 +110,10 @@
             "command": "dotnet",
             "args": [
                 "run",
-                "--no-build",
                 "--project",
                 "${workspaceFolder}/RepWizard.Api/RepWizard.Api.csproj",
                 "--launch-profile", "https"
             ],
-            "dependsOn": ["Build (CI — excludes MAUI)"],
             "isBackground": true,
             "problemMatcher": [],
             "presentation": {

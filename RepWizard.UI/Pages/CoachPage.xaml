@@ -121,7 +121,16 @@
                                 <!-- Message content -->
                                 <Label Text="{Binding Content}"
                                        FontSize="14"
-                                       LineBreakMode="WordWrap" />
+                                       LineBreakMode="WordWrap">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding IsUser}"
+                                                     Value="True">
+                                            <Setter Property="TextColor"
+                                                    Value="{StaticResource OnPrimaryContainer}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
 
                                 <!-- Streaming indicator -->
                                 <ActivityIndicator IsRunning="{Binding IsStreaming}"

@@ -12,22 +12,17 @@ public partial class AppShell : Shell
 
     private static void RegisterRoutes()
     {
-        // Today section routes
-        Routing.RegisterRoute("today/active-session", typeof(ActiveSessionPage));
-        Routing.RegisterRoute("today/exercise-detail", typeof(ExerciseDetailPage));
-
-        // Progress section routes
-        Routing.RegisterRoute("progress/session", typeof(SessionDetailPage));
-        Routing.RegisterRoute("progress/charts", typeof(ChartsPage));
-        Routing.RegisterRoute("progress/measurements", typeof(MeasurementsPage));
-
-        // Coach section routes
-        Routing.RegisterRoute("coach/programs", typeof(ProgramsPage));
-        Routing.RegisterRoute("coach/program", typeof(ProgramDetailPage));
-        Routing.RegisterRoute("coach/library", typeof(ExerciseLibraryPage));
-        Routing.RegisterRoute("coach/library/detail", typeof(ExerciseDetailPage));
-
-        // Settings
+        // Routes use leaf names only — MAUI Shell can't do relative routing
+        // to shell elements (tab routes like "today", "progress", "coach").
+        // Navigate with the leaf name; Shell pushes onto the current tab's stack.
+        Routing.RegisterRoute("active-session", typeof(ActiveSessionPage));
+        Routing.RegisterRoute("exercise-detail", typeof(ExerciseDetailPage));
+        Routing.RegisterRoute("session-detail", typeof(SessionDetailPage));
+        Routing.RegisterRoute("charts", typeof(ChartsPage));
+        Routing.RegisterRoute("measurements", typeof(MeasurementsPage));
+        Routing.RegisterRoute("programs", typeof(ProgramsPage));
+        Routing.RegisterRoute("program-detail", typeof(ProgramDetailPage));
+        Routing.RegisterRoute("library", typeof(ExerciseLibraryPage));
         Routing.RegisterRoute("settings", typeof(SettingsPage));
     }
 }

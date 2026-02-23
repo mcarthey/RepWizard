@@ -50,7 +50,7 @@ public partial class TodayViewModel : BaseViewModel
             if (HasActiveSession && _activeSessionId != Guid.Empty)
             {
                 await _navigation.NavigateToAsync(
-                    $"today/active-session?sessionId={_activeSessionId}&userId={ActiveSessionViewModel.DefaultUserId}");
+                    $"active-session?sessionId={_activeSessionId}&userId={ActiveSessionViewModel.DefaultUserId}");
                 return;
             }
 
@@ -62,7 +62,7 @@ public partial class TodayViewModel : BaseViewModel
                 HasActiveSession = true;
                 _activeSessionId = result.Value!.Id;
                 await _navigation.NavigateToAsync(
-                    $"today/active-session?sessionId={result.Value.Id}&userId={ActiveSessionViewModel.DefaultUserId}");
+                    $"active-session?sessionId={result.Value.Id}&userId={ActiveSessionViewModel.DefaultUserId}");
             }
             else
             {

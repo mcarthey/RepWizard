@@ -75,7 +75,7 @@ public partial class ExerciseLibraryViewModel : BaseViewModel
     [RelayCommand]
     private async Task NavigateToDetailAsync(ExerciseDto exercise, CancellationToken ct)
     {
-        await _navigation.NavigateToAsync($"coach/library/detail?exerciseId={exercise.Id}");
+        await _navigation.NavigateToAsync($"exercise-detail?exerciseId={exercise.Id}");
     }
 
     partial void OnSelectedCategoryChanged(string? value)

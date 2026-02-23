@@ -224,13 +224,13 @@ public partial class CoachViewModel : BaseViewModel
     [RelayCommand]
     private async Task NavigateToProgramsAsync(CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("coach/programs");
+        await _navigation.NavigateToAsync("programs");
     }
 
     [RelayCommand]
     private async Task NavigateToLibraryAsync(CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("coach/library");
+        await _navigation.NavigateToAsync("library");
     }
 
     partial void OnIsStreamingChanged(bool value)

@@ -48,7 +48,7 @@ public partial class ProgramsViewModel : BaseViewModel
     [RelayCommand]
     private async Task NavigateToDetailAsync(TrainingProgramDto program, CancellationToken ct)
     {
-        await _navigation.NavigateToAsync($"coach/program?programId={program.Id}");
+        await _navigation.NavigateToAsync($"program-detail?programId={program.Id}");
     }
 
     /// <summary>

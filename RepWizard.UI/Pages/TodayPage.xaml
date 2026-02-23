@@ -26,7 +26,23 @@
         <!-- Custom title bar omitted in Phase 1; uses default Shell title -->
     </Shell.TitleView>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+
+        <!-- Error Banner -->
+        <Border Grid.Row="5"
+                IsVisible="{Binding HasError}"
+                BackgroundColor="{StaticResource ErrorContainer}"
+                StrokeThickness="0"
+                Padding="12,8"
+                Margin="12,0,12,8">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource Error}"
+                   FontSize="12"
+                   LineBreakMode="WordWrap" />
+        </Border>
 
         <!-- Context Header Band -->
         <VerticalStackLayout Grid.Row="0" Padding="24,16,24,8" Spacing="6">
