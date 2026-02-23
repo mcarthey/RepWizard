@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <!-- RepWizard app icon foreground — white barbell on cyan background -->
+  <!-- Barbell bar -->
+  <rect x="24" y="51" width="60" height="6" rx="3" fill="white"/>
+  <!-- Left plate -->
+  <rect x="20" y="42" width="10" height="24" rx="3" fill="white"/>
+  <!-- Right plate -->
+  <rect x="78" y="42" width="10" height="24" rx="3" fill="white"/>
+  <!-- Glowing emblem center -->
+  <circle cx="54" cy="54" r="16" fill="white" opacity="0.4"/>
+  <circle cx="54" cy="54" r="11" fill="white"/>
+  <circle cx="54" cy="54" r="6" fill="#060B12"/>
+</svg>

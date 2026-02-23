@@ -29,9 +29,19 @@
     <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
 
         <!-- Context Header Band -->
-        <VerticalStackLayout Grid.Row="0" Padding="24,16,24,8">
+        <VerticalStackLayout Grid.Row="0" Padding="24,16,24,8" Spacing="6">
+            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                <Image Source="repwizard_logo.png"
+                       WidthRequest="40" HeightRequest="40"
+                       Aspect="AspectFit"
+                       VerticalOptions="Center" />
+                <Label Text="REPWIZARD" FontSize="20" FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}"
+                       VerticalOptions="Center"
+                       CharacterSpacing="3" />
+            </HorizontalStackLayout>
             <Label Text="{Binding Source={x:Static sys:DateTime.Now}, StringFormat='{0:dddd, MMMM d}'}"
-                   FontSize="13" Opacity="0.6" />
+                   FontSize="13" Opacity="0.6" Margin="0,4,0,0" />
             <Label Text="{Binding GreetingText}" FontSize="22" FontAttributes="Bold" />
         </VerticalStackLayout>
 

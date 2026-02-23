@@ -19,6 +19,14 @@
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
   <ItemGroup>
+    <!-- App icon: emblem foreground on cyan background -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#00C8E8" />
+    <!-- Splash screen: logo on deep space background -->
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#060B12" BaseSize="256,256" />
+    <!-- Images — explicit include (auto-inclusion not picking up SVGs) -->
+    <MauiImage Include="Resources\Images\*" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\RepWizard.UI\RepWizard.UI.csproj" />
     <ProjectReference Include="..\RepWizard.Application\RepWizard.Application.csproj" />
     <ProjectReference Include="..\RepWizard.Infrastructure\RepWizard.Infrastructure.csproj" />
