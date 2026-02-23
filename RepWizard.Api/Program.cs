@@ -106,6 +106,9 @@ if (app.Environment.IsDevelopment())
         db.Database.Migrate();
     else
         db.Database.EnsureCreated();
+
+    // Seed exercises from embedded resource if table is empty
+    await ExerciseSeeder.SeedExercisesAsync(db);
 }
 
 // OpenAPI / Scalar docs

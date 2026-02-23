@@ -91,6 +91,9 @@ public static class MauiProgram
             db.SaveChanges();
         }
 
+        // Seed exercise library from embedded resource if table is empty
+        Infrastructure.Data.ExerciseSeeder.SeedExercisesAsync(db).GetAwaiter().GetResult();
+
         return app;
     }
 }

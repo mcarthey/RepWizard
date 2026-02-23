@@ -1,0 +1,742 @@
+[
+  {
+    "name": "Barbell Bench Press",
+    "description": "The king of chest exercises. A horizontal push movement that targets the pectoralis major with significant triceps and anterior deltoid involvement.",
+    "category": "Strength",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Triceps", "Shoulders"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Lie flat on the bench with eyes directly under the bar.",
+      "Grip the bar slightly wider than shoulder-width, with a full grip (thumb wrapped around bar).",
+      "Unrack the bar and position it over the upper chest/clavicle area.",
+      "Take a deep breath, brace your core, and arch your upper back slightly.",
+      "Lower the bar in a straight line to the mid-chest, touching lightly.",
+      "Press the bar up and slightly back to the lockout position, maintaining shoulder blade retraction throughout.",
+      "Rerack the bar after completing all reps."
+    ],
+    "researchNotes": "Per Schoenfeld (2010), varying grip width and bar path affects which portion of the pec is emphasized. A wider grip increases pec major stretch; narrow grip increases tricep involvement. Shoulder positioning (retracted scapulae) is critical for long-term joint health. Leg drive contributes significantly to total force production in competition-style benching."
+  },
+  {
+    "name": "Incline Dumbbell Press",
+    "description": "An incline pressing movement emphasizing the upper pectoralis major. The dumbbell variant allows greater range of motion and independent arm movement.",
+    "category": "Strength",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Shoulders", "Triceps"],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Set bench to 30-45 degrees (higher angles shift emphasis to shoulders).",
+      "Sit on the bench and pick up dumbbells, resting them on your thighs.",
+      "Kick them up to shoulder height as you lie back.",
+      "Position dumbbells at chest level with palms facing forward.",
+      "Press upward and slightly inward in a slight arc.",
+      "Lower under control to a comfortable stretch, feeling the upper chest engage.",
+      "Do not allow dumbbells to touch at the top — maintain constant tension."
+    ],
+    "researchNotes": "Incline angle of 30-45 degrees maximizes upper pectoral activation while minimizing anterior deltoid dominance. Dumbbell variation allows full adduction at the top and a longer stretch at the bottom compared to barbell, potentially increasing hypertrophic stimulus per Schoenfeld's 2017 review on mechanisms of hypertrophy."
+  },
+  {
+    "name": "Cable Fly",
+    "description": "A chest isolation movement using cables that maintains constant tension throughout the range of motion, unlike free weights where tension drops at the peak contraction.",
+    "category": "Strength",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": [],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Set cables at the appropriate height (low for upper chest emphasis, high for lower chest).",
+      "Stand in the center of the cable station with a staggered stance.",
+      "Grab the handles and take a slight lean forward.",
+      "With a slight bend in the elbows (locked), bring your hands together in an arc.",
+      "Squeeze the pecs hard at the center, focusing on the muscle contraction.",
+      "Slowly reverse the motion, feeling the stretch in the chest.",
+      "Do not allow shoulder to internally rotate excessively during the stretch."
+    ],
+    "researchNotes": "Cables provide ascending resistance curve that matches pectoral strength curve better than dumbbells in the fly pattern. High-to-low cables better target the sternal head of the pec major; low-to-high cables emphasize the upper/clavicular head. Effective for achieving a full stretch-to-contraction range essential for hypertrophy."
+  },
+  {
+    "name": "Dip",
+    "description": "A compound bodyweight (or weighted) exercise for the chest and triceps. Chest dips use a wider grip and forward lean; tricep dips use a narrower grip and upright torso.",
+    "category": "Strength",
+    "primaryMuscles": ["Chest", "Triceps"],
+    "secondaryMuscles": ["Shoulders"],
+    "equipment": "Bodyweight",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Mount the dip bars with arms fully extended.",
+      "For chest emphasis: lean forward 30-45 degrees and use a wider grip.",
+      "Lower yourself by bending your elbows, allowing them to flare slightly outward.",
+      "Descend until upper arms are parallel to the floor or you feel a good chest stretch.",
+      "Press back up to the starting position.",
+      "Add weight via dip belt for progressive overload once bodyweight becomes easy."
+    ],
+    "researchNotes": "Dips allow loading the pec major at a long muscle length (stretched position), which research suggests is particularly beneficial for hypertrophy (Pedrosa et al., 2022). The forward lean and elbow flare are key to targeting the pectoral rather than tricep emphasis."
+  },
+  {
+    "name": "Push-Up",
+    "description": "A fundamental bodyweight pushing movement. Can be progressed with elevation, vest loading, or plyometric variations.",
+    "category": "Strength",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Triceps", "Shoulders", "Core"],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Start in a high plank position, hands slightly wider than shoulder-width.",
+      "Keep your body in a straight line from head to heels (no hip sag or piking).",
+      "Lower your chest to the floor by bending your elbows at roughly 45-degree angle.",
+      "Press back up to full arm extension.",
+      "Progress to: feet-elevated push-ups (more upper chest), weighted (vest), or archer push-ups (unilateral)."
+    ],
+    "researchNotes": "Research shows comparable pectoral activation to bench press at equated loads per Calatayud et al. (2015). Excellent beginner foundational exercise. Feet-elevated variations effectively match incline press muscle activation patterns."
+  },
+  {
+    "name": "Barbell Row",
+    "description": "The primary compound horizontal pulling exercise for back thickness. Targets the entire back musculature with heavy loading potential.",
+    "category": "Strength",
+    "primaryMuscles": ["Back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Traps", "Forearms"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Set up similar to a deadlift: barbell over mid-foot, hip-width stance.",
+      "Hinge at the hips to about 45-70 degrees forward lean.",
+      "Grip the bar just outside your legs (double overhand or mixed grip).",
+      "Pull the bar toward your lower chest/upper abdomen, retracting the scapulae.",
+      "Hold the contraction briefly at the top, then lower the bar under control.",
+      "Maintain a neutral spine throughout — do not round the lumbar."
+    ],
+    "researchNotes": "The Pendlay row variation (bar reset to floor each rep) forces strict form and eliminates momentum. Research on rowing variations (Fenwick et al., 2009) shows that pulling to the lower chest targets the lower trapezius and rhomboids more than pulling to the upper abdomen which emphasizes the lats."
+  },
+  {
+    "name": "Pull-Up / Chin-Up",
+    "description": "The foundational vertical pulling movement. Pull-ups use a pronated (overhand) grip; chin-ups use a supinated (underhand) grip. Both are highly effective for lat development.",
+    "category": "Strength",
+    "primaryMuscles": ["Lats", "Back"],
+    "secondaryMuscles": ["Biceps", "Traps"],
+    "equipment": "Bodyweight",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Hang from the bar with arms fully extended (dead hang starting position).",
+      "For pull-ups: use shoulder-width pronated grip. For chin-ups: use shoulder-width supinated grip.",
+      "Initiate by depressing the shoulder blades (anti-shrug), then pull the elbows down and back.",
+      "Pull until chin clears the bar, focusing on the feeling in the lats, not biceps.",
+      "Lower under control to full hang, maintaining tension throughout.",
+      "Add weight via dip belt or vest for progressive overload."
+    ],
+    "researchNotes": "Lats function to adduct, extend, and internally rotate the humerus. Depressing the shoulder blades first (scapular pull-up) activates the lower trapezius before engaging the lats, which improves mechanics and reduces supraspinatus impingement risk. Chin-ups show slightly higher bicep activation than pull-ups (Youdas et al., 2010)."
+  },
+  {
+    "name": "Seated Cable Row",
+    "description": "A horizontal pulling exercise that allows consistent tension throughout the range of motion, excellent for back thickness and mid-back development.",
+    "category": "Strength",
+    "primaryMuscles": ["Back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Traps"],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Sit at the cable row station with feet on the platform, knees slightly bent.",
+      "Grab the handle (close grip, wide grip, or single arm).",
+      "Start with arms extended, maintaining an upright torso.",
+      "Pull the handle to the lower chest/upper abdomen while retracting the scapulae.",
+      "Avoid excessive trunk flexion/extension — the movement should be in the arms and scapulae.",
+      "Control the weight back to the start, allowing the scapulae to protract fully for a complete stretch."
+    ],
+    "researchNotes": "Allowing scapular protraction at the end range of the cable row ensures full lat lengthening and potentially superior hypertrophic stimulus compared to stopping at a neutral scapular position. Close grip emphasizes lower lat and teres major; wide grip increases upper trap and rhomboid involvement."
+  },
+  {
+    "name": "Single-Arm Dumbbell Row",
+    "description": "A unilateral row variation that allows a greater range of motion and helps identify and correct side-to-side strength imbalances.",
+    "category": "Strength",
+    "primaryMuscles": ["Lats", "Back"],
+    "secondaryMuscles": ["Biceps", "Traps"],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Place one hand and the same-side knee on a flat bench for support.",
+      "Hold the dumbbell with a neutral grip in the other hand, arm extended toward the floor.",
+      "Pull the dumbbell toward your hip, leading with your elbow.",
+      "Allow a natural internal rotation of the humerus as the dumbbell reaches the hip.",
+      "Lower the weight under control to full extension, feeling the lat stretch.",
+      "Complete all reps on one side before switching."
+    ],
+    "researchNotes": "The hip-pull path (pulling toward the hip rather than armpit) aligns better with lat fiber orientation and allows greater shoulder extension range — a key driver of lat hypertrophy. Unilateral work corrects asymmetries that are often masked by bilateral exercises."
+  },
+  {
+    "name": "Lat Pulldown",
+    "description": "A vertical pulling machine exercise for lat development, particularly useful for trainees who cannot yet perform pull-ups.",
+    "category": "Strength",
+    "primaryMuscles": ["Lats"],
+    "secondaryMuscles": ["Biceps", "Back", "Traps"],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Adjust thigh pads to secure your legs during the movement.",
+      "Grip the bar slightly wider than shoulder-width with a pronated grip.",
+      "Lean back slightly (about 10-15 degrees) to improve the line of pull.",
+      "Pull the bar down to upper chest level, leading with the elbows.",
+      "Squeeze the lats hard at the bottom position.",
+      "Control the bar back up to full extension, feeling the lats stretch."
+    ],
+    "researchNotes": "Wide-grip pulldowns show similar lat activation to close-grip, but may cause more bicep brachii involvement at narrower grips. Behind-the-neck pulldowns are NOT recommended due to cervical spine stress. Study by Lusk et al. (2010) found supinated grip pulldowns engage biceps more than pronated grip."
+  },
+  {
+    "name": "Face Pull",
+    "description": "A rear deltoid and external rotator exercise using a cable at face height. Critical for shoulder health and posterior shoulder development.",
+    "category": "Strength",
+    "primaryMuscles": ["Shoulders", "Traps"],
+    "secondaryMuscles": ["Back"],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Attach a rope to a cable at roughly face height.",
+      "Grab the rope with both hands using a double overhand grip.",
+      "Step back until there is tension in the cable, arms extended.",
+      "Pull the rope toward your face, separating your hands and driving your elbows back and high.",
+      "At the end position, your hands should be at ear level and forearms vertical.",
+      "Pause and squeeze the rear delts and external rotators.",
+      "Return under control to the start."
+    ],
+    "researchNotes": "Face pulls are essential for posterior deltoid and external rotator cuff health, counterbalancing the internal rotation dominance of most upper body pressing. The 'W' position at peak contraction maximally recruits the infraspinatus and teres minor. High reps (15-25) and frequency (multiple times per week) are appropriate given the postural and health-maintenance function."
+  },
+  {
+    "name": "Overhead Press (Barbell)",
+    "description": "The primary vertical pressing movement. Develops the deltoids, upper pectoralis, and triceps with significant core demand.",
+    "category": "Strength",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Triceps", "Traps", "Core"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Set the bar in a rack at upper chest height.",
+      "Grip the bar just outside shoulder width, with wrists stacked over elbows.",
+      "Unrack and hold the bar at upper chest, elbows slightly in front of the bar.",
+      "Take a breath and brace hard. Press the bar directly overhead, moving your head back to allow bar clearance.",
+      "As the bar passes your head, drive forward slightly so the bar ends up over the mid-foot.",
+      "At lockout, shrug the traps to create a 'shelf' for the bar.",
+      "Lower under control back to the starting rack position."
+    ],
+    "researchNotes": "The standing OHP requires significant core bracing and hip extension to maintain a neutral spine under load. Pressing directly overhead (not in front of face) is safer and more mechanically efficient. Research shows standing OHP engages the core significantly more than seated press variants (Saeterbakken & Fimland, 2013)."
+  },
+  {
+    "name": "Dumbbell Overhead Press",
+    "description": "A shoulder pressing variation using dumbbells that allows independent arm movement and a natural rotation of the wrists during the press.",
+    "category": "Strength",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Triceps", "Traps"],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Sit or stand with dumbbells at shoulder height, palms facing forward.",
+      "Press the dumbbells overhead, allowing natural wrist rotation (palms can rotate slightly inward at top).",
+      "Do not lock out the elbows forcefully — keep slight tension in the joint.",
+      "Lower the dumbbells back to shoulder height in a controlled manner.",
+      "Seated variation reduces core demand and allows heavier loading; standing increases core and stabilizer demand."
+    ],
+    "researchNotes": "Dumbbell pressing allows natural wrist pronation/supination during the press, which reduces wrist joint stress compared to fixed barbell path. The independent arm movement also reveals and addresses side-to-side strength imbalances."
+  },
+  {
+    "name": "Lateral Raise",
+    "description": "The primary lateral deltoid isolation exercise. Essential for shoulder width development.",
+    "category": "Strength",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": [],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Stand with dumbbells at your sides, slight bend at the elbow.",
+      "Raise the dumbbells to the side until arms are parallel to the floor.",
+      "Lead with the elbows, not the hands — imagine pouring water from a pitcher.",
+      "At the top, your pinkies should be slightly higher than your thumbs.",
+      "Lower under control — the eccentric is where most stimulus occurs.",
+      "Avoid shrugging the traps to help lift the weight."
+    ],
+    "researchNotes": "The lateral deltoid has a short moment arm at low abduction angles, making it difficult to achieve high mechanical tension at the bottom of the movement with dumbbells. Cable lateral raises or a 30-degree forward lean improve tension in the stretched position. High weekly volume (15-25 sets/week) is appropriate for lagging lateral deltoids given their postural role."
+  },
+  {
+    "name": "Rear Delt Fly",
+    "description": "An isolation exercise targeting the posterior deltoid, performed bent over or on an incline bench.",
+    "category": "Strength",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Traps"],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Hinge at the hips to 45-90 degrees forward lean, or use an incline bench for chest support.",
+      "Hold dumbbells below the chest with a slight bend in the elbows.",
+      "Raise the dumbbells out to the sides, leading with your elbows.",
+      "Aim to bring your hands to ear level, squeezing the rear delts and rhomboids.",
+      "Control the descent slowly — resist the weight all the way down.",
+      "Use lighter weights than you think — most people use excessive momentum here."
+    ],
+    "researchNotes": "The posterior deltoid is chronically underdeveloped in most trainees due to the anterior-dominant nature of daily activities and most training programs. High frequency (2-4 sessions/week) and higher rep ranges (15-25) are appropriate. Incline prone position eliminates the need to stabilize the trunk and allows purer isolation."
+  },
+  {
+    "name": "Arnold Press",
+    "description": "A shoulder press variation named after Arnold Schwarzenegger that incorporates rotation to target all three deltoid heads through a greater range of motion.",
+    "category": "Strength",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Triceps"],
+    "equipment": "Dumbbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Start with dumbbells at shoulder height, palms facing toward you (like top of a curl).",
+      "As you press the dumbbells overhead, rotate your palms to face forward.",
+      "Complete the press with palms facing forward at full extension.",
+      "Reverse the rotation as you lower the dumbbells back to the starting position.",
+      "The rotation emphasizes the anterior deltoid at the beginning and the lateral/posterior through the press."
+    ],
+    "researchNotes": "The Arnold Press adds a rotational component that increases the range of motion compared to a standard overhead press and may improve recruitment of the anterior and lateral deltoid across a longer arc. The trade-off is reduced loading capacity compared to a conventional overhead press."
+  },
+  {
+    "name": "Barbell Back Squat",
+    "description": "The foundational lower body compound movement. High-bar squat is more quad-dominant; low-bar squat distributes load to hips and posterior chain.",
+    "category": "Strength",
+    "primaryMuscles": ["Quads"],
+    "secondaryMuscles": ["Glutes", "Hamstrings", "Core"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Position the bar across the upper traps (high bar) or rear delts (low bar).",
+      "Unrack the bar with a hip-width stance, toes pointed out 15-30 degrees.",
+      "Take a deep breath into your abdomen and brace hard (Valsalva maneuver for heavy sets).",
+      "Descend by simultaneously hinging at the hip and flexing the knee.",
+      "Keep your chest up, knee tracking over your toes throughout the descent.",
+      "Squat to parallel or below (where hip crease is at or below knee cap).",
+      "Drive through the whole foot to stand, maintaining bracing until rep is complete."
+    ],
+    "researchNotes": "Per Schoenfeld (2010), squatting to below parallel produces significantly greater glute and hamstring activation than parallel squats, without increased knee compressive forces in healthy individuals with good mobility. High-bar squats show greater quad activation; low-bar shows greater posterior chain involvement due to greater forward torso lean."
+  },
+  {
+    "name": "Romanian Deadlift",
+    "description": "A hip-dominant movement emphasizing the hamstrings and glutes through a long range of motion with minimal knee flexion.",
+    "category": "Strength",
+    "primaryMuscles": ["Hamstrings", "Glutes"],
+    "secondaryMuscles": ["Back", "Forearms"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Start standing with the barbell at hip height (can begin from the rack).",
+      "Hinge at the hips while pushing them backward, lowering the bar along the shins.",
+      "Keep a neutral spine and soft knee bend throughout the movement.",
+      "Descend until you feel a significant hamstring stretch (usually just below the knee or mid-shin).",
+      "Drive the hips forward to return to standing, squeezing the glutes at the top.",
+      "Do not round the lower back — hinge from the hips, not the spine."
+    ],
+    "researchNotes": "The RDL loads the hamstrings at a lengthened position, which emerging research (Pedrosa et al., 2022; Maeo et al., 2021) strongly suggests produces superior hypertrophy compared to exercises that only load the hamstrings at short muscle lengths. The lengthened-position loading stimulus is a key driver of distal hamstring hypertrophy."
+  },
+  {
+    "name": "Leg Press",
+    "description": "A machine-based lower body pressing exercise that allows heavy quad loading with reduced spinal compression compared to the squat.",
+    "category": "Strength",
+    "primaryMuscles": ["Quads"],
+    "secondaryMuscles": ["Glutes", "Hamstrings"],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Set foot position: shoulder-width for balanced development, higher placement for more glute/hamstring.",
+      "Keep your back and glutes flat against the pad throughout.",
+      "Unlock the safety handles and bend the knees to descend.",
+      "Lower the sled until your knees form approximately a 90-degree angle or your hips begin to rotate.",
+      "Press the weight back up through your heels without locking the knees forcefully.",
+      "Never allow your lower back to peel off the pad — this places extreme lumbar stress."
+    ],
+    "researchNotes": "The leg press allows manipulation of foot placement to shift emphasis between quad, glute, and hamstring. While lacking the systemic hormonal response and core demand of squats, the leg press is superior for targeted quad isolation at higher volumes, particularly for trainees with mobility restrictions."
+  },
+  {
+    "name": "Leg Curl",
+    "description": "The primary machine-based hamstring isolation exercise. Both seated and lying variations are effective; research suggests seated may produce slightly greater distal hypertrophy.",
+    "category": "Strength",
+    "primaryMuscles": ["Hamstrings"],
+    "secondaryMuscles": ["Calves"],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "For lying leg curl: lie face down with the pad just above your heels.",
+      "Curl your legs toward your glutes, focusing on feeling the hamstring contract.",
+      "Hold the peak contraction briefly.",
+      "Lower the weight under control — the eccentric (lowering) phase is critical for hamstring hypertrophy.",
+      "For seated leg curl: hips at 90 degrees, which pre-stretches the hamstrings for greater stimulus."
+    ],
+    "researchNotes": "Maeo et al. (2021) demonstrated that the seated leg curl, which loads the hamstrings at a longer muscle length (hip flexed), produces significantly greater biceps femoris distal hypertrophy than the prone leg curl. This aligns with the growing evidence that lengthened-position loading maximizes hypertrophic stimulus."
+  },
+  {
+    "name": "Leg Extension",
+    "description": "The primary quad isolation exercise. Targets the quadriceps through full knee extension, including the often-undertrained vastus medialis (VMO).",
+    "category": "Strength",
+    "primaryMuscles": ["Quads"],
+    "secondaryMuscles": [],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Sit in the machine with your back against the pad and knees at the edge of the seat.",
+      "Pad should rest on the lower shin, just above the ankle.",
+      "Extend your legs to full knee extension, squeezing the quads at the top.",
+      "Lower under control — do not let the weight slam down.",
+      "A slow eccentric (3-5 seconds) is particularly effective for quad hypertrophy."
+    ],
+    "researchNotes": "Contrary to past concerns, research has not supported the idea that leg extensions cause excessive patellofemoral stress in healthy individuals when performed through a full range of motion. The terminal phase of knee extension (last 30 degrees) produces significant VMO activation important for knee tracking. Long-length loading (starting from 90 degrees or greater) may optimize hypertrophy per the emerging stretch-mediated hypertrophy research."
+  },
+  {
+    "name": "Walking Lunge",
+    "description": "A unilateral leg exercise that trains the quads, glutes, and hip stabilizers through a dynamic single-leg movement pattern.",
+    "category": "Strength",
+    "primaryMuscles": ["Quads", "Glutes"],
+    "secondaryMuscles": ["Hamstrings", "Calves", "Core"],
+    "equipment": "Dumbbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Hold dumbbells at your sides or a barbell across your traps.",
+      "Step forward with one foot, lowering your back knee toward the floor.",
+      "Keep your front shin roughly vertical and your trunk upright.",
+      "Push off your front foot to step forward into the next lunge.",
+      "Alternate legs for the prescribed reps or distance.",
+      "For stationary lunges: step back to the starting position after each rep."
+    ],
+    "researchNotes": "Lunges activate the glutes and quads in a single-leg stance that mimics functional movement patterns. The step length determines the emphasis: a longer step increases glute activation due to greater hip extension; a shorter step increases quad dominance."
+  },
+  {
+    "name": "Hip Thrust",
+    "description": "The most effective exercise for gluteus maximus hypertrophy, loading the glutes maximally at full hip extension.",
+    "category": "Strength",
+    "primaryMuscles": ["Glutes"],
+    "secondaryMuscles": ["Hamstrings", "Quads"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Position your upper back against a bench, with a barbell over your hips.",
+      "Place feet flat on the floor at shoulder width, shins roughly vertical at the top.",
+      "Brace your core and thrust your hips upward until they are fully extended.",
+      "At the top, your torso should be parallel to the floor, with a posterior pelvic tilt.",
+      "Squeeze the glutes hard at the top — do not hyperextend the lumbar spine.",
+      "Lower under control back to the starting position."
+    ],
+    "researchNotes": "Per Contreras et al. (multiple studies 2015-2017), the hip thrust generates the highest peak and mean gluteus maximus EMG of any exercise measured, due to the fully shortened position loading at peak glute contraction. The squat loads the glutes more at the lengthened position. Both exercises are complementary for full-range glute development."
+  },
+  {
+    "name": "Standing Calf Raise",
+    "description": "The primary calf exercise targeting the gastrocnemius (the dominant calf muscle when the knee is straight).",
+    "category": "Strength",
+    "primaryMuscles": ["Calves"],
+    "secondaryMuscles": [],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Position the pad on your shoulders with the balls of your feet on the platform edge.",
+      "Lower your heels as far below the platform as your flexibility allows (full stretch).",
+      "Rise up onto your toes, contracting the gastrocnemius maximally.",
+      "Hold the peak contraction briefly.",
+      "Lower slowly under control — use a 3-5 second eccentric for optimal stimulus.",
+      "High reps (15-25) are appropriate given the slow-twitch fiber dominance of soleus."
+    ],
+    "researchNotes": "The gastrocnemius crosses both the knee and ankle joint. Standing calf raises (straight knee) maximally load the gastrocnemius. Seated calf raises (bent knee) target the soleus. Research suggests the calves respond best to high rep ranges (15-30) due to their slow-twitch fiber type dominance and high daily usage adaptation."
+  },
+  {
+    "name": "Conventional Deadlift",
+    "description": "The king of posterior chain exercises. A hip-dominant pull from the floor that trains the entire back, hamstrings, glutes, and grip.",
+    "category": "Strength",
+    "primaryMuscles": ["Back", "Hamstrings", "Glutes"],
+    "secondaryMuscles": ["Traps", "Forearms", "Quads"],
+    "equipment": "Barbell",
+    "difficulty": "Advanced",
+    "isCompound": true,
+    "instructions": [
+      "Stand with the bar over mid-foot, feet hip-width apart.",
+      "Hinge down and grip the bar just outside your legs.",
+      "Lower hips until shins touch the bar, shoulders slightly in front of the bar.",
+      "Take a big breath and brace the abdomen hard (Valsalva).",
+      "Drive your feet through the floor while pulling the bar in close to your body.",
+      "Lock out by squeezing the glutes and extending the hips fully.",
+      "Lower the bar under control — do not drop (it's bad for the bar and floor)."
+    ],
+    "researchNotes": "The conventional deadlift has the highest systemic loading potential of any exercise, recruiting virtually every major muscle group. Due to high CNS demand, heavy deadlift training (85%+ 1RM) requires careful programming — typically 1-3 times per week, with adequate recovery. Lumbar position is critical: maintain natural lordosis, not a flat or rounded lower back."
+  },
+  {
+    "name": "Sumo Deadlift",
+    "description": "A wide-stance deadlift variation that reduces the range of motion and shifts emphasis toward the quadriceps and hip abductors.",
+    "category": "Strength",
+    "primaryMuscles": ["Glutes", "Hamstrings", "Quads"],
+    "secondaryMuscles": ["Back", "Traps"],
+    "equipment": "Barbell",
+    "difficulty": "Advanced",
+    "isCompound": true,
+    "instructions": [
+      "Set up with a very wide stance (feet near the collars), toes angled out significantly.",
+      "Grip the bar inside your legs with a shoulder-width grip.",
+      "Drop your hips lower than in conventional and make your torso more upright.",
+      "Drive your knees out over your toes throughout the lift.",
+      "Lock out by driving your hips forward while standing tall.",
+      "Foot width and toe angle are highly individual — experiment to find what allows deepest hip engagement."
+    ],
+    "researchNotes": "Sumo deadlift positions the torso more vertically, reducing lumbar flexion moment and shifting more load to the quadriceps and hip abductors. Lifters with longer femurs or limited hip mobility often find sumo more comfortable. Both conventional and sumo recruit similar total muscle mass but with different distribution."
+  },
+  {
+    "name": "Trap Bar Deadlift",
+    "description": "A deadlift variation using a hexagonal bar that positions the load at the lifter's center of gravity, reducing spinal stress compared to conventional deadlift.",
+    "category": "Strength",
+    "primaryMuscles": ["Quads", "Glutes", "Back"],
+    "secondaryMuscles": ["Hamstrings", "Traps"],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": true,
+    "instructions": [
+      "Stand inside the trap bar with feet hip-width apart.",
+      "Hinge down and grip the handles at your sides.",
+      "With the high handles (raised), the movement is more squat-like; low handles are more hip-hinge-like.",
+      "Drive through your feet to stand up, keeping the weight centered.",
+      "Lock out at the top with hips and knees fully extended.",
+      "Lower under control."
+    ],
+    "researchNotes": "The trap bar deadlift produces higher peak force, power, and velocity than a conventional barbell deadlift at equivalent loads (Camara et al., 2016), making it particularly useful for athletic power development. The neutral grip also reduces forearm/wrist stress. Excellent choice for beginners learning to hinge safely."
+  },
+  {
+    "name": "Barbell Curl",
+    "description": "The foundational biceps exercise using a barbell for maximum loading potential.",
+    "category": "Strength",
+    "primaryMuscles": ["Biceps"],
+    "secondaryMuscles": ["Forearms"],
+    "equipment": "Barbell",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Stand with the barbell in an underhand (supinated) grip, shoulder-width.",
+      "Start with arms fully extended, elbows at your sides.",
+      "Curl the bar toward your chin by flexing at the elbows.",
+      "At the top, supinate your wrists slightly to maximize bicep peak contraction.",
+      "Lower under control to full elbow extension — the full stretch is key for hypertrophy.",
+      "Avoid excessive trunk swinging — use momentum-free form for training purposes."
+    ],
+    "researchNotes": "Full elbow extension at the bottom (lengthened position) is critical for maximizing biceps hypertrophy. Research by Pedrosa et al. (2022) confirms that training muscles at long lengths produces superior size gains. EZ bar curls reduce wrist supination and may reduce bicep peak activation compared to straight bar."
+  },
+  {
+    "name": "Hammer Curl",
+    "description": "A neutral-grip curl variation that emphasizes the brachialis and brachioradialis, contributing to overall arm thickness.",
+    "category": "Strength",
+    "primaryMuscles": ["Biceps", "Forearms"],
+    "secondaryMuscles": [],
+    "equipment": "Dumbbell",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Hold dumbbells at your sides with a neutral grip (palms facing each other).",
+      "Curl one or both dumbbells toward your shoulder without rotating your wrist.",
+      "Keep the thumbs pointing up throughout the movement.",
+      "Lower under control to full elbow extension.",
+      "The neutral grip shifts emphasis from the biceps brachii to the brachialis, which lies beneath the bicep."
+    ],
+    "researchNotes": "The brachialis is a large elbow flexor that, when developed, pushes the bicep peak up and adds significant arm width. The hammer curl is one of the most effective exercises for brachialis and brachioradialis development. Including both supinated and neutral curl variations ensures complete arm development."
+  },
+  {
+    "name": "Tricep Pushdown",
+    "description": "A cable isolation exercise targeting all three heads of the triceps, particularly effective for the medial and lateral heads.",
+    "category": "Strength",
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": [],
+    "equipment": "Cable",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Attach a bar or rope to a high pulley.",
+      "Grip the attachment and keep your elbows at your sides (elbows tucked).",
+      "Push the attachment down until your elbows are fully extended.",
+      "Squeeze the triceps hard at the full extension position.",
+      "Allow the weight to rise slowly, keeping elbows at your sides.",
+      "Rope variant allows a more natural wrist position and additional pronation at lockout."
+    ],
+    "researchNotes": "The triceps account for approximately 60% of upper arm mass, making them critical for arm size. The long head is best targeted by overhead exercises (skull crushers, overhead extensions) that stretch it across the shoulder joint. Pushdowns effectively target the lateral and medial heads. For complete tricep development, include both overhead and non-overhead tricep exercises."
+  },
+  {
+    "name": "Skull Crusher",
+    "description": "A lying tricep extension exercise that heavily loads the long head of the triceps through a large range of motion.",
+    "category": "Strength",
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": [],
+    "equipment": "Barbell",
+    "difficulty": "Intermediate",
+    "isCompound": false,
+    "instructions": [
+      "Lie on a flat bench with an EZ bar or barbell extended overhead.",
+      "Lower the bar toward your forehead by hinging only at the elbows.",
+      "Your upper arms should remain perpendicular to the floor (do not let elbows flare).",
+      "Lower to a point where you feel a significant tricep stretch — often past the forehead to above the head.",
+      "Extend the elbows back to the start position.",
+      "Alternatively, lower to just above the forehead if range of motion is limited."
+    ],
+    "researchNotes": "The long head of the triceps crosses the shoulder joint, making it bi-articulate. Overhead positions (elbow above shoulder) place the long head at a lengthened position, increasing its activation and potential hypertrophic stimulus. Skull crushers in the overhead variation are particularly effective for long head development."
+  },
+  {
+    "name": "Plank",
+    "description": "An isometric core stability exercise that trains anti-extension. The foundation of most core training progressions.",
+    "category": "Strength",
+    "primaryMuscles": ["Core"],
+    "secondaryMuscles": ["Shoulders"],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Start in a push-up position, then drop to forearms with elbows under shoulders.",
+      "Maintain a straight line from head to heels — no hip pike or sag.",
+      "Brace your abdominals hard as if bracing for a punch.",
+      "Hold the position for the prescribed time.",
+      "Progress by increasing duration, adding weight on the back, or using an unstable surface.",
+      "For pain-free progressions, see McGill Big 3 for clinical populations."
+    ],
+    "researchNotes": "The plank trains the core in its primary function: preventing movement (anti-extension, anti-rotation). Per Stuart McGill's research, high-rep dynamic core exercises can increase lumbar load, while low-load isometric exercises like the plank are safer and more functionally transferable for most individuals."
+  },
+  {
+    "name": "Dead Bug",
+    "description": "A core stability exercise that trains anti-extension while maintaining a neutral spine, excellent for developing motor control and coordination.",
+    "category": "Strength",
+    "primaryMuscles": ["Core"],
+    "secondaryMuscles": [],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Lie on your back with arms pointing toward the ceiling and hips and knees at 90 degrees.",
+      "Press your lower back firmly into the floor and maintain this throughout the exercise.",
+      "Simultaneously lower one leg toward the floor and the opposite arm overhead.",
+      "Return to the starting position and repeat on the other side.",
+      "Move slowly and controlled — speed is the enemy of this exercise.",
+      "Breathe out as you extend the limbs, breathe in to reset."
+    ],
+    "researchNotes": "Dead bug is one of Dr. Stuart McGill's recommended core exercises for spine health. By requiring simultaneous limb movement while maintaining a neutral spine position, it trains the deep abdominal muscles and transverse abdominis without lumbar flexion. Ideal for rehabilitation and as a warm-up prior to heavy lifting."
+  },
+  {
+    "name": "Hanging Leg Raise",
+    "description": "A demanding core exercise that trains hip flexion while hanging from a bar, requiring significant grip strength and spinal control.",
+    "category": "Strength",
+    "primaryMuscles": ["Core"],
+    "secondaryMuscles": ["Forearms"],
+    "equipment": "Bodyweight",
+    "difficulty": "Advanced",
+    "isCompound": false,
+    "instructions": [
+      "Hang from a pull-up bar with an overhand grip.",
+      "Engage your core and avoid swinging.",
+      "Raise your legs by flexing at the hips and knees (beginners: bent knee) or straight legs (advanced).",
+      "Aim to bring your feet above hip height, ideally to bar level.",
+      "Lower under control — do not swing or use momentum.",
+      "For L-sit variation: hold the raised position for time."
+    ],
+    "researchNotes": "The hip flexors are not 'core' muscles in the traditional sense, but hanging leg raises train the lower abdominals through their role in posterior pelvic tilt during the movement. The high grip and shoulder demand makes this exercise a multi-joint movement. Strict form (no swinging) is essential for effective abdominal training versus hip flexor dominance."
+  },
+  {
+    "name": "Hip Flexor Stretch",
+    "description": "A static stretch targeting the iliopsoas and rectus femoris, addressing the anterior chain tightness common from sitting and aggressive training.",
+    "category": "Flexibility",
+    "primaryMuscles": ["Quads"],
+    "secondaryMuscles": ["Core"],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Kneel on one knee (the side being stretched) with the other foot flat on the floor in front.",
+      "Tuck your pelvis under (posterior pelvic tilt) to fully elongate the hip flexor.",
+      "Shift your weight forward until you feel a stretch in the front of the kneeling hip.",
+      "Hold for 30-60 seconds post-workout, or 10-15 seconds with movement pre-workout.",
+      "Advanced variation: reach overhead with the arm on the kneeling side for a greater oblique and QL stretch."
+    ],
+    "researchNotes": "Prescribe STATIC stretching post-workout only. Static stretching pre-workout acutely reduces force production (maximal strength) for 30-60 minutes per Behm & Chaouachi (2011). Dynamic hip flexor mobilization (lunging with movement) is safe and appropriate pre-workout without the force reduction penalty."
+  },
+  {
+    "name": "World's Greatest Stretch",
+    "description": "A dynamic mobility exercise that addresses thoracic rotation, hip flexor mobility, and hamstring flexibility in a single movement — one of the highest ROI mobility exercises.",
+    "category": "Flexibility",
+    "primaryMuscles": ["Quads", "Hamstrings", "Core"],
+    "secondaryMuscles": ["Shoulders", "Back"],
+    "equipment": "Bodyweight",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Start in a push-up position.",
+      "Step one foot forward beside the same-side hand (lunge position).",
+      "Place the hand on the same side as the forward foot flat on the floor inside the foot.",
+      "Rotate your torso and reach that hand toward the ceiling.",
+      "Hold for 2-3 seconds, return to floor, then step back.",
+      "Alternate sides for 5-10 reps per side.",
+      "This is ideal as a dynamic warm-up movement."
+    ],
+    "researchNotes": "Appropriate for pre-workout warm-up as it uses dynamic movement rather than static stretching. Addresses multiple common mobility restrictions simultaneously (hip flexors, thoracic rotation, shoulder mobility). Used extensively in clinical settings for movement screening and rehabilitation."
+  },
+  {
+    "name": "Band Pull-Apart",
+    "description": "A scapular stability and rear deltoid exercise using a resistance band, excellent as a warm-up and shoulder health exercise.",
+    "category": "Warmup",
+    "primaryMuscles": ["Shoulders", "Traps"],
+    "secondaryMuscles": ["Back"],
+    "equipment": "Bands",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "Hold a light resistance band at shoulder height with both hands, arms extended.",
+      "Pull the band apart by moving your hands outward, squeezing your shoulder blades together.",
+      "Maintain straight arms throughout (slight bend acceptable for beginners).",
+      "Control the return to the starting position.",
+      "Perform 2-3 sets of 15-25 reps as part of the upper body warm-up."
+    ],
+    "researchNotes": "Band pull-aparts activate the posterior deltoid, rhomboids, and middle trapezius — the muscles responsible for scapular retraction and external rotation. High frequency (multiple times per day) is appropriate for shoulder health and posture correction. Include in every upper body training day as a warm-up."
+  },
+  {
+    "name": "Treadmill",
+    "description": "Cardiovascular exercise on a motorized belt. Can be used for steady-state cardio, walking, jogging, or interval training.",
+    "category": "Cardio",
+    "primaryMuscles": ["FullBody"],
+    "secondaryMuscles": [],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": false,
+    "instructions": [
+      "For steady-state cardio: maintain a pace where you can hold a conversation (Zone 2).",
+      "For HIIT: alternate between high-intensity (sprint or steep incline) and recovery periods.",
+      "Use incline walking (15% incline, 3-4 mph) as a low-impact, high-calorie alternative to jogging.",
+      "Maintain upright posture — do not hold the handrails (reduces caloric expenditure and natural gait).",
+      "Monitor heart rate to stay in the appropriate training zone."
+    ],
+    "researchNotes": "Zone 2 cardio (55-70% max heart rate) has significant evidence for improving mitochondrial density and metabolic health without interfering with strength and hypertrophy adaptations when performed appropriately. High-intensity cardio can compromise strength gains if volume is excessive — manage total fatigue carefully when combining with resistance training."
+  },
+  {
+    "name": "Rowing Machine",
+    "description": "A full-body cardiovascular exercise that combines pushing and pulling movements, offering high caloric expenditure with low impact.",
+    "category": "Cardio",
+    "primaryMuscles": ["Back", "FullBody"],
+    "secondaryMuscles": ["Quads", "Hamstrings", "Shoulders"],
+    "equipment": "Machine",
+    "difficulty": "Beginner",
+    "isCompound": true,
+    "instructions": [
+      "Sit with feet strapped in, grip the handle with a shoulder-width grip.",
+      "The rowing stroke has four phases: catch (compression), drive (push legs), swing (hinge back), pull (arms).",
+      "At the catch: shins vertical, arms extended, slight forward hinge.",
+      "Drive through the legs first, then hinge back, then pull the handle to lower ribs.",
+      "Return by extending arms, swinging forward, then bending knees.",
+      "Maintain a consistent rhythm — beginners aim for 24-26 strokes per minute."
+    ],
+    "researchNotes": "Rowing engages approximately 86% of major muscle groups, making it one of the most energy-efficient forms of cardio. The non-impact nature makes it suitable for trainees with knee or joint issues. Technique is critical — poor form (primarily lumbar flexion during the drive) can cause back pain."
+  }
+]

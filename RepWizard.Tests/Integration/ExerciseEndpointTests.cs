@@ -39,8 +39,9 @@ public class ExerciseEndpointTests : IntegrationTestBase
         body.Should().NotBeNull();
         body!.Success.Should().BeTrue();
         body.Data.Should().NotBeEmpty();
+        // Search matches name OR description (see ExerciseRepository.SearchAsync)
         body.Data!.Should().AllSatisfy(e =>
-            e.Name.Should().ContainEquivalentOf("bench"));
+            (e.Name + " " + e.Description).Should().ContainEquivalentOf("bench"));
     }
 
     [Fact]

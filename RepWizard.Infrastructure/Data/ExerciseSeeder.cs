@@ -6,21 +6,32 @@ using RepWizard.Core.Enums;
 namespace RepWizard.Infrastructure.Data;
 
 /// <summary>
-/// Seeds the exercise library from the JSON seed file.
-/// Run on API startup if the exercise table is empty.
-/// Seed data is defined in RepWizard.Api/Data/Seeds/exercises.json.
+/// Seeds the exercise library from the embedded JSON resource.
+/// Called on both API and MAUI startup if the exercise table is empty.
 /// </summary>
 public static class ExerciseSeeder
 {
-    public static async Task SeedExercisesAsync(AppDbContext context, string seedFilePath)
+    public static async Task SeedExercisesAsync(AppDbContext context, string? seedFilePath = null)
     {
         if (await context.Exercises.AnyAsync())
             return; // Already seeded
 
-        if (!File.Exists(seedFilePath))
-            throw new FileNotFoundException($"Exercise seed file not found: {seedFilePath}");
+        string json;
+        if (seedFilePath != null && File.Exists(seedFilePath))
+        {
+            json = await File.ReadAllTextAsync(seedFilePath);
+        }
+        else
+        {
+            // Read from embedded resource
+            var assembly = typeof(ExerciseSeeder).Assembly;
+            var resourceName = "RepWizard.Infrastructure.Data.exercises.json";
+            using var stream = assembly.GetManifestResourceStream(resourceName)
+                ?? throw new FileNotFoundException($"Embedded resource not found: {resourceName}");
+            using var reader = new StreamReader(stream);
+            json = await reader.ReadToEndAsync();
+        }
 
-        var json = await File.ReadAllTextAsync(seedFilePath);
         var seedData = JsonSerializer.Deserialize<List<ExerciseSeedModel>>(json,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
