@@ -13,7 +13,7 @@
         <!-- Search Bar -->
         <Border Grid.Row="0"
                 Margin="16,12"
-                BackgroundColor="{StaticResource SurfaceVariant}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                 StrokeShape="RoundRectangle 16"
                 StrokeThickness="0"
                 Padding="4,0">
@@ -49,7 +49,7 @@
                     <DataTemplate x:DataType="x:String">
                         <Border Padding="12,6"
                                 StrokeShape="RoundRectangle 14"
-                                BackgroundColor="{StaticResource SurfaceVariant}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                                 StrokeThickness="0">
                             <Label Text="{Binding .}" FontSize="13" />
                         </Border>
@@ -67,7 +67,7 @@
                 <DataTemplate x:DataType="dto:ExerciseDto">
                     <Border Margin="16,4"
                             Padding="16,12"
-                            BackgroundColor="{StaticResource SurfaceVariant}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                             StrokeShape="RoundRectangle 12"
                             StrokeThickness="0">
                         <Border.GestureRecognizers>

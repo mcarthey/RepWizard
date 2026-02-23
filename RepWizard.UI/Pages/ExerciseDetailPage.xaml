@@ -26,13 +26,13 @@
                     </Border>
                     <Border Padding="8,4"
                             StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{StaticResource SurfaceVariant}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                             StrokeThickness="0">
                         <Label Text="{Binding Exercise.Equipment}" FontSize="13" />
                     </Border>
                     <Border Padding="8,4"
                             StrokeShape="RoundRectangle 10"
-                            BackgroundColor="{StaticResource SurfaceVariant}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                             StrokeThickness="0">
                         <Label Text="{Binding Exercise.Difficulty}" FontSize="13" />
                     </Border>
@@ -40,7 +40,7 @@
             </VerticalStackLayout>
 
             <!-- Description -->
-            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                     StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     Padding="16">
@@ -53,7 +53,7 @@
             </Border>
 
             <!-- Muscles -->
-            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                     StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     Padding="16">
@@ -70,7 +70,7 @@
             </Border>
 
             <!-- Instructions -->
-            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                     StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     Padding="16">
@@ -83,7 +83,7 @@
             </Border>
 
             <!-- Research Notes -->
-            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                     StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     Padding="16">

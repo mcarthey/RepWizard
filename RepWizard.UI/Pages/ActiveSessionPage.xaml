@@ -15,7 +15,7 @@
                    Style="{StaticResource HeadingLabel}"
                    VerticalOptions="Center" />
             <Border Grid.Column="1"
-                    BackgroundColor="{StaticResource SurfaceVariant}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                     StrokeShape="RoundRectangle 12"
                     StrokeThickness="0"
                     Padding="12,6">
@@ -31,7 +31,7 @@
             <VerticalStackLayout Spacing="16">
 
                 <!-- Exercise Picker -->
-                <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                         StrokeShape="RoundRectangle 12"
                         StrokeThickness="0"
                         Padding="12">
@@ -43,7 +43,7 @@
                 </Border>
 
                 <!-- Set Input Form -->
-                <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                         StrokeShape="RoundRectangle 16"
                         StrokeThickness="0"
                         Padding="16">
@@ -133,7 +133,7 @@
                 <CollectionView ItemsSource="{Binding LoggedSets}">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:LoggedSetDisplayItem">
-                            <Border BackgroundColor="{StaticResource SurfaceVariant}"
+                            <Border BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                                     StrokeShape="RoundRectangle 10"
                                     StrokeThickness="0"
                                     Padding="12,8"
@@ -189,7 +189,7 @@
                     <Editor Text="{Binding SessionNotes}"
                             Placeholder="How did the session feel?"
                             HeightRequest="80"
-                            BackgroundColor="{StaticResource SurfaceVariant}" />
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}" />
                 </VerticalStackLayout>
 
                 <!-- Spacer for bottom button -->
@@ -227,7 +227,7 @@
                 <Border StrokeShape="RoundRectangle 999"
                         Stroke="{StaticResource Primary}"
                         StrokeThickness="4"
-                        BackgroundColor="{StaticResource SurfaceVariant}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                         WidthRequest="160"
                         HeightRequest="160"
                         HorizontalOptions="Center">
@@ -245,7 +245,7 @@
                         HeightRequest="44"
                         MinimumWidthRequest="120"
                         FontAttributes="Bold"
-                        BackgroundColor="{StaticResource SurfaceVariant}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
                         TextColor="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
             </VerticalStackLayout>
         </Border>

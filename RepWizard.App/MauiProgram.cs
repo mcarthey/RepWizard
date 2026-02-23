@@ -1,3 +1,4 @@
+using System.Reflection;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
@@ -37,11 +38,14 @@ public static class MauiProgram
             cfg.RegisterServicesFromAssembly(typeof(Application.DependencyInjection).Assembly));
 
         // HttpClient factory with Polly resilience (retry + circuit breaker)
-        // Android emulator uses 10.0.2.2 to reach host machine's localhost
+        // Priority: build-time -p:ApiBaseUrl > emulator 10.0.2.2 > localhost
+        var metadata = typeof(MauiProgram).Assembly
+            .GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>()
+            .FirstOrDefault(a => a.Key == "ApiBaseUrl");
         var defaultUrl = DeviceInfo.Platform == DevicePlatform.Android
             ? "https://10.0.2.2:7001"
             : "https://localhost:7001";
-        var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? defaultUrl;
+        var apiBaseUrl = metadata?.Value ?? defaultUrl;
         builder.Services.AddHttpClient("RepWizardApi", client =>
         {
             client.BaseAddress = new Uri(apiBaseUrl);

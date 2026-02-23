@@ -11,7 +11,7 @@
              x:Class="RepWizard.UI.Controls.MetricChipView">
 
     <Border StrokeShape="RoundRectangle 16"
-            BackgroundColor="{StaticResource SurfaceVariant}"
+            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
             Padding="12,10"
             StrokeThickness="0">
         <HorizontalStackLayout Spacing="8" VerticalOptions="Center">

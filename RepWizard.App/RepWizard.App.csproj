@@ -17,7 +17,16 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <!-- Pass -p:ApiBaseUrl=https://xxx.ngrok-free.dev to override the API endpoint -->
+    <ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''"></ApiBaseUrl>
   </PropertyGroup>
+  <!-- Inject ApiBaseUrl as assembly metadata when provided -->
+  <ItemGroup Condition="'$(ApiBaseUrl)' != ''">
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ApiBaseUrl</_Parameter1>
+      <_Parameter2>$(ApiBaseUrl)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
   <ItemGroup>
     <!-- App icon: emblem foreground on cyan background -->
     <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#00C8E8" />
