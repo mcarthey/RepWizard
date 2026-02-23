@@ -21,7 +21,8 @@ public static class AiEndpoints
     {
         var group = app.MapGroup("/api/v1/ai")
             .WithTags("AI Coach")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("ai");
 
         // POST /api/v1/ai/chat — SSE streaming chat
         group.MapPost("/chat", async (

@@ -12,7 +12,8 @@ public static class MeasurementEndpoints
     {
         var group = app.MapGroup("/api/v1/measurements")
             .WithTags("Measurements")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("fixed");
 
         // POST /api/v1/measurements — log a body measurement
         group.MapPost("/", async (

@@ -1,5 +1,7 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RepWizard.Api.Endpoints;
@@ -54,6 +56,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+// Rate limiting — built into ASP.NET Core 9, no NuGet needed
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // General API endpoints: 60 requests per minute
+    options.AddFixedWindowLimiter("fixed", cfg =>
+    {
+        cfg.PermitLimit = 60;
+        cfg.Window = TimeSpan.FromMinutes(1);
+        cfg.QueueLimit = 0;
+    });
+
+    // AI endpoints: 10 requests per minute (expensive LLM calls)
+    options.AddFixedWindowLimiter("ai", cfg =>
+    {
+        cfg.PermitLimit = 10;
+        cfg.Window = TimeSpan.FromMinutes(1);
+        cfg.QueueLimit = 0;
+    });
+
+    // Auth endpoints: 5 requests per minute (brute-force protection)
+    options.AddFixedWindowLimiter("auth", cfg =>
+    {
+        cfg.PermitLimit = 5;
+        cfg.Window = TimeSpan.FromMinutes(1);
+        cfg.QueueLimit = 0;
+    });
+});
+
 // CORS for development
 builder.Services.AddCors(options =>
 {
@@ -93,6 +125,7 @@ app.UseMiddleware<RepWizard.Api.Middleware.GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

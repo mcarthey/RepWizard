@@ -20,7 +20,8 @@ public static class SyncEndpoints
     {
         var group = app.MapGroup("/api/v1/sync")
             .WithTags("Sync")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("fixed");
 
         // POST /api/v1/sync/push — client pushes local changes to server
         group.MapPost("/push", async (

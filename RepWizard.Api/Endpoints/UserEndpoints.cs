@@ -11,7 +11,8 @@ public static class UserEndpoints
     {
         var group = app.MapGroup("/api/v1/users")
             .WithTags("Users")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireRateLimiting("fixed");
 
         // GET /api/v1/users/{id}
         group.MapGet("/{id:guid}", async (
