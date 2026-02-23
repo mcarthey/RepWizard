@@ -492,12 +492,13 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 - [ ] Adaptive layouts for tablet and desktop (Windows/macOS) — requires design specs
 - [ ] Notification service — rest timer alerts, scheduled workout reminders — requires platform-specific implementation
 - [ ] App store packaging (Android APK/AAB, iOS IPA) — release phase
-- [ ] Wire generated AI program into Today tab (scheduled session display)
-- [ ] EF Core migrations (currently using `EnsureCreated` — adequate for dev, not for production)
-- [ ] Rate limiting on API endpoints
+- [x] Wire generated AI program into Today tab (scheduled session display)
+- [x] EF Core migrations — InitialCreate + AddInputConstraints, provider-aware initialization
+- [x] Rate limiting on API endpoints — 3 policies (auth: 5/min, ai: 10/min, fixed: 60/min)
 - [ ] Contract testing between MAUI client and API
-- [ ] Input validation at database level (column constraints beyond EF defaults)
-- [ ] `CHANGELOG.md` — not yet created
+- [x] Input validation at database level — MaxLength on 12 string fields, 13 SQL Server check constraints
+- [x] `CHANGELOG.md` — created and maintained through all phases
+- [x] Theme alignment — SVG tab/metric icons, app icon from logo, color palette verified
 - [ ] SkiaSharp hero progress arc on TodayPage (spec calls for gradient stroke + glow)
 - [ ] Motion system — breathing scale animation, morph transitions, celebration sequences (Section 13.7–13.8)
 
@@ -513,7 +514,7 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 
 ## Cross-Cutting / Ongoing
 
-- [ ] Keep `CHANGELOG.md` updated at every phase gate
+- [x] Keep `CHANGELOG.md` updated at every phase gate
 - [x] Keep `TASKS.md` (this file) updated as tasks are completed
 - [x] Run full test suite before marking any phase complete
 - [x] Apply anti-pattern checklist (`IMPLEMENTATION.md` Section 11) at every phase gate
