@@ -220,5 +220,183 @@ All notable changes to this project are documented here.
 
 ---
 
-*Phase 4 — AI Coach* is the next phase gate.
-*Prerequisites: Anthropic .NET SDK, streaming SSE endpoint, AiContextBuilder, ProgramValidator.*
+## Phase 3 Gaps — Completed (2026-02-20)
+
+### Added
+- **ActiveSessionPage XAML** — full workout logging UI: exercise picker, set input form (weight/reps/RPE/RIR/SetType), logged sets list, rest timer overlay with countdown, elapsed time, session notes, complete session button
+- **ActiveSessionViewModel** extensions — form state management, exercise loading via `GetExercisesQuery`, `LogSetFromFormCommand`, progressive overload default pre-fill, `IQueryAttributable` for Shell navigation params, elapsed time timer
+- **TodayViewModel wired to real data** — injected `IMediator`; `LoadAsync` queries `GetSessionHistoryQuery` + `GetActiveSessionQuery`; calculates `WorkoutsThisWeek`, `WeeklyProgressPercent`, `MinutesTrainedThisWeek`, `TotalVolumeThisWeek`, `CurrentStreakDays`; `StartWorkoutAsync` sends `StartWorkoutSessionCommand` and navigates with session ID
+- **ExerciseLibraryPage** — searchable exercise list with category filter chips, paginated CollectionView, tap-to-detail navigation
+- **ExerciseLibraryViewModel** — search, category filter, paginated loading via `GetExercisesQuery`, `LoadMoreCommand`
+- **ExerciseDetailPage** — full exercise detail view (name, category, equipment, difficulty, description, muscles, instructions, research notes)
+- **ExerciseDetailViewModel** — `IQueryAttributable` for exercise ID, loads via `GetExerciseByIdQuery`
+- `GetActiveSessionQuery` — new CQRS query + handler for checking active sessions
+- `InverseBoolConverter` — added to converters, registered in App.xaml
+
+**Post-gap test count: 146 (no regressions)**
+
+---
+
+## Phase 4 — AI Coach (2026-02-20)
+
+### Added
+
+#### AI Services
+- `IAiChatService` interface in Core + `AnthropicChatService` implementation in Infrastructure (HttpClient-based, SSE streaming)
+- `AiContextBuilder` service — builds structured user context (profile, recent workouts, volume landmarks, fatigue indicators)
+- `ProgramValidator` — enforces science-based constraints: MRV limits per muscle group, deload week requirement, CNS load rules, recovery windows, beginner constraints
+
+#### CQRS Commands & Queries
+- `SaveAiMessageCommand` + handler + validator — persists `AiMessage` entities, creates conversations on first message
+- `GetConversationQuery` + handler — loads conversation with messages
+- `GetConversationsQuery` + handler — lists user's conversations
+- `GetTrainingProgramsQuery` + handler — lists user's training programs
+- `GetTrainingProgramByIdQuery` + handler — loads program with weeks and days
+
+#### AI & Program DTOs
+- `AiConversationDto`, `AiConversationDetailDto`, `AiMessageDto`, `SendChatRequest`, `GenerateProgramRequest`
+- `TrainingProgramDto`, `TrainingProgramDetailDto`, `ProgramWeekDto`, `ProgramDayDto`
+
+#### API Endpoints
+- `POST /api/v1/ai/chat` — SSE streaming endpoint with context injection
+- `GET /api/v1/ai/conversations` — list user conversations
+- `GET /api/v1/ai/conversations/{id}` — get conversation with messages
+- `POST /api/v1/ai/generate-program` — program generation endpoint
+
+#### Infrastructure
+- `IAiConversationRepository` + `AiConversationRepository` — conversation persistence with eager-loaded messages
+- `ITrainingProgramRepository` + `TrainingProgramRepository` — program persistence with nested weeks/days
+
+#### MAUI ViewModels & Pages
+- `CoachViewModel` — SSE streaming chat UI with message bubbles, cancel support, conversation persistence
+- `CoachPage` — chat interface with message list, input field, streaming indicator
+- `ProgramsViewModel` — program list with cards, active badge, metadata chips
+- `ProgramsPage` — program list UI with navigation to detail
+- `ProgramDetailViewModel` — week-by-week view with AI reasoning section
+- `ProgramDetailPage` — nested week/day display
+- `BoolToAlignmentConverter` for chat bubble positioning
+
+#### Tests
+- `AiContextBuilderTests` (6 tests) — mock user/session data, context building
+- `ProgramValidatorTests` (12 tests) — every science constraint rule
+
+**Phase 4 total test count: 164 (146 + 18 new)**
+
+---
+
+## Phase 5 — Auth, Sync & Polish (2026-02-21)
+
+### Added
+
+#### Authentication
+- JWT authentication with PBKDF2 password hashing (`JwtAuthService`)
+- `POST /api/v1/auth/register` — register new user, returns JWT + refresh token
+- `POST /api/v1/auth/login` — authenticate, returns JWT + refresh token
+- `POST /api/v1/auth/refresh` — refresh expired access token
+- `RegisterCommand` + handler + validator (name, email, password validation)
+- `LoginCommand` + handler + validator
+- `RefreshTokenCommand` + handler + validator
+- User entity extended with `PasswordHash`, `RefreshToken`, `RefreshTokenExpiresAt`
+- JWT middleware configured in API (`UseAuthentication`, `UseAuthorization`)
+- JWT settings externalized to `appsettings.json`
+
+#### Profile Management
+- `GET /api/v1/users/{id}` — get user profile
+- `PUT /api/v1/users/{id}` — update user profile
+- `GetUserProfileQuery` + handler
+- `UpdateProfileCommand` + handler + validator (height/weight range validation)
+- `SettingsPage` — full profile management UI (edit toggle, fitness goal, experience level, sync status)
+- `SettingsViewModel` — profile load/save via MediatR, sync trigger
+
+#### Sync Service
+- Full `SyncService` implementation with real HTTP push/pull via `IHttpClientFactory`
+- `POST /api/v1/sync/push` API endpoint — processes client changes, detects conflicts
+- `GET /api/v1/sync/pull` API endpoint — returns server changes since timestamp
+- Conflict detection: server-wins resolution with local copy preserved
+- `ConflictLog` entity + persistence (EntityType, EntityId, LocalJson, ServerJson, Resolution)
+- Fallback to local-only sync when API is unreachable
+- Polly resilience policies on `HttpClient` (retry + circuit breaker via `Microsoft.Extensions.Http.Resilience`)
+
+#### Tests
+- `RegisterCommandHandlerTests` (3 tests)
+- `LoginCommandHandlerTests` (3 tests)
+- `RegisterCommandValidatorTests` (5 tests)
+- `UpdateProfileCommandHandlerTests` (3 tests)
+- `JwtAuthServiceTests` (8 tests — password hashing, token generation, validation)
+- `AuthEndpointTests` — API integration tests via `WebApplicationFactory` (4 tests)
+
+**Phase 5 total test count: 190 (164 + 26 new)**
+
+---
+
+## Hardening Pass (2026-02-21)
+
+### Fixed
+
+#### Security
+- Removed JWT secret from `appsettings.json` (was committed to source control)
+- Moved JWT secret to `appsettings.Development.json` (git-ignored in production)
+- Fail-fast in `Program.cs` and `JwtAuthService` if `Jwt:Secret` is not configured
+- Moved hardcoded API base URL to `IConfiguration` in `MauiProgram.cs`
+
+#### Code Quality
+- Fixed CS0618: replaced deprecated `MainPage` setter with `CreateWindow` pattern in `App.xaml.cs`
+- Fixed CS8602: null-forgiving operators on test assertions
+- Added `OperationCanceledException` catch before generic `Exception` in `SyncService.SyncAsync`
+- 0 compiler warnings across all buildable targets
+
+### Added
+
+#### Observability
+- `GlobalExceptionMiddleware` — catches unhandled exceptions, returns `supportId` for incident triage
+- `CorrelationIdMiddleware` — propagates `X-Correlation-Id` header, adds to structured log scope
+
+#### Test Infrastructure
+- Extracted `IntegrationTestBase` — shared `WebApplicationFactory` + SQLite in-memory setup
+- Refactored `AuthEndpointTests` to inherit from `IntegrationTestBase`
+
+#### Performance
+- Added `.AsNoTracking()` to all read-only repository queries (6 repositories, 15 methods)
+
+**Post-hardening: 190 tests, 0 warnings**
+
+---
+
+## Test Gap Closure (2026-02-21)
+
+### Added
+- Auth integration tests (+5): duplicate email, login flow, refresh flow, invalid refresh, missing password, protected endpoint without token
+- Exercise endpoint integration tests (+5): paginated list, search filter, category filter, get by ID, not found
+- Workout endpoint integration tests (+8): start session, empty userId, get session, not found, log set, invalid reps, complete session, session history pagination
+- Measurement endpoint integration tests (+5): log, no metrics, history list, limit, progress chart
+- Middleware integration tests (+5): correlation ID generation/echo, multiple requests get different IDs, exception returns 500 with supportId, correlation ID survives exception path
+- Sync service unit tests (+8): pending changes detection, push flow, skip when nothing pending, conflict handling, API unreachable fallback, cancellation, unexpected exception
+
+### Fixed
+- **BUG-1**: No endpoints enforced auth — added `.RequireAuthorization()` to Users, Workouts, Measurements, AI, Sync endpoint groups
+- **BUG-2**: `AsNoTracking` + client-generated Guids caused silent write failures — added `MarkAsNew()` on `BaseEntity` to reset Id for EF Core sentinel check
+- **BUG-3**: Circular reference in SyncService serialization — added `ReferenceHandler.IgnoreCycles`
+
+**Post-closure: 227 tests (190 + 37 new)**
+
+---
+
+## Code Quality Pass (2026-02-22)
+
+### Changed
+- Replaced magic strings in sync layer with `SyncConstants.SyncEntityTypes` and `SyncConstants.SyncActions` (shared constants class)
+- Extracted duplicated SSE parsing to `SseParser.TryParseDataLine()` shared helper
+- Added `ILogger` to `JwtAuthService`, `AnthropicChatService` — replaced silent catches with typed exception catches + logging
+- `CoachViewModel` catch blocks now log via `Debug.WriteLine`
+- `GlobalExceptionMiddleware` now environment-aware — Development returns actual exception details, Production returns generic message
+
+**Post-quality pass: 227 tests, 0 warnings**
+
+---
+
+## Dev Tooling (2026-02-22)
+
+### Added
+- `RepWizard.Dev.slnf` — development solution filter (includes UI, excludes App host for Windows builds)
+- `RepWizard.CI.slnf` — CI solution filter (excludes all MAUI projects)
+- `.vscode/tasks.json` — Build, Test, Build Android, MAUI emulator tasks, Run API, compound tasks
