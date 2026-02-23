@@ -63,12 +63,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Ensure database is created on startup in development
+// Apply pending migrations on startup in development
+// Note: if migrating from EnsureCreated, drop the existing LocalDB first:
+//   dotnet ef database drop --project RepWizard.Infrastructure --startup-project RepWizard.Api
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    if (db.Database.IsSqlServer())
+        db.Database.Migrate();
+    else
+        db.Database.EnsureCreated();
 }
 
 // OpenAPI / Scalar docs
