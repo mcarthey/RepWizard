@@ -66,7 +66,15 @@ public class AiContextBuilder
             Age = user.DateOfBirth.HasValue
                 ? (int)((DateTime.UtcNow - user.DateOfBirth.Value).TotalDays / 365.25)
                 : null,
-            LatestWeightKg = user.WeightKg
+            LatestWeightKg = user.WeightKg,
+            LongTermGoal = user.LongTermGoalText,
+            LongTermGoalMonths = user.LongTermGoalMonths,
+            ShortTermFocus = user.ShortTermFocusText,
+            ShortTermFocusWeeks = user.ShortTermFocusWeeks,
+            AvailableDaysPerWeek = user.AvailableDaysPerWeek,
+            SessionLengthMinutes = user.SessionLengthMinutes,
+            AvailableEquipment = user.AvailableEquipment,
+            MovementLimitations = user.MovementLimitations
         };
     }
 
@@ -198,6 +206,14 @@ public class AiContextBuilder
         public string? Experience { get; set; }
         public int? Age { get; set; }
         public decimal? LatestWeightKg { get; set; }
+        public string? LongTermGoal { get; set; }
+        public int? LongTermGoalMonths { get; set; }
+        public string? ShortTermFocus { get; set; }
+        public int? ShortTermFocusWeeks { get; set; }
+        public int? AvailableDaysPerWeek { get; set; }
+        public int? SessionLengthMinutes { get; set; }
+        public string? AvailableEquipment { get; set; }
+        public string? MovementLimitations { get; set; }
     }
 
     internal class WorkoutSummary

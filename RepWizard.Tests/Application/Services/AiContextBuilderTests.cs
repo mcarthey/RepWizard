@@ -269,4 +269,43 @@ public class AiContextBuilderTests
         indicators.AverageRpeLast7Days.Should().BeGreaterThan(0);
         indicators.AverageRpeLast7Days.Should().BeLessThanOrEqualTo(10);
     }
+
+    [Fact]
+    public async Task BuildContextAsync_WithGoalFields_IncludesGoalsInContext()
+    {
+        var userId = Guid.NewGuid();
+        var user = BuildUser();
+        user.Id = userId;
+        user.LongTermGoalText = "Build muscle mass";
+        user.LongTermGoalMonths = 6;
+        user.ShortTermFocusText = "Increase squat 1RM";
+        user.ShortTermFocusWeeks = 8;
+        user.AvailableDaysPerWeek = 4;
+        user.SessionLengthMinutes = 60;
+        user.AvailableEquipment = "Full gym";
+        user.MovementLimitations = "Left shoulder impingement";
+
+        _userRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _sessionRepo.Setup(r => r.GetRecentSessionsAsync(userId, 14, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<WorkoutSession>().AsReadOnly());
+        _measurementRepo.Setup(r => r.GetLatestForUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BodyMeasurement?)null);
+        _programRepo.Setup(r => r.GetActiveForUserAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrainingProgram?)null);
+
+        var json = await _builder.BuildContextAsync(userId);
+
+        using var doc = JsonDocument.Parse(json);
+        var userCtx = doc.RootElement.GetProperty("user");
+
+        userCtx.GetProperty("longTermGoal").GetString().Should().Be("Build muscle mass");
+        userCtx.GetProperty("longTermGoalMonths").GetInt32().Should().Be(6);
+        userCtx.GetProperty("shortTermFocus").GetString().Should().Be("Increase squat 1RM");
+        userCtx.GetProperty("shortTermFocusWeeks").GetInt32().Should().Be(8);
+        userCtx.GetProperty("availableDaysPerWeek").GetInt32().Should().Be(4);
+        userCtx.GetProperty("sessionLengthMinutes").GetInt32().Should().Be(60);
+        userCtx.GetProperty("availableEquipment").GetString().Should().Be("Full gym");
+        userCtx.GetProperty("movementLimitations").GetString().Should().Be("Left shoulder impingement");
+    }
 }

@@ -12,4 +12,12 @@ public record UpdateProfileCommand(
     decimal? WeightKg,
     string? FitnessGoal,
     string? ExperienceLevel,
-    string? MedicalNotes) : IRequest<Result<UserDto>>;
+    string? MedicalNotes,
+    string? LongTermGoalText = null,
+    int? LongTermGoalMonths = null,
+    string? ShortTermFocusText = null,
+    int? ShortTermFocusWeeks = null,
+    int? AvailableDaysPerWeek = null,
+    int? SessionLengthMinutes = null,
+    string? AvailableEquipment = null,
+    string? MovementLimitations = null) : IRequest<Result<UserDto>>;

@@ -2,11 +2,11 @@ using RepWizard.UI.ViewModels;
 
 namespace RepWizard.UI.Pages;
 
-public partial class CoachPage : ContentPage
+public partial class AiChatPage : ContentPage
 {
-    private readonly CoachViewModel _viewModel;
+    private readonly AiChatViewModel _viewModel;
 
-    public CoachPage(CoachViewModel viewModel)
+    public AiChatPage(AiChatViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;

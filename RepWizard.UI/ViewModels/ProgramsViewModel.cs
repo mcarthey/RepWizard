@@ -9,7 +9,7 @@ namespace RepWizard.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for the Programs page -- displays all training programs for the user.
-/// Loads programs via GetTrainingProgramsQuery and supports navigation to detail and coach.
+/// Loads programs via GetTrainingProgramsQuery and supports navigation to detail and AI chat.
 /// </summary>
 public partial class ProgramsViewModel : BaseViewModel
 {
@@ -51,12 +51,9 @@ public partial class ProgramsViewModel : BaseViewModel
         await _navigation.NavigateToAsync($"program-detail?programId={program.Id}");
     }
 
-    /// <summary>
-    /// Navigate to the Coach tab to generate a new program via AI chat.
-    /// </summary>
     [RelayCommand]
-    private async Task NavigateToCoachAsync(CancellationToken ct)
+    private async Task NavigateToAiChatAsync(CancellationToken ct)
     {
-        await _navigation.NavigateBackAsync();
+        await _navigation.NavigateToAsync("ai-chat?source=programs");
     }
 }

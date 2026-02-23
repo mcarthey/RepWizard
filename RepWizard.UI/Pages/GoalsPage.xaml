@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             x:Class="RepWizard.UI.Pages.GoalsPage"
+             x:DataType="vm:GoalsViewModel"
+             Title="Training Goals"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+
+            <!-- Long-Term Goal -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="LONG-TERM GOAL"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       Opacity="0.6" />
+                <Border Style="{StaticResource TonalSurface}" Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Entry Text="{Binding LongTermGoalText}"
+                               Placeholder="e.g., Build muscle mass"
+                               FontSize="15" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry Grid.Column="0"
+                                   Text="{Binding LongTermGoalMonthsText}"
+                                   Placeholder="Timeline"
+                                   Keyboard="Numeric"
+                                   FontSize="15" />
+                            <Label Grid.Column="1"
+                                   Text="months"
+                                   FontSize="14"
+                                   Opacity="0.6"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Short-Term Focus -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="SHORT-TERM FOCUS"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       Opacity="0.6" />
+                <Border Style="{StaticResource TonalSurface}" Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Entry Text="{Binding ShortTermFocusText}"
+                               Placeholder="e.g., Increase squat 1RM by 20lb"
+                               FontSize="15" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry Grid.Column="0"
+                                   Text="{Binding ShortTermFocusWeeksText}"
+                                   Placeholder="Timeline"
+                                   Keyboard="Numeric"
+                                   FontSize="15" />
+                            <Label Grid.Column="1"
+                                   Text="weeks"
+                                   FontSize="14"
+                                   Opacity="0.6"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Training Schedule -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="TRAINING SCHEDULE"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       Opacity="0.6" />
+                <Border Style="{StaticResource TonalSurface}" Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                        <VerticalStackLayout Grid.Column="0" Grid.Row="0" Spacing="4">
+                            <Label Text="Days per week"
+                                   FontSize="12"
+                                   Opacity="0.6" />
+                            <Entry Text="{Binding AvailableDaysPerWeekText}"
+                                   Keyboard="Numeric"
+                                   Placeholder="4"
+                                   FontSize="15" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Grid.Row="0" Spacing="4">
+                            <Label Text="Session length"
+                                   FontSize="12"
+                                   Opacity="0.6" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                                <Entry Grid.Column="0"
+                                       Text="{Binding SessionLengthMinutesText}"
+                                       Keyboard="Numeric"
+                                       Placeholder="60"
+                                       FontSize="15" />
+                                <Label Grid.Column="1"
+                                       Text="min"
+                                       FontSize="13"
+                                       Opacity="0.6"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Equipment & Limitations -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="CONSTRAINTS"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       Opacity="0.6" />
+                <Border Style="{StaticResource TonalSurface}" Padding="12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Available Equipment"
+                                   FontSize="12"
+                                   Opacity="0.6" />
+                            <Entry Text="{Binding AvailableEquipment}"
+                                   Placeholder="e.g., Full gym, Home dumbbells only"
+                                   FontSize="15" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Movement Limitations"
+                                   FontSize="12"
+                                   Opacity="0.6" />
+                            <Editor Text="{Binding MovementLimitations}"
+                                    Placeholder="e.g., Left shoulder impingement, knee pain during deep squats"
+                                    FontSize="15"
+                                    AutoSize="TextChanges"
+                                    MinimumHeightRequest="80" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Save Button -->
+            <Button Text="Save Goals"
+                    Command="{Binding SaveGoalsCommand}"
+                    Margin="0,8,0,24"
+                    FontSize="16"
+                    Padding="16,12" />
+
+            <!-- Error -->
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="{StaticResource Error}"
+                   FontSize="12"
+                   HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

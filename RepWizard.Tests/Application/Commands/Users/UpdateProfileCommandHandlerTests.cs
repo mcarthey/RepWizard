@@ -81,4 +81,67 @@ public class UpdateProfileCommandHandlerTests
         result.Value.HeightCm.Should().Be(170m); // Unchanged
         result.Value.WeightKg.Should().Be(82.5m); // Updated
     }
+
+    [Fact]
+    public async Task Handle_GoalFields_SavesAndReturnsGoals()
+    {
+        var userId = Guid.NewGuid();
+        var user = new User
+        {
+            Id = userId,
+            Name = "Test User",
+            Email = "test@example.com",
+            PasswordHash = "hash"
+        };
+        _usersRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        var command = new UpdateProfileCommand(
+            userId, null, null, null, null, null, null, null,
+            LongTermGoalText: "Build muscle mass",
+            LongTermGoalMonths: 6,
+            ShortTermFocusText: "Increase squat 1RM by 20lb",
+            ShortTermFocusWeeks: 8,
+            AvailableDaysPerWeek: 4,
+            SessionLengthMinutes: 60,
+            AvailableEquipment: "Full gym",
+            MovementLimitations: "Left shoulder impingement");
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.LongTermGoalText.Should().Be("Build muscle mass");
+        result.Value.LongTermGoalMonths.Should().Be(6);
+        result.Value.ShortTermFocusText.Should().Be("Increase squat 1RM by 20lb");
+        result.Value.ShortTermFocusWeeks.Should().Be(8);
+        result.Value.AvailableDaysPerWeek.Should().Be(4);
+        result.Value.SessionLengthMinutes.Should().Be(60);
+        result.Value.AvailableEquipment.Should().Be("Full gym");
+        result.Value.MovementLimitations.Should().Be("Left shoulder impingement");
+    }
+
+    [Fact]
+    public async Task Handle_GoalFieldsNotProvided_DefaultToNull()
+    {
+        var userId = Guid.NewGuid();
+        var user = new User
+        {
+            Id = userId,
+            Name = "Test User",
+            Email = "test@example.com",
+            PasswordHash = "hash"
+        };
+        _usersRepo.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        var command = new UpdateProfileCommand(userId, "New Name", null, null, null, null, null, null);
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.LongTermGoalText.Should().BeNull();
+        result.Value.LongTermGoalMonths.Should().BeNull();
+        result.Value.ShortTermFocusText.Should().BeNull();
+        result.Value.ShortTermFocusWeeks.Should().BeNull();
+        result.Value.AvailableDaysPerWeek.Should().BeNull();
+        result.Value.SessionLengthMinutes.Should().BeNull();
+        result.Value.AvailableEquipment.Should().BeNull();
+        result.Value.MovementLimitations.Should().BeNull();
+    }
 }

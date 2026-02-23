@@ -18,9 +18,9 @@
                        Style="{StaticResource SubheadingLabel}"
                        VerticalOptions="Center" />
                 <Button Grid.Column="1"
-                        Text="+ Generate"
+                        Text="Ask AI Coach"
                         Style="{StaticResource SecondaryButton}"
-                        Command="{Binding NavigateToCoachCommand}"
+                        Command="{Binding NavigateToAiChatCommand}"
                         FontSize="13"
                         Padding="12,6" />
             </Grid>
@@ -157,7 +157,7 @@
                            HorizontalTextAlignment="Center"
                            LineBreakMode="WordWrap" />
                     <Button Text="Generate Program"
-                            Command="{Binding NavigateToCoachCommand}"
+                            Command="{Binding NavigateToAiChatCommand}"
                             HorizontalOptions="Center"
                             Margin="0,8,0,0" />
                 </VerticalStackLayout>

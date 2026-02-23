@@ -32,6 +32,16 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
         if (request.ExperienceLevel != null && Enum.TryParse<ExperienceLevel>(request.ExperienceLevel, true, out var level))
             user.ExperienceLevel = level;
 
+        // Training goals
+        if (request.LongTermGoalText != null) user.LongTermGoalText = request.LongTermGoalText;
+        if (request.LongTermGoalMonths.HasValue) user.LongTermGoalMonths = request.LongTermGoalMonths;
+        if (request.ShortTermFocusText != null) user.ShortTermFocusText = request.ShortTermFocusText;
+        if (request.ShortTermFocusWeeks.HasValue) user.ShortTermFocusWeeks = request.ShortTermFocusWeeks;
+        if (request.AvailableDaysPerWeek.HasValue) user.AvailableDaysPerWeek = request.AvailableDaysPerWeek;
+        if (request.SessionLengthMinutes.HasValue) user.SessionLengthMinutes = request.SessionLengthMinutes;
+        if (request.AvailableEquipment != null) user.AvailableEquipment = request.AvailableEquipment;
+        if (request.MovementLimitations != null) user.MovementLimitations = request.MovementLimitations;
+
         _users.Update(user);
         await _users.SaveChangesAsync(ct);
 
@@ -45,7 +55,15 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
             WeightKg = user.WeightKg,
             FitnessGoal = user.FitnessGoal.ToString(),
             ExperienceLevel = user.ExperienceLevel.ToString(),
-            MedicalNotes = user.MedicalNotes
+            MedicalNotes = user.MedicalNotes,
+            LongTermGoalText = user.LongTermGoalText,
+            LongTermGoalMonths = user.LongTermGoalMonths,
+            ShortTermFocusText = user.ShortTermFocusText,
+            ShortTermFocusWeeks = user.ShortTermFocusWeeks,
+            AvailableDaysPerWeek = user.AvailableDaysPerWeek,
+            SessionLengthMinutes = user.SessionLengthMinutes,
+            AvailableEquipment = user.AvailableEquipment,
+            MovementLimitations = user.MovementLimitations
         });
     }
 }

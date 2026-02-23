@@ -11,6 +11,16 @@ public class UserDto
     public string FitnessGoal { get; set; } = string.Empty;
     public string ExperienceLevel { get; set; } = string.Empty;
     public string? MedicalNotes { get; set; }
+
+    // Training goals
+    public string? LongTermGoalText { get; set; }
+    public int? LongTermGoalMonths { get; set; }
+    public string? ShortTermFocusText { get; set; }
+    public int? ShortTermFocusWeeks { get; set; }
+    public int? AvailableDaysPerWeek { get; set; }
+    public int? SessionLengthMinutes { get; set; }
+    public string? AvailableEquipment { get; set; }
+    public string? MovementLimitations { get; set; }
 }
 
 public class UpdateProfileRequest
@@ -22,6 +32,16 @@ public class UpdateProfileRequest
     public string? FitnessGoal { get; set; }
     public string? ExperienceLevel { get; set; }
     public string? MedicalNotes { get; set; }
+
+    // Training goals
+    public string? LongTermGoalText { get; set; }
+    public int? LongTermGoalMonths { get; set; }
+    public string? ShortTermFocusText { get; set; }
+    public int? ShortTermFocusWeeks { get; set; }
+    public int? AvailableDaysPerWeek { get; set; }
+    public int? SessionLengthMinutes { get; set; }
+    public string? AvailableEquipment { get; set; }
+    public string? MovementLimitations { get; set; }
 }
 
 public class RegisterRequest

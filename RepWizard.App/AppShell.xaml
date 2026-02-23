@@ -5,7 +5,7 @@
     Three-tab Shell navigation per the spec:
       - Today: Active workout / next session command center
       - Progress: History, charts, measurements
-      - Coach: AI coaching, programs, exercise library
+      - Plan: Training plan hub, programs, goals, AI chat
 
     Routes are registered in AppShell.xaml.cs.
     Navigation is handled via INavigationService (injected into ViewModels).
@@ -37,12 +37,12 @@
                 Route="progress" />
         </Tab>
 
-        <!-- COACH TAB -->
-        <Tab Title="Coach" Icon="tab_coach.png">
+        <!-- PLAN TAB -->
+        <Tab Title="Plan" Icon="tab_plan.png">
             <ShellContent
-                Title="Coach"
-                ContentTemplate="{DataTemplate pages:CoachPage}"
-                Route="coach" />
+                Title="Plan"
+                ContentTemplate="{DataTemplate pages:PlanHubPage}"
+                Route="plan" />
         </Tab>
     </TabBar>
 </Shell>

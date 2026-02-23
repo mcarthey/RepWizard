@@ -12,6 +12,7 @@
             <converters:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter" />
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

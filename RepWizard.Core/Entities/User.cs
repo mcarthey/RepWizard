@@ -19,6 +19,16 @@ public class User : BaseEntity
     public ExperienceLevel ExperienceLevel { get; set; } = ExperienceLevel.Beginner;
     public string? MedicalNotes { get; set; }
 
+    // Training goals (richer goal data for Plan tab)
+    public string? LongTermGoalText { get; set; }
+    public int? LongTermGoalMonths { get; set; }
+    public string? ShortTermFocusText { get; set; }
+    public int? ShortTermFocusWeeks { get; set; }
+    public int? AvailableDaysPerWeek { get; set; }
+    public int? SessionLengthMinutes { get; set; }
+    public string? AvailableEquipment { get; set; }
+    public string? MovementLimitations { get; set; }
+
     // Navigation properties
     public ICollection<WorkoutSession> WorkoutSessions { get; set; } = new List<WorkoutSession>();
     public ICollection<WorkoutTemplate> WorkoutTemplates { get; set; } = new List<WorkoutTemplate>();

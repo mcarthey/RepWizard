@@ -2,7 +2,7 @@ namespace RepWizard.Shared.Helpers;
 
 /// <summary>
 /// Shared SSE (Server-Sent Events) line parsing utilities.
-/// Used by both Infrastructure (AnthropicChatService) and UI (CoachViewModel)
+/// Used by both Infrastructure (AnthropicChatService) and UI (AiChatViewModel)
 /// to avoid duplicating the "data: " prefix parsing logic.
 /// </summary>
 public static class SseParser

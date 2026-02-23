@@ -44,7 +44,15 @@ public static class UserEndpoints
                 request.WeightKg,
                 request.FitnessGoal,
                 request.ExperienceLevel,
-                request.MedicalNotes), ct);
+                request.MedicalNotes,
+                request.LongTermGoalText,
+                request.LongTermGoalMonths,
+                request.ShortTermFocusText,
+                request.ShortTermFocusWeeks,
+                request.AvailableDaysPerWeek,
+                request.SessionLengthMinutes,
+                request.AvailableEquipment,
+                request.MovementLimitations), ct);
 
             return result.IsSuccess
                 ? Results.Ok(ApiResponse<UserDto>.Ok(result.Value!))

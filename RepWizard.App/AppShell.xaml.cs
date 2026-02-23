@@ -13,7 +13,7 @@ public partial class AppShell : Shell
     private static void RegisterRoutes()
     {
         // Routes use leaf names only — MAUI Shell can't do relative routing
-        // to shell elements (tab routes like "today", "progress", "coach").
+        // to shell elements (tab routes like "today", "progress", "plan").
         // Navigate with the leaf name; Shell pushes onto the current tab's stack.
         Routing.RegisterRoute("active-session", typeof(ActiveSessionPage));
         Routing.RegisterRoute("exercise-detail", typeof(ExerciseDetailPage));
@@ -23,6 +23,8 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("programs", typeof(ProgramsPage));
         Routing.RegisterRoute("program-detail", typeof(ProgramDetailPage));
         Routing.RegisterRoute("library", typeof(ExerciseLibraryPage));
+        Routing.RegisterRoute("goals", typeof(GoalsPage));
+        Routing.RegisterRoute("ai-chat", typeof(AiChatPage));
         Routing.RegisterRoute("settings", typeof(SettingsPage));
     }
 }

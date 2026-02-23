@@ -18,7 +18,9 @@ public static class ViewModelRegistration
         services.AddTransient<SessionDetailViewModel>();
         services.AddTransient<MeasurementsViewModel>();
         services.AddTransient<ChartsViewModel>();
-        services.AddTransient<CoachViewModel>();
+        services.AddTransient<PlanHubViewModel>();
+        services.AddTransient<GoalsViewModel>();
+        services.AddTransient<AiChatViewModel>();
         services.AddTransient<ProgramsViewModel>();
         services.AddTransient<ProgramDetailViewModel>();
         services.AddTransient<ExerciseLibraryViewModel>();
@@ -36,7 +38,9 @@ public static class ViewModelRegistration
         services.AddTransient<SessionDetailPage>();
         services.AddTransient<ChartsPage>();
         services.AddTransient<MeasurementsPage>();
-        services.AddTransient<CoachPage>();
+        services.AddTransient<PlanHubPage>();
+        services.AddTransient<GoalsPage>();
+        services.AddTransient<AiChatPage>();
         services.AddTransient<ProgramsPage>();
         services.AddTransient<ProgramDetailPage>();
         services.AddTransient<ExerciseLibraryPage>();

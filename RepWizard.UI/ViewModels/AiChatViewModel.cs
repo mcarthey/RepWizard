@@ -11,44 +11,11 @@ using RepWizard.Shared.Helpers;
 namespace RepWizard.UI.ViewModels;
 
 /// <summary>
-/// Display model for a single chat message shown in the conversation.
-/// </summary>
-public partial class ChatMessageItem : ObservableObject
-{
-    [ObservableProperty]
-    private string _content;
-
-    public bool IsUser { get; }
-    public DateTime Timestamp { get; }
-
-    /// <summary>
-    /// Whether this message is currently being streamed (assistant only).
-    /// </summary>
-    [ObservableProperty]
-    private bool _isStreaming;
-
-    public ChatMessageItem(string content, bool isUser, DateTime? timestamp = null)
-    {
-        _content = content;
-        IsUser = isUser;
-        Timestamp = timestamp ?? DateTime.Now;
-    }
-
-    /// <summary>
-    /// Append streamed content to an assistant message.
-    /// </summary>
-    public void AppendContent(string text)
-    {
-        Content += text;
-    }
-}
-
-/// <summary>
-/// ViewModel for the Coach tab -- AI chat interface with streaming response support.
+/// ViewModel for the AI Chat page (formerly Coach tab).
 /// Calls the SSE endpoint at /api/v1/ai/chat and accumulates streamed tokens into
 /// a ChatMessageItem in real time.
 /// </summary>
-public partial class CoachViewModel : BaseViewModel
+public partial class AiChatViewModel : BaseViewModel, IQueryAttributable
 {
     private readonly INavigationService _navigation;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -63,27 +30,32 @@ public partial class CoachViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isStreaming;
 
-    /// <summary>
-    /// Tracks the current conversation ID returned by the API after the first message.
-    /// Subsequent messages in the same conversation include this ID so the server
-    /// can append to the existing conversation thread.
-    /// </summary>
     [ObservableProperty]
     private Guid? _conversationId;
 
-    /// <summary>
-    /// Display title for the current conversation.
-    /// </summary>
     [ObservableProperty]
     private string _conversationTitle = "New Conversation";
 
     private CancellationTokenSource _streamCts = new();
 
-    public CoachViewModel(INavigationService navigation, IHttpClientFactory httpClientFactory)
+    public AiChatViewModel(INavigationService navigation, IHttpClientFactory httpClientFactory)
     {
         _navigation = navigation;
         _httpClientFactory = httpClientFactory;
-        Title = "Coach";
+        Title = "AI Coach";
+    }
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("source", out var source))
+        {
+            // Context pre-loading hint from hub or builder
+            var sourceStr = source?.ToString();
+            if (sourceStr == "hub")
+                ConversationTitle = "Training Plan Chat";
+            else if (sourceStr == "builder")
+                ConversationTitle = "Program Builder Chat";
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanSendMessage))]
@@ -94,10 +66,8 @@ public partial class CoachViewModel : BaseViewModel
         var userMessage = UserInput.Trim();
         UserInput = string.Empty;
 
-        // Add user bubble
         Messages.Add(new ChatMessageItem(userMessage, isUser: true));
 
-        // Prepare assistant bubble for streaming
         var assistantMessage = new ChatMessageItem(string.Empty, isUser: false)
         {
             IsStreaming = true
@@ -152,19 +122,16 @@ public partial class CoachViewModel : BaseViewModel
                             using var doc = JsonDocument.Parse(data);
                             var root = doc.RootElement;
 
-                            // Extract streamed content token
                             if (root.TryGetProperty("content", out var contentProp))
                             {
                                 var chunk = contentProp.GetString();
                                 if (!string.IsNullOrEmpty(chunk))
                                 {
-                                    // Update on main thread for UI binding
                                     MainThread.BeginInvokeOnMainThread(() =>
                                         assistantMessage.AppendContent(chunk));
                                 }
                             }
 
-                            // Extract conversationId if present (returned on first message)
                             if (root.TryGetProperty("conversationId", out var convIdProp))
                             {
                                 var convIdStr = convIdProp.GetString();
@@ -172,7 +139,6 @@ public partial class CoachViewModel : BaseViewModel
                                     ConversationId = convId;
                             }
 
-                            // Extract title if present
                             if (root.TryGetProperty("title", out var titleProp))
                             {
                                 var title = titleProp.GetString();
@@ -182,7 +148,7 @@ public partial class CoachViewModel : BaseViewModel
                         }
                         catch (JsonException ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"CoachViewModel: Malformed SSE data, skipping: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"AiChatViewModel: Malformed SSE data, skipping: {ex.Message}");
                         }
                     }
                 }
@@ -207,9 +173,6 @@ public partial class CoachViewModel : BaseViewModel
         SendMessageCommand.NotifyCanExecuteChanged();
     }
 
-    /// <summary>
-    /// Start a new conversation -- clears messages and resets the conversation ID.
-    /// </summary>
     [RelayCommand]
     private void NewConversation()
     {
@@ -219,18 +182,6 @@ public partial class CoachViewModel : BaseViewModel
         UserInput = string.Empty;
         IsStreaming = false;
         ClearError();
-    }
-
-    [RelayCommand]
-    private async Task NavigateToProgramsAsync(CancellationToken ct)
-    {
-        await _navigation.NavigateToAsync("programs");
-    }
-
-    [RelayCommand]
-    private async Task NavigateToLibraryAsync(CancellationToken ct)
-    {
-        await _navigation.NavigateToAsync("library");
     }
 
     partial void OnIsStreamingChanged(bool value)

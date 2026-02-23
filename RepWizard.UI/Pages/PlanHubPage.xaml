@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             x:Class="RepWizard.UI.Pages.PlanHubPage"
+             x:DataType="vm:PlanHubViewModel"
+             Title="Plan"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+             Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- 1. Context Header -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0"
+                       Text="Your Training Plan"
+                       Style="{StaticResource HeadingLabel}"
+                       FontSize="24"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="1"
+                        Text="Edit Goals"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding NavigateToGoalsCommand}"
+                        FontSize="13"
+                        Padding="12,6"
+                        MinimumHeightRequest="36" />
+            </Grid>
+
+            <!-- 2. Active Program Card -->
+            <Border Style="{StaticResource TonalSurface}"
+                    Padding="16"
+                    IsVisible="{Binding HasActiveProgram}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding ActiveProgramName}"
+                           Style="{StaticResource HeadingLabel}"
+                           FontSize="18" />
+                    <Label Text="{Binding ActiveProgramProgress}"
+                           Style="{StaticResource SubheadingLabel}"
+                           FontSize="14" />
+                    <ProgressBar Progress="{Binding ProgramProgressPercent}"
+                                 ProgressColor="{StaticResource Primary}"
+                                 HeightRequest="6" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,4,0,0">
+                        <Button Grid.Column="0"
+                                Text="View Program"
+                                Command="{Binding NavigateToProgramDetailCommand}"
+                                FontSize="13"
+                                Padding="8,6" />
+                        <Button Grid.Column="1"
+                                Text="All Programs"
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding NavigateToProgramsCommand}"
+                                FontSize="13"
+                                Padding="8,6" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Empty state: no active program -->
+            <Border Style="{StaticResource TonalSurface}"
+                    Padding="24"
+                    IsVisible="{Binding HasActiveProgram, Converter={StaticResource InverseBoolConverter}}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Label Text="No active program"
+                           Style="{StaticResource HeadingLabel}"
+                           FontSize="16"
+                           HorizontalOptions="Center" />
+                    <Label Text="Set your goals and build a training program to get started."
+                           FontSize="14"
+                           Opacity="0.7"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" />
+                    <Button Text="Browse Programs"
+                            Command="{Binding NavigateToProgramsCommand}"
+                            Margin="0,8,0,0"
+                            HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- 3. Goals Strip -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding HasGoals}">
+                <Label Text="Goals"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="13"
+                       Opacity="0.6" />
+                <FlexLayout Wrap="Wrap" JustifyContent="Start" Direction="Row">
+                    <Border Padding="10,6"
+                            Margin="0,0,8,8"
+                            StrokeThickness="0"
+                            BackgroundColor="{StaticResource PrimaryContainer}"
+                            IsVisible="{Binding LongTermGoalText, Converter={StaticResource IsNotNullConverter}}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToGoalsCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{Binding LongTermGoalText}"
+                               FontSize="13"
+                               TextColor="{StaticResource OnPrimaryContainer}" />
+                    </Border>
+                    <Border Padding="10,6"
+                            Margin="0,0,8,8"
+                            StrokeThickness="0"
+                            BackgroundColor="{StaticResource SecondaryContainer}"
+                            IsVisible="{Binding ShortTermFocusText, Converter={StaticResource IsNotNullConverter}}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToGoalsCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{Binding ShortTermFocusText}"
+                               FontSize="13"
+                               TextColor="{StaticResource OnSecondaryContainer}" />
+                    </Border>
+                </FlexLayout>
+            </VerticalStackLayout>
+
+            <!-- Goals nudge (when no goals) -->
+            <Border Padding="12,10"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource TertiaryContainer}"
+                    IsVisible="{Binding HasGoals, Converter={StaticResource InverseBoolConverter}}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavigateToGoalsCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="Set your training goals to get personalized recommendations"
+                       FontSize="13"
+                       TextColor="{StaticResource OnTertiaryContainer}" />
+            </Border>
+
+            <!-- 4. Quick Actions -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Quick Actions"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="13"
+                       Opacity="0.6" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Border Grid.Column="0"
+                            Style="{StaticResource TonalSurface}"
+                            Padding="16">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToAiChatCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Ask AI Coach"
+                                   Style="{StaticResource HeadingLabel}"
+                                   FontSize="14" />
+                            <Label Text="Get training advice"
+                                   FontSize="12"
+                                   Opacity="0.6" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1"
+                            Style="{StaticResource TonalSurface}"
+                            Padding="16">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToLibraryCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Exercise Library"
+                                   Style="{StaticResource HeadingLabel}"
+                                   FontSize="14" />
+                            <Label Text="Browse exercises"
+                                   FontSize="12"
+                                   Opacity="0.6" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </VerticalStackLayout>
+
+            <!-- 5. AI Insight Banner placeholder (Commit 3) -->
+
+            <!-- 6. Quick-start Templates placeholder (Commit 2) -->
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

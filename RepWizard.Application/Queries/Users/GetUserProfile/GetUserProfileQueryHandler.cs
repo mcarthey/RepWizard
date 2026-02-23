@@ -30,7 +30,15 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             WeightKg = user.WeightKg,
             FitnessGoal = user.FitnessGoal.ToString(),
             ExperienceLevel = user.ExperienceLevel.ToString(),
-            MedicalNotes = user.MedicalNotes
+            MedicalNotes = user.MedicalNotes,
+            LongTermGoalText = user.LongTermGoalText,
+            LongTermGoalMonths = user.LongTermGoalMonths,
+            ShortTermFocusText = user.ShortTermFocusText,
+            ShortTermFocusWeeks = user.ShortTermFocusWeeks,
+            AvailableDaysPerWeek = user.AvailableDaysPerWeek,
+            SessionLengthMinutes = user.SessionLengthMinutes,
+            AvailableEquipment = user.AvailableEquipment,
+            MovementLimitations = user.MovementLimitations
         });
     }
 }

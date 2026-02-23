@@ -62,6 +62,12 @@ public class AppDbContext : DbContext
             b.Property(u => u.MedicalNotes).HasMaxLength(2000);
             b.Property(u => u.HeightCm).HasPrecision(5, 2);
             b.Property(u => u.WeightKg).HasPrecision(6, 2);
+
+            // Training goal fields
+            b.Property(u => u.LongTermGoalText).HasMaxLength(500);
+            b.Property(u => u.ShortTermFocusText).HasMaxLength(500);
+            b.Property(u => u.AvailableEquipment).HasMaxLength(500);
+            b.Property(u => u.MovementLimitations).HasMaxLength(1000);
         });
 
         // ConflictLog configuration

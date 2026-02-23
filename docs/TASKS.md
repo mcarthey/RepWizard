@@ -512,6 +512,54 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 
 ---
 
+## Plan Tab Redesign — In Progress
+
+> Reframes the Coach tab as a program builder studio. AI is an embedded advisor, not the landing page.
+> Spec: `docs/RepWizard-PlanTab-Spec.md`
+
+### Commit 1: Rename + Hub Shell + Goals ✅ COMPLETE
+
+- [x] Extend `User` entity with 8 training goal fields (LongTermGoalText, LongTermGoalMonths, ShortTermFocusText, ShortTermFocusWeeks, AvailableDaysPerWeek, SessionLengthMinutes, AvailableEquipment, MovementLimitations)
+- [x] Update `UserDto`, `UpdateProfileRequest`, `UpdateProfileCommand`, handler, query handlers
+- [x] Update `AppDbContext` with MaxLength constraints for new string fields
+- [x] Update `AiContextBuilder` to include goal fields in AI context
+- [x] Create `PlanHubPage` + `PlanHubViewModel` — hub page with active program card, goals strip, quick actions
+- [x] Create `GoalsPage` + `GoalsViewModel` — goals editor for all 8 goal fields
+- [x] Create `AiChatPage` + `AiChatViewModel` — renamed from CoachPage/CoachViewModel, simplified header, IQueryAttributable for source context
+- [x] Create `ChatMessageItem` as standalone file (extracted from CoachViewModel)
+- [x] Create `IsNotNullConverter` for goals strip visibility
+- [x] Update `AppShell` — Coach tab → Plan tab (PlanHubPage as root)
+- [x] Register new routes: `goals`, `ai-chat`
+- [x] Update `ViewModelRegistration` — replace Coach with PlanHub, Goals, AiChat
+- [x] Update `ProgramsViewModel` — NavigateToCoach → NavigateToAiChat
+- [x] Update `ProgramsPage` — button text and command references
+- [x] Generate EF migration `AddUserGoalFields`
+- [x] Delete old Coach files (CoachPage.xaml, CoachPage.xaml.cs, CoachViewModel.cs)
+- [x] Add 3 new tests: goal field save/load, goal field defaults, AI context includes goals
+- [x] Copy `tab_coach.svg` → `tab_plan.svg` for tab icon
+
+**Post-Commit 1 test count: 246 ✅ (3 new tests, 0 regressions)**
+
+### Commit 2: Builder Flow + Quick-Start Templates
+
+- [ ] Create `ProgramBuilderPage` + `ProgramBuilderViewModel` (5-step wizard: Goal, Structure, Exercises, Volume, Review)
+- [ ] Create `QuickStartTemplates` static data service (5 curated templates)
+- [ ] Create `CreateTrainingProgramCommand` + handler + validator
+- [ ] Create `ActivateProgramCommand` + handler
+- [ ] Add quick-start template cards to PlanHubPage
+- [ ] Implement `generate-program` endpoint (replace stub with real SSE + AI)
+- [ ] Add ~15 tests
+
+### Commit 3: AI Integration
+
+- [ ] Add AI Insight banner to PlanHubPage (lazy-loaded)
+- [ ] Add client-side advisory text in builder (ProgramValidator-based, offline)
+- [ ] Add goal analysis on GoalsPage (API call)
+- [ ] Add context pre-loading for AI chat from query params
+- [ ] Add ~8 tests
+
+---
+
 ## Cross-Cutting / Ongoing
 
 - [x] Keep `CHANGELOG.md` updated at every phase gate
