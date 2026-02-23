@@ -40,3 +40,15 @@ public class ProgramDayDto
     public string? Focus { get; set; }
     public string? WorkoutTemplateName { get; set; }
 }
+
+public class ScheduledWorkoutDto
+{
+    public string ProgramName { get; set; } = string.Empty;
+    public int CurrentWeekNumber { get; set; }
+    public int TotalWeeks { get; set; }
+    public bool IsDeloadWeek { get; set; }
+    public bool IsRestDay { get; set; }
+    public string? Focus { get; set; }
+    public string? WorkoutTemplateName { get; set; }
+    public Guid? WorkoutTemplateId { get; set; }
+}

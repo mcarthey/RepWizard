@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using RepWizard.Application.Commands.Workouts.StartWorkoutSession;
+using RepWizard.Application.Queries.Programs.GetTodayScheduledWorkout;
 using RepWizard.Application.Queries.Workouts.GetActiveSession;
 using RepWizard.Application.Queries.Workouts.GetSessionHistory;
 using RepWizard.Core.Interfaces;
@@ -28,6 +29,10 @@ public partial class TodayViewModel : BaseViewModel
     [ObservableProperty] private bool _hasActiveSession;
     [ObservableProperty] private string _nextWorkoutFocus = string.Empty;
     [ObservableProperty] private string _greetingText = string.Empty;
+    [ObservableProperty] private bool _hasScheduledWorkout;
+    [ObservableProperty] private bool _isRestDay;
+    [ObservableProperty] private string _scheduledProgramName = string.Empty;
+    [ObservableProperty] private string _scheduledWeekInfo = string.Empty;
 
     public TodayViewModel(INavigationService navigation, IMediator mediator)
     {
@@ -104,6 +109,29 @@ public partial class TodayViewModel : BaseViewModel
                 TotalVolumeThisWeek = thisWeek.Sum(s => s.TotalVolume);
                 CurrentStreakDays = CalculateStreak(allSessions);
                 IsEmpty = WorkoutsThisWeek == 0 && !HasActiveSession;
+            }
+
+            // Load today's scheduled workout from active program
+            var scheduledResult = await _mediator.Send(
+                new GetTodayScheduledWorkoutQuery(ActiveSessionViewModel.DefaultUserId), ct);
+            if (scheduledResult.IsSuccess && scheduledResult.Value != null)
+            {
+                var scheduled = scheduledResult.Value;
+                HasScheduledWorkout = true;
+                IsRestDay = scheduled.IsRestDay;
+                ScheduledProgramName = scheduled.ProgramName;
+                ScheduledWeekInfo = scheduled.IsDeloadWeek
+                    ? $"Week {scheduled.CurrentWeekNumber}/{scheduled.TotalWeeks} (Deload)"
+                    : $"Week {scheduled.CurrentWeekNumber}/{scheduled.TotalWeeks}";
+                NextWorkoutFocus = scheduled.IsRestDay
+                    ? "Rest Day"
+                    : scheduled.Focus ?? scheduled.WorkoutTemplateName ?? string.Empty;
+            }
+            else
+            {
+                HasScheduledWorkout = false;
+                IsRestDay = false;
+                NextWorkoutFocus = string.Empty;
             }
         });
     }

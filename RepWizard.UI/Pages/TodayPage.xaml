@@ -26,7 +26,7 @@
         <!-- Custom title bar omitted in Phase 1; uses default Shell title -->
     </Shell.TitleView>
 
-    <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
 
         <!-- Context Header Band -->
         <VerticalStackLayout Grid.Row="0" Padding="24,16,24,8">
@@ -81,8 +81,29 @@
             </VerticalStackLayout>
         </Grid>
 
-        <!-- Weekly Status Band -->
+        <!-- Scheduled Workout Card -->
         <Border Grid.Row="2"
+                IsVisible="{Binding HasScheduledWorkout}"
+                BackgroundColor="{StaticResource SurfaceVariant}"
+                StrokeShape="RoundRectangle 12"
+                StrokeThickness="0"
+                Margin="16,0,16,8"
+                Padding="16,12">
+            <VerticalStackLayout Spacing="4">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="{Binding ScheduledProgramName}"
+                           FontSize="14" FontAttributes="Bold" />
+                    <Label Text="{Binding ScheduledWeekInfo}"
+                           FontSize="12" Opacity="0.6" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding NextWorkoutFocus}"
+                       FontSize="16"
+                       TextColor="{StaticResource Primary}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Weekly Status Band -->
+        <Border Grid.Row="3"
                 BackgroundColor="{StaticResource SurfaceVariant}"
                 Padding="24,12"
                 StrokeThickness="0">
@@ -100,7 +121,7 @@
         </Border>
 
         <!-- Secondary Metrics Zone — 2x2 grid -->
-        <Grid Grid.Row="3" Padding="16" ColumnDefinitions="*,*" RowDefinitions="*,*" ColumnSpacing="12" RowSpacing="12">
+        <Grid Grid.Row="4" Padding="16" ColumnDefinitions="*,*" RowDefinitions="*,*" ColumnSpacing="12" RowSpacing="12">
             <controls:MetricChipView Grid.Row="0" Grid.Column="0"
                                      Icon="icon_workouts.png"
                                      Label="Workouts"
