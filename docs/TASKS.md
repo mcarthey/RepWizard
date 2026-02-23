@@ -322,10 +322,44 @@ Legend: ✅ Complete | 🔄 In Progress | ⏳ Pending
 
 ### Reference Docs Added
 
-- [x] `docs/HARDENING.md` — production hardening playbook
-- [x] `docs/TESTING-STRATEGY.md` — testing patterns and anti-patterns
+- [x] `HARDENING.md` — production hardening playbook (moved to global `~/.claude/`)
+- [x] `TESTING-STRATEGY.md` — testing patterns and anti-patterns (moved to global `~/.claude/`)
 
 **Post-hardening: 190 tests ✅, 0 warnings, Android build clean**
+
+---
+
+## Code Quality Pass ✅ COMPLETE
+
+> Applied code smell fixes identified by reviewing the codebase against `docs/CODE_SMELLS.md`.
+
+### Magic String Elimination
+
+- [x] Created `RepWizard.Shared/Constants/SyncConstants.cs` — `SyncEntityTypes` and `SyncActions` static classes
+- [x] Replaced string literals in `SyncService.cs`, `SyncEndpoints.cs`, `SyncServiceTests.cs` with constants
+- [x] Updated `SyncDtos.cs` comment to reference `SyncActions` constants
+
+### SSE Parsing Deduplication
+
+- [x] Created `RepWizard.Shared/Helpers/SseParser.cs` — `TryParseDataLine` shared helper
+- [x] Replaced inline SSE parsing in `AnthropicChatService.cs` and `CoachViewModel.cs`
+
+### Silent Exception Swallowing
+
+- [x] `JwtAuthService`: added `ILogger`, replaced bare `catch` with `SecurityTokenExpiredException` + `Exception` catches with logging
+- [x] `AnthropicChatService`: added `ILogger`, changed `catch (JsonException)` to log with `LogDebug`
+- [x] `CoachViewModel`: changed `catch (JsonException)` to log via `Debug.WriteLine`
+
+### GlobalExceptionMiddleware Environment Awareness
+
+- [x] Added `IHostEnvironment` injection — Development returns actual exception details, Production returns generic message
+- [x] Updated `MiddlewareTests` assertions to match Development-mode behavior
+
+### Documentation
+
+- [x] Expanded `docs/CODE_SMELLS.md` with MAUI ViewModel variant, middleware exception hiding, sync layer magic strings, convention vs. speculation distinction, and new "Framework Assumption Mismatch" section (EF Core sentinel check, AsNoTracking)
+
+**Post-quality pass: 227 tests ✅, 0 warnings**
 
 ---
 
@@ -427,17 +461,21 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 
 **Files changed:** `UserEndpoints.cs`, `WorkoutEndpoints.cs`, `MeasurementEndpoints.cs`, `AiEndpoints.cs`, `SyncEndpoints.cs`, `IntegrationTestBase.cs`, `AuthEndpointTests.cs`, `WorkoutEndpointTests.cs`
 
-### BUG-2: `AsNoTracking` caused silent write failures ✅ FIXED
+### BUG-2: `AsNoTracking` + client-generated Guids caused silent write failures ✅ FIXED
 
-**Root cause:** `GetWithExercisesAndSetsAsync()` used `.AsNoTracking()`, returning detached entities. Both `CompleteWorkoutSessionCommandHandler` and `LogSetCommandHandler` modified the detached graph and called `SaveChangesAsync()` — which persisted nothing. API responses looked correct (built from in-memory objects) but the database was never updated.
+**Root cause:** Two interacting issues:
+1. `GetWithExercisesAndSetsAsync()` used `.AsNoTracking()`, returning detached entities. Both `CompleteWorkoutSessionCommandHandler` and `LogSetCommandHandler` modified the detached graph and called `SaveChangesAsync()` — which persisted nothing.
+2. EF Core's sentinel check: entities with client-generated `Guid` IDs already have non-default values. When re-attached via `Update()`, EF sees a non-default PK and marks child entities as `Modified` (not `Added`), causing `DbUpdateConcurrencyException` for genuinely new records.
 
-**Fix applied:**
-- `CompleteWorkoutSessionCommandHandler`: added `_sessions.Update(session)` to re-attach the detached entity before saving
-- `LogSetCommandHandler`: added `AddSessionExerciseAsync` / `AddExerciseSetAsync` methods to `IWorkoutSessionRepository` to explicitly add new child entities to the EF change tracker as `Added`
+**Fix applied (proper):**
+- Added `MarkAsNew()` extension method on `BaseEntity` — resets `Id` to `Guid.Empty` so EF treats the entity as `Added` when attached
+- `LogSetCommandHandler`: calls `MarkAsNew()` on new `SessionExercise` and `ExerciseSet` before adding to the context
+- Removed the intermediate `AddSessionExerciseAsync` / `AddExerciseSetAsync` workaround
+- `CompleteWorkoutSessionCommandHandler`: uses `_sessions.Update(session)` to re-attach the detached entity
 - `GetWithExercisesAndSetsAsync` retains `AsNoTracking()` (used by read-only `GetWorkoutSessionQueryHandler`)
 - Strengthened `GetSessionHistory_ReturnsCompletedSessions` test to verify completed sessions appear in history
 
-**Files changed:** `IWorkoutSessionRepository.cs`, `WorkoutSessionRepository.cs`, `CompleteWorkoutSessionCommandHandler.cs`, `LogSetCommandHandler.cs`, `LogSetCommandHandlerTests.cs`, `WorkoutEndpointTests.cs`
+**Files changed:** `BaseEntity.cs` (MarkAsNew), `LogSetCommandHandler.cs`, `CompleteWorkoutSessionCommandHandler.cs`, `WorkoutEndpointTests.cs`
 
 ### BUG-3: Circular reference in SyncService serialization ✅ FIXED
 
@@ -462,6 +500,14 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 - [ ] `CHANGELOG.md` — not yet created
 - [ ] SkiaSharp hero progress arc on TodayPage (spec calls for gradient stroke + glow)
 - [ ] Motion system — breathing scale animation, morph transitions, celebration sequences (Section 13.7–13.8)
+
+---
+
+## Dev Tooling ✅ COMPLETE
+
+- [x] Created `RepWizard.Dev.slnf` — development solution filter (includes UI, excludes App host to avoid MAUI multi-targeting errors on Windows)
+- [x] Created `.vscode/tasks.json` — Build (Dev filter), Test, Build Android, MAUI emulator tasks, Run API, compound tasks
+- [x] Three solution filters: `RepWizard.CI.slnf` (no MAUI), `RepWizard.Dev.slnf` (with UI), `RepWizard.sln` (all 8 projects)
 
 ---
 
