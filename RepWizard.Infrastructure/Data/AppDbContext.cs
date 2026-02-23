@@ -59,6 +59,7 @@ public class AppDbContext : DbContext
             b.Property(u => u.Name).HasMaxLength(100).IsRequired();
             b.Property(u => u.PasswordHash).HasMaxLength(256).IsRequired();
             b.Property(u => u.RefreshToken).HasMaxLength(256);
+            b.Property(u => u.MedicalNotes).HasMaxLength(2000);
             b.Property(u => u.HeightCm).HasPrecision(5, 2);
             b.Property(u => u.WeightKg).HasPrecision(6, 2);
         });
@@ -69,6 +70,8 @@ public class AppDbContext : DbContext
             b.HasKey(c => c.Id);
             b.HasIndex(c => c.UserId);
             b.HasIndex(c => new { c.EntityType, c.EntityId });
+            b.Property(c => c.EntityType).HasMaxLength(100);
+            b.Property(c => c.Resolution).HasMaxLength(50);
             b.HasOne(c => c.User)
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
@@ -81,6 +84,8 @@ public class AppDbContext : DbContext
             b.HasKey(e => e.Id);
             b.Property(e => e.Name).HasMaxLength(200).IsRequired();
             b.Property(e => e.Description).HasMaxLength(2000);
+            b.Property(e => e.VideoUrl).HasMaxLength(500);
+            b.Property(e => e.ResearchNotes).HasMaxLength(4000);
 
             // Store MuscleGroup lists as JSON
             b.Property(e => e.PrimaryMuscles)
@@ -107,6 +112,7 @@ public class AppDbContext : DbContext
         {
             b.HasKey(t => t.Id);
             b.Property(t => t.Name).HasMaxLength(200).IsRequired();
+            b.Property(t => t.Description).HasMaxLength(2000);
             b.Property(t => t.Tags)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
@@ -122,6 +128,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TemplateExercise>(b =>
         {
             b.HasKey(te => te.Id);
+            b.Property(te => te.Notes).HasMaxLength(1000);
             b.HasOne(te => te.WorkoutTemplate)
                 .WithMany(t => t.TemplateExercises)
                 .HasForeignKey(te => te.WorkoutTemplateId)
@@ -136,6 +143,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<WorkoutSession>(b =>
         {
             b.HasKey(s => s.Id);
+            b.Property(s => s.Notes).HasMaxLength(2000);
             b.HasOne(s => s.User)
                 .WithMany(u => u.WorkoutSessions)
                 .HasForeignKey(s => s.UserId)
@@ -151,6 +159,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<SessionExercise>(b =>
         {
             b.HasKey(se => se.Id);
+            b.Property(se => se.Notes).HasMaxLength(1000);
             b.HasOne(se => se.WorkoutSession)
                 .WithMany(s => s.SessionExercises)
                 .HasForeignKey(se => se.WorkoutSessionId)
@@ -178,6 +187,7 @@ public class AppDbContext : DbContext
         {
             b.HasKey(p => p.Id);
             b.Property(p => p.Name).HasMaxLength(200).IsRequired();
+            b.Property(p => p.GoalDescription).HasMaxLength(2000);
             b.HasOne(p => p.User)
                 .WithMany(u => u.TrainingPrograms)
                 .HasForeignKey(p => p.UserId)
@@ -199,6 +209,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProgramDay>(b =>
         {
             b.HasKey(d => d.Id);
+            b.Property(d => d.Focus).HasMaxLength(200);
             b.HasOne(d => d.ProgramWeek)
                 .WithMany(w => w.Days)
                 .HasForeignKey(d => d.ProgramWeekId)
@@ -217,6 +228,7 @@ public class AppDbContext : DbContext
             b.Property(m => m.WeightKg).HasPrecision(6, 2);
             b.Property(m => m.BodyFatPercent).HasPrecision(5, 2);
             b.Property(m => m.MuscleKg).HasPrecision(6, 2);
+            b.Property(m => m.MeasurementNotes).HasMaxLength(2000);
             b.Property(m => m.Photos)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
@@ -248,6 +260,53 @@ public class AppDbContext : DbContext
                 .HasForeignKey(m => m.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // Check constraints — SQL Server only (defense-in-depth behind FluentValidation).
+        // SQLite (tests + MAUI client) doesn't support all SQL Server syntax in check constraints,
+        // and FluentValidation already enforces these ranges at the application layer.
+        if (Database.IsSqlServer())
+        {
+            modelBuilder.Entity<ExerciseSet>(b =>
+            {
+                b.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_ExerciseSet_Reps", "[Reps] > 0");
+                    t.HasCheckConstraint("CK_ExerciseSet_SetNumber", "[SetNumber] > 0");
+                    t.HasCheckConstraint("CK_ExerciseSet_RPE", "[RPE] IS NULL OR ([RPE] >= 1 AND [RPE] <= 10)");
+                    t.HasCheckConstraint("CK_ExerciseSet_RIR", "[RepsInReserve] IS NULL OR ([RepsInReserve] >= 0 AND [RepsInReserve] <= 10)");
+                    t.HasCheckConstraint("CK_ExerciseSet_WeightKg", "[WeightKg] IS NULL OR [WeightKg] >= 0");
+                });
+            });
+
+            modelBuilder.Entity<TemplateExercise>(b =>
+            {
+                b.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_TemplateExercise_SetCount", "[SetCount] > 0");
+                    t.HasCheckConstraint("CK_TemplateExercise_MinReps", "[MinReps] > 0");
+                    t.HasCheckConstraint("CK_TemplateExercise_MaxReps", "[MaxReps] >= [MinReps]");
+                    t.HasCheckConstraint("CK_TemplateExercise_RestSeconds", "[RestSeconds] >= 0");
+                });
+            });
+
+            modelBuilder.Entity<ProgramWeek>(b =>
+            {
+                b.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_ProgramWeek_WeekNumber", "[WeekNumber] > 0");
+                    t.HasCheckConstraint("CK_ProgramWeek_VolumeMultiplier", "[VolumeMultiplier] >= 0 AND [VolumeMultiplier] <= 2");
+                });
+            });
+
+            modelBuilder.Entity<BodyMeasurement>(b =>
+            {
+                b.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_BodyMeasurement_WeightKg", "[WeightKg] IS NULL OR ([WeightKg] >= 0 AND [WeightKg] <= 500)");
+                    t.HasCheckConstraint("CK_BodyMeasurement_BodyFatPercent", "[BodyFatPercent] IS NULL OR ([BodyFatPercent] >= 3 AND [BodyFatPercent] <= 60)");
+                });
+            });
+        }
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
