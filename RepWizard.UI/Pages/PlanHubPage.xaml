@@ -154,13 +154,13 @@
                             <RoundRectangle CornerRadius="12" />
                         </Border.StrokeShape>
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding NavigateToAiChatCommand}" />
+                            <TapGestureRecognizer Command="{Binding NavigateToBuilderCommand}" />
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Ask AI Coach"
+                            <Label Text="Create Program"
                                    Style="{StaticResource HeadingLabel}"
                                    FontSize="14" />
-                            <Label Text="Get training advice"
+                            <Label Text="Build or generate a plan"
                                    FontSize="12"
                                    Opacity="0.6" />
                         </VerticalStackLayout>

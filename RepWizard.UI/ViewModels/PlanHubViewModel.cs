@@ -99,9 +99,10 @@ public partial class PlanHubViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task NavigateToAiChatAsync(CancellationToken ct)
+    private async Task NavigateToBuilderAsync(CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("ai-chat?source=hub");
+        // Navigates to programs list for now; will go directly to builder in Commit 2
+        await _navigation.NavigateToAsync("programs");
     }
 
     [RelayCommand]

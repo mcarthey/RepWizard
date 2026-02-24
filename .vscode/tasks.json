@@ -33,79 +33,7 @@
             }
         },
         {
-            "label": "Build: Android",
-            "type": "process",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "${workspaceFolder}/RepWizard.App/RepWizard.App.csproj",
-                "-f", "net9.0-android",
-                "-c", "Debug",
-                "/property:GenerateFullPaths=true"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
-        },
-        {
-            "label": "MAUI: Start Emulator",
-            "type": "shell",
-            "command": "emulator -avd pixel_7_-_api_36 -no-snapshot-load",
-            "isBackground": true,
-            "problemMatcher": {
-                "pattern": {
-                    "regexp": "^$"
-                },
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": "^.*emulator.*$",
-                    "endsPattern": "^.*boot completed.*$"
-                }
-            },
-            "presentation": {
-                "reveal": "silent",
-                "panel": "dedicated"
-            }
-        },
-        {
-            "label": "MAUI: Wait for Emulator",
-            "type": "shell",
-            "command": "adb wait-for-device && adb shell 'while [ \"$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done' && echo 'Emulator ready'",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "MAUI: Deploy to Emulator",
-            "type": "shell",
-            "command": "dotnet build ${workspaceFolder}/RepWizard.App/RepWizard.App.csproj -f net9.0-android -c Debug -t:Run -p:AndroidAttachDebugger=false",
-            "problemMatcher": "$msCompile",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "MAUI: Start Emulator and Deploy",
-            "dependsOn": [
-                "MAUI: Start Emulator",
-                "MAUI: Wait for Emulator"
-            ],
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "MAUI: Deploy (emulator already running)",
-            "dependsOn": [
-                "MAUI: Wait for Emulator",
-                "MAUI: Deploy to Emulator"
-            ],
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "Run: API (localhost:7001)",
+            "label": "Start API",
             "type": "process",
             "command": "dotnet",
             "args": [
@@ -123,16 +51,60 @@
             }
         },
         {
-            "label": "Start: API + Emulator",
-            "dependsOn": [
-                "Run: API (localhost:7001)",
-                "MAUI: Start Emulator and Deploy"
-            ],
-            "problemMatcher": [],
+            "label": "Start Emulator",
+            "type": "shell",
+            "command": "emulator -avd pixel_7_-_api_36 -no-snapshot-load -partition-size 2047",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*emulator.*$",
+                    "endsPattern": "^.*boot completed.*$"
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Deploy to Emulator",
+            "type": "shell",
+            "command": "adb -s emulator-5554 wait-for-device && adb -s emulator-5554 shell 'while [ \"$(getprop sys.boot_completed)\" != \"1\" ]; do sleep 1; done' && dotnet build ${workspaceFolder}/RepWizard.App/RepWizard.App.csproj -f net9.0-android -c Debug -t:Run '-p:AdbTarget=-s emulator-5554' -p:AndroidAttachDebugger=false -r android-x64",
+            "detail": "Waits for emulator, builds if needed, and deploys",
+            "problemMatcher": "$msCompile",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
             }
+        },
+        {
+            "label": "Deploy to Physical Device",
+            "type": "shell",
+            "command": "dotnet build ${workspaceFolder}/RepWizard.App/RepWizard.App.csproj -f net9.0-android -c Debug -r android-arm -p:EmbedAssembliesIntoApk=true \"-p:ApiBaseUrl=${input:apiBaseUrl}\" && adb -s ${input:deviceSerial} install -r ${workspaceFolder}/RepWizard.App/bin/Debug/net9.0-android/android-arm/com.repwizard.app-Signed.apk && adb -s ${input:deviceSerial} shell am start -n com.repwizard.app/com.repwizard.app.MainActivity",
+            "detail": "Builds for ARM, installs, and launches on physical device",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "deviceSerial",
+            "type": "promptString",
+            "description": "Physical device serial (from 'adb devices'), e.g. 192.168.1.130:40517",
+            "default": "192.168.1.130:40517"
+        },
+        {
+            "id": "apiBaseUrl",
+            "type": "promptString",
+            "description": "API base URL (ngrok URL for physical device)",
+            "default": "https://nonperverse-marg-rateable.ngrok-free.dev"
         }
     ]
 }

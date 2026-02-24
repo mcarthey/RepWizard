@@ -52,8 +52,9 @@ public partial class ProgramsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task NavigateToAiChatAsync(CancellationToken ct)
+    private async Task NavigateToBuilderAsync(CancellationToken ct)
     {
-        await _navigation.NavigateToAsync("ai-chat?source=programs");
+        // TODO: Navigate to "builder" route once ProgramBuilderPage exists (Commit 2)
+        await Task.CompletedTask;
     }
 }

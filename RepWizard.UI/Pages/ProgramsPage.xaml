@@ -18,9 +18,9 @@
                        Style="{StaticResource SubheadingLabel}"
                        VerticalOptions="Center" />
                 <Button Grid.Column="1"
-                        Text="Ask AI Coach"
+                        Text="+ New"
                         Style="{StaticResource SecondaryButton}"
-                        Command="{Binding NavigateToAiChatCommand}"
+                        Command="{Binding NavigateToBuilderCommand}"
                         FontSize="13"
                         Padding="12,6" />
             </Grid>
@@ -150,14 +150,14 @@
                     <Label Text="No programs yet"
                            Style="{StaticResource HeadingLabel}"
                            HorizontalOptions="Center" />
-                    <Label Text="Use the AI Coach to generate a personalized training program tailored to your goals."
+                    <Label Text="Create a training program manually or let AI generate one based on your goals."
                            FontSize="14"
                            Opacity="0.6"
                            HorizontalOptions="Center"
                            HorizontalTextAlignment="Center"
                            LineBreakMode="WordWrap" />
-                    <Button Text="Generate Program"
-                            Command="{Binding NavigateToAiChatCommand}"
+                    <Button Text="Create Program"
+                            Command="{Binding NavigateToBuilderCommand}"
                             HorizontalOptions="Center"
                             Margin="0,8,0,0" />
                 </VerticalStackLayout>
