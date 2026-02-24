@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.PlanHubPage"
              x:DataType="vm:PlanHubViewModel"
              Title="Plan"
@@ -188,7 +189,56 @@
 
             <!-- 5. AI Insight Banner placeholder (Commit 3) -->
 
-            <!-- 6. Quick-start Templates placeholder (Commit 2) -->
+            <!-- 6. Quick-start Templates -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Quick-Start Templates"
+                       Style="{StaticResource SubheadingLabel}"
+                       FontSize="13"
+                       Opacity="0.6" />
+                <CollectionView ItemsSource="{Binding Templates}"
+                                HeightRequest="130"
+                                ItemsLayout="HorizontalList"
+                                SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:QuickStartTemplateDto">
+                            <Border Padding="12,10"
+                                    Margin="0,0,10,0"
+                                    WidthRequest="200"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                                    StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12" />
+                                </Border.StrokeShape>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:PlanHubViewModel}}, Path=NavigateToBuilderFromTemplateCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="14" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding Description}"
+                                           FontSize="11" Opacity="0.6"
+                                           LineBreakMode="TailTruncation" MaxLines="2" />
+                                    <HorizontalStackLayout Spacing="8" Margin="0,4,0,0">
+                                        <Border Padding="6,2" StrokeShape="RoundRectangle 8"
+                                                BackgroundColor="{StaticResource PrimaryContainer}" StrokeThickness="0">
+                                            <Label Text="{Binding DaysPerWeek, StringFormat='{0}x/wk'}"
+                                                   FontSize="10" TextColor="{StaticResource Primary}" />
+                                        </Border>
+                                        <Border Padding="6,2" StrokeShape="RoundRectangle 8"
+                                                BackgroundColor="{StaticResource SecondaryContainer}" StrokeThickness="0">
+                                            <Label Text="{Binding DurationWeeks, StringFormat='{0} wks'}"
+                                                   FontSize="10" TextColor="{StaticResource Secondary}" />
+                                        </Border>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
 
         </VerticalStackLayout>
     </ScrollView>

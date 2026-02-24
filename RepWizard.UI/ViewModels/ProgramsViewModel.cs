@@ -54,7 +54,6 @@ public partial class ProgramsViewModel : BaseViewModel
     [RelayCommand]
     private async Task NavigateToBuilderAsync(CancellationToken ct)
     {
-        // TODO: Navigate to "builder" route once ProgramBuilderPage exists (Commit 2)
-        await Task.CompletedTask;
+        await _navigation.NavigateToAsync("builder");
     }
 }

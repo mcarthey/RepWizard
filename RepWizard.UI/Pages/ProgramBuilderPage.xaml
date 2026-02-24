@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
+             xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
+             x:Class="RepWizard.UI.Pages.ProgramBuilderPage"
+             x:DataType="vm:ProgramBuilderViewModel"
+             Title="Create Program"
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Step Indicator -->
+        <HorizontalStackLayout Grid.Row="0"
+                               Spacing="4"
+                               HorizontalOptions="Center"
+                               Padding="16,12">
+            <Border WidthRequest="32" HeightRequest="32"
+                    StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                    BackgroundColor="{Binding CurrentStep, Converter={StaticResource StepColorConverter}, ConverterParameter=0}">
+                <Label Text="1" HorizontalOptions="Center" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+                       TextColor="White" />
+            </Border>
+            <BoxView WidthRequest="20" HeightRequest="2" Color="{StaticResource OutlineVariant}" VerticalOptions="Center" />
+            <Border WidthRequest="32" HeightRequest="32"
+                    StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                    BackgroundColor="{Binding CurrentStep, Converter={StaticResource StepColorConverter}, ConverterParameter=1}">
+                <Label Text="2" HorizontalOptions="Center" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+                       TextColor="White" />
+            </Border>
+            <BoxView WidthRequest="20" HeightRequest="2" Color="{StaticResource OutlineVariant}" VerticalOptions="Center" />
+            <Border WidthRequest="32" HeightRequest="32"
+                    StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                    BackgroundColor="{Binding CurrentStep, Converter={StaticResource StepColorConverter}, ConverterParameter=2}">
+                <Label Text="3" HorizontalOptions="Center" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+                       TextColor="White" />
+            </Border>
+            <BoxView WidthRequest="20" HeightRequest="2" Color="{StaticResource OutlineVariant}" VerticalOptions="Center" />
+            <Border WidthRequest="32" HeightRequest="32"
+                    StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                    BackgroundColor="{Binding CurrentStep, Converter={StaticResource StepColorConverter}, ConverterParameter=3}">
+                <Label Text="4" HorizontalOptions="Center" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+                       TextColor="White" />
+            </Border>
+            <BoxView WidthRequest="20" HeightRequest="2" Color="{StaticResource OutlineVariant}" VerticalOptions="Center" />
+            <Border WidthRequest="32" HeightRequest="32"
+                    StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                    BackgroundColor="{Binding CurrentStep, Converter={StaticResource StepColorConverter}, ConverterParameter=4}">
+                <Label Text="5" HorizontalOptions="Center" VerticalOptions="Center" FontSize="13" FontAttributes="Bold"
+                       TextColor="White" />
+            </Border>
+        </HorizontalStackLayout>
+
+        <ScrollView Grid.Row="1">
+            <Grid>
+
+                <!-- Step 0: Goals -->
+                <VerticalStackLayout Padding="16" Spacing="12"
+                                     IsVisible="{Binding CurrentStep, Converter={StaticResource EqualConverter}, ConverterParameter=0}">
+                    <Label Text="Your Goals" Style="{StaticResource HeadingLabel}" FontSize="20" />
+                    <Label Text="These are loaded from your profile. Confirm or adjust for this program."
+                           FontSize="13" Opacity="0.6" />
+
+                    <Border Style="{StaticResource TonalSurface}" Padding="12">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Long-term Goal" FontSize="12" Opacity="0.5" />
+                            <Label Text="{Binding LongTermGoal, TargetNullValue='Not set'}"
+                                   FontSize="15" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource TonalSurface}" Padding="12">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Short-term Focus" FontSize="12" Opacity="0.5" />
+                            <Label Text="{Binding ShortTermFocus, TargetNullValue='Not set'}"
+                                   FontSize="15" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label Text="Goal for this program" FontSize="13" Opacity="0.6" Margin="0,8,0,0" />
+                    <Entry Text="{Binding GoalForProgram}"
+                           Placeholder="What do you want to achieve?"
+                           FontSize="15" />
+                </VerticalStackLayout>
+
+                <!-- Step 1: Structure -->
+                <VerticalStackLayout Padding="16" Spacing="12"
+                                     IsVisible="{Binding CurrentStep, Converter={StaticResource EqualConverter}, ConverterParameter=1}">
+                    <Label Text="Program Structure" Style="{StaticResource HeadingLabel}" FontSize="20" />
+
+                    <Label Text="Program Name" FontSize="13" Opacity="0.6" />
+                    <Entry Text="{Binding ProgramName}" Placeholder="e.g. My Strength Program" FontSize="15" />
+
+                    <Label Text="{Binding DaysPerWeek, StringFormat='Training Days: {0}/week'}"
+                           FontSize="13" Opacity="0.6" />
+                    <Stepper Value="{Binding DaysPerWeek}" Minimum="2" Maximum="6" Increment="1" />
+
+                    <Label Text="{Binding DurationWeeks, StringFormat='Duration: {0} weeks'}"
+                           FontSize="13" Opacity="0.6" />
+                    <Stepper Value="{Binding DurationWeeks}" Minimum="2" Maximum="24" Increment="1" />
+
+                    <Label Text="{Binding SessionLengthMinutes, StringFormat='Session Length: {0} min'}"
+                           FontSize="13" Opacity="0.6" />
+                    <Slider Value="{Binding SessionLengthMinutes}" Minimum="20" Maximum="120"
+                            MinimumTrackColor="{StaticResource Primary}" />
+
+                    <Label Text="Split Type" FontSize="13" Opacity="0.6" />
+                    <Picker ItemsSource="{Binding SplitTypes}"
+                            SelectedIndex="{Binding SelectedSplitIndex}"
+                            FontSize="15" />
+                </VerticalStackLayout>
+
+                <!-- Step 2: Exercises -->
+                <VerticalStackLayout Padding="16" Spacing="12"
+                                     IsVisible="{Binding CurrentStep, Converter={StaticResource EqualConverter}, ConverterParameter=2}">
+                    <Label Text="Exercises" Style="{StaticResource HeadingLabel}" FontSize="20" />
+                    <Label Text="Tap a training day to add exercises from the library."
+                           FontSize="13" Opacity="0.6" />
+
+                    <CollectionView ItemsSource="{Binding Days}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BuilderDayItem">
+                                <Border Margin="0,4" Padding="12,10"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                                        StrokeShape="RoundRectangle 10" StrokeThickness="0">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProgramBuilderViewModel}}, Path=SelectDayCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding DayOfWeek}" FontSize="14" FontAttributes="Bold" />
+                                            <Label Text="{Binding Summary}" FontSize="12" Opacity="0.6" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="+"
+                                               FontSize="20" VerticalOptions="Center"
+                                               IsVisible="{Binding RestDay, Converter={StaticResource InverseBoolConverter}}"
+                                               TextColor="{StaticResource Primary}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <!-- Step 3: Volume -->
+                <VerticalStackLayout Padding="16" Spacing="12"
+                                     IsVisible="{Binding CurrentStep, Converter={StaticResource EqualConverter}, ConverterParameter=3}">
+                    <Label Text="Volume &amp; Progression" Style="{StaticResource HeadingLabel}" FontSize="20" />
+                    <Label Text="Adjust sets, reps, and rest for each exercise."
+                           FontSize="13" Opacity="0.6" />
+
+                    <CollectionView ItemsSource="{Binding Days}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BuilderDayItem">
+                                <VerticalStackLayout Spacing="4" Margin="0,0,0,12"
+                                                     IsVisible="{Binding RestDay, Converter={StaticResource InverseBoolConverter}}">
+                                    <Label Text="{Binding DayOfWeek, StringFormat='{0}'}"
+                                           FontSize="14" FontAttributes="Bold" Margin="0,4,0,0" />
+                                    <CollectionView ItemsSource="{Binding Exercises}" SelectionMode="None">
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:BuilderExerciseItem">
+                                                <Border Margin="0,2" Padding="10,8"
+                                                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                                                        StrokeShape="RoundRectangle 8" StrokeThickness="0">
+                                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8"
+                                                          RowDefinitions="Auto,Auto">
+                                                        <Label Text="{Binding ExerciseName}" FontSize="13" FontAttributes="Bold"
+                                                               Grid.ColumnSpan="4" />
+                                                        <HorizontalStackLayout Grid.Row="1" Spacing="8">
+                                                            <Label Text="Sets:" FontSize="11" VerticalOptions="Center" Opacity="0.6" />
+                                                            <Stepper Value="{Binding SetCount}" Minimum="1" Maximum="10" Increment="1" />
+                                                        </HorizontalStackLayout>
+                                                        <Label Grid.Row="1" Grid.Column="3"
+                                                               Text="{Binding VolumeDisplay}" FontSize="11"
+                                                               VerticalOptions="Center" Opacity="0.6" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <!-- Step 4: Review -->
+                <VerticalStackLayout Padding="16" Spacing="12"
+                                     IsVisible="{Binding CurrentStep, Converter={StaticResource EqualConverter}, ConverterParameter=4}">
+                    <Label Text="Review" Style="{StaticResource HeadingLabel}" FontSize="20" />
+
+                    <Border Style="{StaticResource TonalSurface}" Padding="16">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                        <Label Text="{Binding ReviewSummary}" FontSize="14" LineBreakMode="WordWrap" />
+                    </Border>
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,8,0,0">
+                        <Switch IsToggled="{Binding ActivateImmediately}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="Activate immediately"
+                               FontSize="14" VerticalOptions="Center" />
+                    </Grid>
+
+                    <!-- Error display -->
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="{StaticResource Error}"
+                           FontSize="12"
+                           IsVisible="{Binding HasError}" />
+                </VerticalStackLayout>
+
+                <!-- Exercise Picker Overlay -->
+                <Border IsVisible="{Binding ShowExercisePicker}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+                        Padding="16"
+                        ZIndex="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding SelectedDay.DayOfWeek, StringFormat='Add Exercise — {0}'}"
+                                   Style="{StaticResource HeadingLabel}" FontSize="16" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="Close"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding CloseExercisePickerCommand}"
+                                    FontSize="12" Padding="8,4" />
+                        </Grid>
+                        <SearchBar Text="{Binding ExerciseSearch}"
+                                   Placeholder="Search exercises..."
+                                   SearchCommand="{Binding SearchExercisesCommand}" />
+                        <CollectionView ItemsSource="{Binding SearchResults}"
+                                        SelectionMode="None"
+                                        HeightRequest="400">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="dto:ExerciseDto">
+                                    <Border Margin="0,2" Padding="10,8"
+                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                                            StrokeShape="RoundRectangle 8" StrokeThickness="0">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProgramBuilderViewModel}}, Path=AddExerciseToDayCommand}"
+                                                CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" />
+                                            <Label Text="{Binding Equipment}" FontSize="11" Opacity="0.6" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                            <CollectionView.EmptyView>
+                                <Label Text="Search for an exercise above"
+                                       FontSize="13" Opacity="0.5"
+                                       HorizontalOptions="Center" Margin="0,40" />
+                            </CollectionView.EmptyView>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Border>
+
+            </Grid>
+        </ScrollView>
+
+        <!-- Bottom Navigation Bar -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto"
+              Padding="16,8" ColumnSpacing="8"
+              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
+            <Button Text="Back"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding PreviousStepCommand}"
+                    IsVisible="{Binding CanGoBack}"
+                    FontSize="14" Padding="16,8" />
+            <Button Grid.Column="1"
+                    Text="Cancel"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding CancelCommand}"
+                    FontSize="14" Padding="16,8"
+                    HorizontalOptions="Start"
+                    IsVisible="{Binding CanGoBack, Converter={StaticResource InverseBoolConverter}}" />
+            <Button Grid.Column="2"
+                    Text="{Binding NextButtonText}"
+                    Command="{Binding NextStepCommand}"
+                    FontSize="14" Padding="24,8" />
+        </Grid>
+
+        <!-- Loading overlay -->
+        <ActivityIndicator Grid.RowSpan="3"
+                           IsRunning="{Binding IsLoading}"
+                           IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Color="{StaticResource Primary}" />
+
+    </Grid>
+
+</ContentPage>

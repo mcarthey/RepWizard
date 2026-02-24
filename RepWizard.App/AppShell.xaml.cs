@@ -25,6 +25,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("library", typeof(ExerciseLibraryPage));
         Routing.RegisterRoute("goals", typeof(GoalsPage));
         Routing.RegisterRoute("ai-chat", typeof(AiChatPage));
+        Routing.RegisterRoute("builder", typeof(ProgramBuilderPage));
         Routing.RegisterRoute("settings", typeof(SettingsPage));
     }
 }

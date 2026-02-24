@@ -13,6 +13,8 @@
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
             <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <converters:StepColorConverter x:Key="StepColorConverter" />
+            <converters:EqualConverter x:Key="EqualConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

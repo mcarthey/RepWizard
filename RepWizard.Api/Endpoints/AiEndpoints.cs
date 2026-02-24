@@ -187,37 +187,89 @@ public static class AiEndpoints
         .WithName("GetConversation")
         .WithSummary("Get an AI Coach conversation with all messages");
 
-        // POST /api/v1/ai/generate-program — program generation (stub)
-        group.MapPost("/generate-program", (
+        // POST /api/v1/ai/generate-program — AI-assisted program generation
+        group.MapPost("/generate-program", async (
             GenerateProgramRequest request,
             IMediator mediator,
+            IAiChatService aiChatService,
+            AiContextBuilder contextBuilder,
+            IConfiguration configuration,
             CancellationToken ct) =>
         {
             if (request.UserId == Guid.Empty)
                 return Results.BadRequest(ApiResponse<object>.Fail("UserId is required."));
 
-            if (request.ConversationId == Guid.Empty)
-                return Results.BadRequest(ApiResponse<object>.Fail("ConversationId is required."));
+            // Build user context for AI
+            var userContext = await contextBuilder.BuildContextAsync(request.UserId, ct);
 
-            // Stub: stream back a placeholder message indicating program generation is available
+            // Build a generation-specific prompt from request params
+            var constraints = new StringBuilder();
+            if (request.DaysPerWeek.HasValue)
+                constraints.AppendLine($"- Training days per week: {request.DaysPerWeek}");
+            if (request.DurationWeeks.HasValue)
+                constraints.AppendLine($"- Program duration: {request.DurationWeeks} weeks");
+            if (request.SessionLengthMinutes.HasValue)
+                constraints.AppendLine($"- Session length: {request.SessionLengthMinutes} minutes");
+            if (!string.IsNullOrWhiteSpace(request.SplitType))
+                constraints.AppendLine($"- Split type: {request.SplitType}");
+            if (!string.IsNullOrWhiteSpace(request.GoalOverride))
+                constraints.AppendLine($"- Goal for this program: {request.GoalOverride}");
+
+            var systemPrompt = configuration["AiCoach:ProgramGenerationPrompt"]
+                ?? "You are an expert strength and conditioning coach. Generate a structured, periodized training program based on the user's profile, goals, and constraints. Return your reasoning and the program structure in detail.";
+
+            var fullSystemPrompt = $"{systemPrompt}\n\n<user_context>\n{userContext}\n</user_context>";
+
+            var userMessage = constraints.Length > 0
+                ? $"Generate a training program with these parameters:\n{constraints}"
+                : "Generate a training program based on my profile and goals.";
+
+            var messages = new List<AiChatMessage>
+            {
+                new("user", userMessage)
+            } as IReadOnlyList<AiChatMessage>;
+
+            // Stream the response back as SSE
             return Results.Stream(async stream =>
             {
                 var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
+                var fullResponse = new StringBuilder();
 
-                var message = "Program generation is available. "
-                    + "To generate a training program, please discuss your goals, experience level, "
-                    + "available equipment, and weekly schedule with the AI Coach first. "
-                    + "The coach will then create a periodized program tailored to your needs.";
+                try
+                {
+                    await foreach (var chunk in aiChatService.StreamChatAsync(
+                        fullSystemPrompt, messages, ct))
+                    {
+                        fullResponse.Append(chunk);
 
-                var sseData = JsonSerializer.Serialize(
-                    new { content = message, status = "stub" }, SseJsonOptions);
-                await writer.WriteAsync($"data: {sseData}\n\n");
-                await writer.WriteAsync("data: [DONE]\n\n");
-                await writer.FlushAsync();
+                        var sseData = JsonSerializer.Serialize(
+                            new { content = chunk }, SseJsonOptions);
+                        await writer.WriteAsync($"data: {sseData}\n\n");
+                        await writer.FlushAsync();
+                    }
+
+                    // Send completion event with the full response as AiReasoning
+                    var doneData = JsonSerializer.Serialize(
+                        new { aiReasoning = fullResponse.ToString(), status = "complete" }, SseJsonOptions);
+                    await writer.WriteAsync($"data: {doneData}\n\n");
+                    await writer.WriteAsync("data: [DONE]\n\n");
+                    await writer.FlushAsync();
+                }
+                catch (OperationCanceledException)
+                {
+                    // Client disconnected
+                }
+                catch (Exception ex)
+                {
+                    var errorEvent = JsonSerializer.Serialize(
+                        new { error = ex.Message }, SseJsonOptions);
+                    await writer.WriteAsync($"data: {errorEvent}\n\n");
+                    await writer.FlushAsync();
+                }
             }, "text/event-stream");
         })
         .WithName("GenerateProgram")
-        .WithSummary("Generate a training program based on AI Coach conversation (stub — will be refined)");
+        .WithSummary("Generate a training program based on user profile, goals, and optional constraints");
 
         return app;
     }

@@ -33,4 +33,14 @@ public class TrainingProgramRepository : Repository<TrainingProgram>, ITrainingP
                 .ThenInclude(w => w.Days.OrderBy(d => d.DayOfWeek))
                     .ThenInclude(d => d.WorkoutTemplate)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.IsActive, ct);
+
+    public async Task DeactivateAllForUserAsync(Guid userId, CancellationToken ct = default)
+    {
+        var activePrograms = await _dbSet
+            .Where(p => p.UserId == userId && p.IsActive)
+            .ToListAsync(ct);
+
+        foreach (var program in activePrograms)
+            program.Deactivate();
+    }
 }

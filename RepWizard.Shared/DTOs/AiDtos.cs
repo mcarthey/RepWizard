@@ -37,6 +37,11 @@ public class SendChatRequest
 
 public class GenerateProgramRequest
 {
-    public Guid ConversationId { get; set; }
     public Guid UserId { get; set; }
+    public Guid? ConversationId { get; set; }
+    public string? GoalOverride { get; set; }
+    public int? DaysPerWeek { get; set; }
+    public int? DurationWeeks { get; set; }
+    public int? SessionLengthMinutes { get; set; }
+    public string? SplitType { get; set; }
 }

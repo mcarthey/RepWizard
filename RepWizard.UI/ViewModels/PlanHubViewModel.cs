@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using RepWizard.Application.Queries.Programs.GetTrainingPrograms;
 using RepWizard.Application.Queries.Users.GetUserProfile;
+using RepWizard.Application.Services;
 using RepWizard.Core.Interfaces;
 using RepWizard.Shared.DTOs;
 
@@ -29,6 +30,9 @@ public partial class PlanHubViewModel : BaseViewModel
     [ObservableProperty] private string? _longTermGoalText;
     [ObservableProperty] private string? _shortTermFocusText;
     [ObservableProperty] private bool _hasGoals;
+
+    // Quick-start templates
+    public IReadOnlyList<QuickStartTemplateDto> Templates { get; } = QuickStartTemplates.GetAll();
 
     public PlanHubViewModel(IMediator mediator, INavigationService navigation)
     {
@@ -101,8 +105,13 @@ public partial class PlanHubViewModel : BaseViewModel
     [RelayCommand]
     private async Task NavigateToBuilderAsync(CancellationToken ct)
     {
-        // Navigates to programs list for now; will go directly to builder in Commit 2
-        await _navigation.NavigateToAsync("programs");
+        await _navigation.NavigateToAsync("builder");
+    }
+
+    [RelayCommand]
+    private async Task NavigateToBuilderFromTemplateAsync(QuickStartTemplateDto template, CancellationToken ct)
+    {
+        await _navigation.NavigateToAsync($"builder?templateId={template.Id}");
     }
 
     [RelayCommand]

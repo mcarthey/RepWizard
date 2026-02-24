@@ -22,6 +22,7 @@ public static class ViewModelRegistration
         services.AddTransient<GoalsViewModel>();
         services.AddTransient<AiChatViewModel>();
         services.AddTransient<ProgramsViewModel>();
+        services.AddTransient<ProgramBuilderViewModel>();
         services.AddTransient<ProgramDetailViewModel>();
         services.AddTransient<ExerciseLibraryViewModel>();
         services.AddTransient<ExerciseDetailViewModel>();
@@ -42,6 +43,7 @@ public static class ViewModelRegistration
         services.AddTransient<GoalsPage>();
         services.AddTransient<AiChatPage>();
         services.AddTransient<ProgramsPage>();
+        services.AddTransient<ProgramBuilderPage>();
         services.AddTransient<ProgramDetailPage>();
         services.AddTransient<ExerciseLibraryPage>();
         services.AddTransient<SettingsPage>();

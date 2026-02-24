@@ -140,6 +140,7 @@ app.MapExerciseEndpoints();
 app.MapWorkoutEndpoints();
 app.MapMeasurementEndpoints();
 app.MapAiEndpoints();
+app.MapProgramEndpoints();
 app.MapSyncEndpoints();
 
 app.Run();
