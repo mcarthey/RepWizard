@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using RepWizard.Application.Commands.Programs.ActivateProgram;
 using RepWizard.Application.Commands.Programs.CreateTrainingProgram;
 using RepWizard.Application.Queries.Exercises.GetExercises;
 using RepWizard.Application.Queries.Users.GetUserProfile;
@@ -20,6 +19,7 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
 
     private string? _templateId;
     private Guid? _editProgramId;
+    private bool _isTemplateMode;
 
     // Step tracking (0-4)
     [ObservableProperty] private int _currentStep;
@@ -99,6 +99,7 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
                 var template = QuickStartTemplates.GetById(_templateId);
                 if (template != null)
                 {
+                    _isTemplateMode = true;
                     ProgramName = template.Name;
                     DaysPerWeek = template.DaysPerWeek;
                     DurationWeeks = template.DurationWeeks;
@@ -111,6 +112,14 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
                         "PPL" => 2,
                         _ => 3
                     };
+
+                    RebuildDaysFromTemplate(template);
+                    await PopulateTemplateExercisesAsync(template, ct);
+
+                    // Skip straight to review
+                    CurrentStep = 4;
+                    UpdateAdvisory();
+                    return;
                 }
             }
 
@@ -121,14 +130,20 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
 
     partial void OnDaysPerWeekChanged(int value)
     {
-        RebuildDays();
-        UpdateAdvisory();
+        if (!_isTemplateMode)
+        {
+            RebuildDays();
+            UpdateAdvisory();
+        }
     }
 
     partial void OnSelectedSplitIndexChanged(int value)
     {
-        RebuildDays();
-        UpdateAdvisory();
+        if (!_isTemplateMode)
+        {
+            RebuildDays();
+            UpdateAdvisory();
+        }
     }
 
     partial void OnCurrentStepChanged(int value)
@@ -148,23 +163,67 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
             _ => "Custom"
         };
 
-        var dayNames = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
         var newDays = new ObservableCollection<BuilderDayItem>();
 
-        for (var i = 0; i < 7; i++)
+        for (var i = 0; i < DaysPerWeek; i++)
         {
-            var isTraining = i < DaysPerWeek;
-            var focus = isTraining ? GetFocusForDay(splitType, i) : null;
-
+            var focus = GetFocusForDay(splitType, i);
             newDays.Add(new BuilderDayItem
             {
-                DayOfWeek = dayNames[i],
-                RestDay = !isTraining,
+                DayOfWeek = $"Day {i + 1}",
+                RestDay = false,
                 Focus = focus
             });
         }
 
         Days = newDays;
+    }
+
+    private void RebuildDaysFromTemplate(QuickStartTemplateDto template)
+    {
+        var newDays = new ObservableCollection<BuilderDayItem>();
+
+        for (var i = 0; i < template.Days.Count; i++)
+        {
+            var templateDay = template.Days[i];
+            newDays.Add(new BuilderDayItem
+            {
+                DayOfWeek = $"Day {i + 1}",
+                RestDay = false,
+                Focus = templateDay.Focus
+            });
+        }
+
+        Days = newDays;
+    }
+
+    private async Task PopulateTemplateExercisesAsync(QuickStartTemplateDto template, CancellationToken ct)
+    {
+        // Load all exercises to match by name
+        var result = await _mediator.Send(new GetExercisesQuery(null, null, null, 1, 100), ct);
+        if (!result.IsSuccess || result.Value == null) return;
+
+        var allExercises = result.Value.Items;
+        var exerciseLookup = allExercises.ToDictionary(e => e.Name, e => e, StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < template.Days.Count && i < Days.Count; i++)
+        {
+            var templateDay = template.Days[i];
+            var day = Days[i];
+
+            foreach (var exerciseName in templateDay.ExerciseNames)
+            {
+                if (exerciseLookup.TryGetValue(exerciseName, out var exercise))
+                {
+                    day.Exercises.Add(new BuilderExerciseItem
+                    {
+                        ExerciseId = exercise.Id,
+                        ExerciseName = exercise.Name,
+                        OrderIndex = day.Exercises.Count
+                    });
+                }
+            }
+        }
     }
 
     private static string GetFocusForDay(string splitType, int dayIndex) => splitType switch
@@ -193,6 +252,7 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
     [RelayCommand]
     private void SelectDay(BuilderDayItem day)
     {
+        if (day.RestDay) return;
         SelectedDay = day;
         ShowExercisePicker = true;
     }
@@ -240,9 +300,19 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
         var totalExercises = Days.Sum(d => d.Exercises.Count);
         var splitName = SplitTypes[SelectedSplitIndex];
 
-        ReviewSummary = $"{ProgramName}\n" +
-                        $"{DurationWeeks} weeks • {trainingDays} days/week • {splitName}\n" +
-                        $"{totalExercises} exercises • ~{SessionLengthMinutes} min/session";
+        var summary = $"{ProgramName}\n" +
+                      $"{DurationWeeks} weeks • {trainingDays} days/week • {splitName}\n" +
+                      $"{totalExercises} exercises • ~{SessionLengthMinutes} min/session";
+
+        // Add per-day breakdown
+        foreach (var day in Days.Where(d => !d.RestDay))
+        {
+            summary += $"\n\n{day.DayOfWeek} — {day.Focus}";
+            foreach (var ex in day.Exercises)
+                summary += $"\n  • {ex.ExerciseName} ({ex.VolumeDisplay})";
+        }
+
+        ReviewSummary = summary;
     }
 
     [RelayCommand]
@@ -257,7 +327,7 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
 
         await ExecuteSafeAsync(async () =>
         {
-            var dayInputs = Days.Where(d => !d.RestDay || true) // include all days
+            var dayInputs = Days
                 .Select(d => new ProgramDayInput
                 {
                     DayOfWeek = d.DayOfWeek,

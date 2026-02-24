@@ -12,4 +12,11 @@ public class QuickStartTemplateDto
     public string SplitType { get; set; } = string.Empty;
     public int SessionLengthMinutes { get; set; }
     public IList<string> Tags { get; set; } = new List<string>();
+    public IList<TemplateDayDto> Days { get; set; } = new List<TemplateDayDto>();
+}
+
+public class TemplateDayDto
+{
+    public string Focus { get; set; } = string.Empty;
+    public IList<string> ExerciseNames { get; set; } = new List<string>();
 }

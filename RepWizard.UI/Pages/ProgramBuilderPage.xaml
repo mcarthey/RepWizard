@@ -4,9 +4,11 @@
              xmlns:vm="clr-namespace:RepWizard.UI.ViewModels"
              xmlns:dto="clr-namespace:RepWizard.Shared.DTOs;assembly=RepWizard.Shared"
              x:Class="RepWizard.UI.Pages.ProgramBuilderPage"
+             x:Name="BuilderPage"
              x:DataType="vm:ProgramBuilderViewModel"
              Title="Create Program"
-             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+             Shell.NavBarIsVisible="False">
 
     <Grid RowDefinitions="Auto,*,Auto">
 
@@ -14,7 +16,8 @@
         <HorizontalStackLayout Grid.Row="0"
                                Spacing="4"
                                HorizontalOptions="Center"
-                               Padding="16,12">
+                               Padding="16,12"
+                               IsVisible="{Binding ShowExercisePicker, Converter={StaticResource InverseBoolConverter}}">
             <Border WidthRequest="32" HeightRequest="32"
                     StrokeShape="RoundRectangle 16" StrokeThickness="0"
                     BackgroundColor="{Binding CurrentStep, Converter={StaticResource StepColorConverter}, ConverterParameter=0}">
@@ -51,7 +54,8 @@
             </Border>
         </HorizontalStackLayout>
 
-        <ScrollView Grid.Row="1">
+        <ScrollView Grid.Row="1"
+                    IsVisible="{Binding ShowExercisePicker, Converter={StaticResource InverseBoolConverter}}">
             <Grid>
 
                 <!-- Step 0: Goals -->
@@ -126,11 +130,11 @@
                     </Border>
                 </VerticalStackLayout>
 
-                <!-- Step 2: Exercises -->
+                <!-- Step 2: Exercises (training days only) -->
                 <VerticalStackLayout Padding="16" Spacing="12"
                                      IsVisible="{Binding CurrentStep, Converter={StaticResource EqualConverter}, ConverterParameter=2}">
                     <Label Text="Exercises" Style="{StaticResource HeadingLabel}" FontSize="20" />
-                    <Label Text="Tap a training day to add exercises from the library."
+                    <Label Text="Tap a day to add exercises from the library."
                            FontSize="13" Opacity="0.6" />
 
                     <CollectionView ItemsSource="{Binding Days}" SelectionMode="None">
@@ -138,10 +142,11 @@
                             <DataTemplate x:DataType="vm:BuilderDayItem">
                                 <Border Margin="0,4" Padding="12,10"
                                         BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
-                                        StrokeShape="RoundRectangle 10" StrokeThickness="0">
+                                        StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                                        IsVisible="{Binding RestDay, Converter={StaticResource InverseBoolConverter}}">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProgramBuilderViewModel}}, Path=SelectDayCommand}"
+                                            Command="{Binding BindingContext.SelectDayCommand, Source={x:Reference BuilderPage}}"
                                             CommandParameter="{Binding .}" />
                                     </Border.GestureRecognizers>
                                     <Grid ColumnDefinitions="*,Auto">
@@ -151,7 +156,6 @@
                                         </VerticalStackLayout>
                                         <Label Grid.Column="1" Text="+"
                                                FontSize="20" VerticalOptions="Center"
-                                               IsVisible="{Binding RestDay, Converter={StaticResource InverseBoolConverter}}"
                                                TextColor="{StaticResource Primary}" />
                                     </Grid>
                                 </Border>
@@ -225,59 +229,59 @@
                            IsVisible="{Binding HasError}" />
                 </VerticalStackLayout>
 
-                <!-- Exercise Picker Overlay -->
-                <Border IsVisible="{Binding ShowExercisePicker}"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
-                        Padding="16"
-                        ZIndex="10">
-                    <VerticalStackLayout Spacing="8">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="{Binding SelectedDay.DayOfWeek, StringFormat='Add Exercise — {0}'}"
-                                   Style="{StaticResource HeadingLabel}" FontSize="16" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="Close"
-                                    Style="{StaticResource SecondaryButton}"
-                                    Command="{Binding CloseExercisePickerCommand}"
-                                    FontSize="12" Padding="8,4" />
-                        </Grid>
-                        <SearchBar Text="{Binding ExerciseSearch}"
-                                   Placeholder="Search exercises..."
-                                   SearchCommand="{Binding SearchExercisesCommand}" />
-                        <CollectionView ItemsSource="{Binding SearchResults}"
-                                        SelectionMode="None"
-                                        HeightRequest="400">
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate x:DataType="dto:ExerciseDto">
-                                    <Border Margin="0,2" Padding="10,8"
-                                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
-                                            StrokeShape="RoundRectangle 8" StrokeThickness="0">
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProgramBuilderViewModel}}, Path=AddExerciseToDayCommand}"
-                                                CommandParameter="{Binding .}" />
-                                        </Border.GestureRecognizers>
-                                        <VerticalStackLayout Spacing="2">
-                                            <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" />
-                                            <Label Text="{Binding Equipment}" FontSize="11" Opacity="0.6" />
-                                        </VerticalStackLayout>
-                                    </Border>
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                            <CollectionView.EmptyView>
-                                <Label Text="Search for an exercise above"
-                                       FontSize="13" Opacity="0.5"
-                                       HorizontalOptions="Center" Margin="0,40" />
-                            </CollectionView.EmptyView>
-                        </CollectionView>
-                    </VerticalStackLayout>
-                </Border>
-
             </Grid>
         </ScrollView>
 
-        <!-- Bottom Navigation Bar -->
+        <!-- Exercise Picker Overlay (covers entire screen) -->
+        <Grid Grid.RowSpan="3"
+              IsVisible="{Binding ShowExercisePicker}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+              Padding="16"
+              RowDefinitions="Auto,Auto,*">
+            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                <Label Text="{Binding SelectedDay.DayOfWeek, StringFormat='Add Exercise — {0}'}"
+                       Style="{StaticResource HeadingLabel}" FontSize="16" VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="Done"
+                        Command="{Binding CloseExercisePickerCommand}"
+                        FontSize="13" Padding="16,6" />
+            </Grid>
+            <SearchBar Grid.Row="1"
+                       Text="{Binding ExerciseSearch}"
+                       Placeholder="Search exercises..."
+                       SearchCommand="{Binding SearchExercisesCommand}" />
+            <CollectionView Grid.Row="2"
+                            ItemsSource="{Binding SearchResults}"
+                            SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:ExerciseDto">
+                        <Border Margin="0,2" Padding="12,10"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceElevated1}}"
+                                StrokeShape="RoundRectangle 8" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding BindingContext.AddExerciseToDayCommand, Source={x:Reference BuilderPage}}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="{Binding Equipment}" FontSize="11" Opacity="0.6" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="Search for an exercise above"
+                           FontSize="13" Opacity="0.5"
+                           HorizontalOptions="Center" Margin="0,40" />
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Grid>
+
+        <!-- Bottom Navigation Bar (hidden when picker is open) -->
         <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto"
               Padding="16,8" ColumnSpacing="8"
-              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}">
+              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceColor}, Dark={StaticResource SurfaceColorDark}}"
+              IsVisible="{Binding ShowExercisePicker, Converter={StaticResource InverseBoolConverter}}">
             <Button Text="Back"
                     Style="{StaticResource SecondaryButton}"
                     Command="{Binding PreviousStepCommand}"
