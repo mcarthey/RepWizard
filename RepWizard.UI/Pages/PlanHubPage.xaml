@@ -187,7 +187,32 @@
                 </Grid>
             </VerticalStackLayout>
 
-            <!-- 5. AI Insight Banner placeholder (Commit 3) -->
+            <!-- 5. AI Insight Banner -->
+            <Border Style="{StaticResource TonalSurface}"
+                    Padding="14"
+                    IsVisible="{Binding HasInsight}"
+                    x:Name="InsightBanner">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="AI Insight"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           Opacity="0.5" />
+                    <Label Text="{Binding InsightText}"
+                           FontSize="13"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Insight loading shimmer -->
+            <BoxView HeightRequest="60"
+                     CornerRadius="12"
+                     Color="{StaticResource OutlineVariant}"
+                     Opacity="0.3"
+                     IsVisible="{Binding IsInsightLoading}"
+                     x:Name="InsightShimmer" />
 
             <!-- 6. Quick-start Templates -->
             <VerticalStackLayout Spacing="8">

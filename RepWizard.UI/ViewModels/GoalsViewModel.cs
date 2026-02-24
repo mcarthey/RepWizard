@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using RepWizard.Application.Commands.Users.UpdateProfile;
+using RepWizard.Application.Queries.Ai.GetGoalAnalysis;
 using RepWizard.Application.Queries.Users.GetUserProfile;
 using RepWizard.Core.Interfaces;
 
@@ -25,6 +26,11 @@ public partial class GoalsViewModel : BaseViewModel
     [ObservableProperty] private string _sessionLengthMinutesText = string.Empty;
     [ObservableProperty] private string? _availableEquipment;
     [ObservableProperty] private string? _movementLimitations;
+
+    // Goal analysis
+    [ObservableProperty] private string _goalAnalysisText = string.Empty;
+    [ObservableProperty] private bool _hasGoalAnalysis;
+    [ObservableProperty] private bool _isAnalysisLoading;
 
     public GoalsViewModel(IMediator mediator, INavigationService navigation)
     {
@@ -83,9 +89,37 @@ public partial class GoalsViewModel : BaseViewModel
                 MovementLimitations: MovementLimitations), ct);
 
             if (result.IsSuccess)
+            {
+                await LoadGoalAnalysisAsync(ct);
                 await _navigation.NavigateBackAsync();
+            }
             else
+            {
                 SetError(result.Error ?? "Failed to save goals.");
+            }
         }, "Failed to save goals");
+    }
+
+    [RelayCommand]
+    private async Task LoadGoalAnalysisAsync(CancellationToken ct)
+    {
+        IsAnalysisLoading = true;
+        try
+        {
+            var result = await _mediator.Send(new GetGoalAnalysisQuery(DefaultUserId), ct);
+            if (result.IsSuccess && result.Value?.HasAnalysis == true)
+            {
+                GoalAnalysisText = result.Value.AnalysisText;
+                HasGoalAnalysis = true;
+            }
+        }
+        catch
+        {
+            // Non-critical
+        }
+        finally
+        {
+            IsAnalysisLoading = false;
+        }
     }
 }

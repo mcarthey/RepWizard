@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
+using RepWizard.Application.Queries.Ai.GetPlanInsight;
 using RepWizard.Application.Queries.Programs.GetTrainingPrograms;
 using RepWizard.Application.Queries.Users.GetUserProfile;
 using RepWizard.Application.Services;
@@ -33,6 +34,11 @@ public partial class PlanHubViewModel : BaseViewModel
 
     // Quick-start templates
     public IReadOnlyList<QuickStartTemplateDto> Templates { get; } = QuickStartTemplates.GetAll();
+
+    // AI Insight
+    [ObservableProperty] private string _insightText = string.Empty;
+    [ObservableProperty] private bool _hasInsight;
+    [ObservableProperty] private bool _isInsightLoading;
 
     public PlanHubViewModel(IMediator mediator, INavigationService navigation)
     {
@@ -81,6 +87,29 @@ public partial class PlanHubViewModel : BaseViewModel
                 }
             }
         });
+    }
+
+    [RelayCommand]
+    private async Task LoadInsightAsync(CancellationToken ct)
+    {
+        IsInsightLoading = true;
+        try
+        {
+            var result = await _mediator.Send(new GetPlanInsightQuery(DefaultUserId), ct);
+            if (result.IsSuccess && result.Value?.HasInsight == true)
+            {
+                InsightText = result.Value.InsightText;
+                HasInsight = true;
+            }
+        }
+        catch
+        {
+            // Non-critical — banner stays hidden
+        }
+        finally
+        {
+            IsInsightLoading = false;
+        }
     }
 
     [RelayCommand]

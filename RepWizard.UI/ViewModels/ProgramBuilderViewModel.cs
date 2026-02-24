@@ -51,6 +51,11 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
     [ObservableProperty] private bool _activateImmediately = true;
     [ObservableProperty] private string _reviewSummary = string.Empty;
 
+    // Advisory text (client-side, deterministic rules)
+    [ObservableProperty] private string _advisoryText = string.Empty;
+    [ObservableProperty] private bool _hasAdvisory;
+    private string? _userExperienceLevel;
+
     public ProgramBuilderViewModel(IMediator mediator, INavigationService navigation)
     {
         _mediator = mediator;
@@ -80,6 +85,8 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
                 ShortTermFocus = user.ShortTermFocusText;
                 GoalForProgram = user.LongTermGoalText ?? user.ShortTermFocusText ?? string.Empty;
 
+                _userExperienceLevel = user.ExperienceLevel;
+
                 if (user.AvailableDaysPerWeek.HasValue)
                     DaysPerWeek = user.AvailableDaysPerWeek.Value;
                 if (user.SessionLengthMinutes.HasValue)
@@ -108,11 +115,21 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
             }
 
             RebuildDays();
+            UpdateAdvisory();
         });
     }
 
-    partial void OnDaysPerWeekChanged(int value) => RebuildDays();
-    partial void OnSelectedSplitIndexChanged(int value) => RebuildDays();
+    partial void OnDaysPerWeekChanged(int value)
+    {
+        RebuildDays();
+        UpdateAdvisory();
+    }
+
+    partial void OnSelectedSplitIndexChanged(int value)
+    {
+        RebuildDays();
+        UpdateAdvisory();
+    }
 
     partial void OnCurrentStepChanged(int value)
     {
@@ -278,6 +295,40 @@ public partial class ProgramBuilderViewModel : BaseViewModel, IQueryAttributable
                 SetError(result.Error ?? "Failed to save program.");
             }
         }, "Failed to save program");
+    }
+
+    private void UpdateAdvisory()
+    {
+        var warnings = new List<string>();
+
+        var isBeginner = string.Equals(_userExperienceLevel, "Beginner", StringComparison.OrdinalIgnoreCase)
+                      || string.Equals(_userExperienceLevel, "Novice", StringComparison.OrdinalIgnoreCase);
+
+        if (isBeginner && DaysPerWeek > 3)
+            warnings.Add("Beginners typically benefit most from 3 sessions per week.");
+
+        if (DurationWeeks > 4)
+        {
+            // Deload reminder
+        }
+        else if (DurationWeeks < 3)
+        {
+            warnings.Add("Programs under 3 weeks may not provide enough stimulus for measurable progress.");
+        }
+
+        if (DaysPerWeek >= 5 && SessionLengthMinutes > 90)
+            warnings.Add("High frequency with long sessions increases recovery demands. Monitor fatigue closely.");
+
+        if (warnings.Count > 0)
+        {
+            AdvisoryText = string.Join(" ", warnings);
+            HasAdvisory = true;
+        }
+        else
+        {
+            AdvisoryText = string.Empty;
+            HasAdvisory = false;
+        }
     }
 
     [RelayCommand]

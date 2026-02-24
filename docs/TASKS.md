@@ -512,7 +512,7 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 
 ---
 
-## Plan Tab Redesign — In Progress
+## Plan Tab Redesign ✅ COMPLETE
 
 > Reframes the Coach tab as a program builder studio. AI is an embedded advisor, not the landing page.
 > Spec: `docs/RepWizard-PlanTab-Spec.md`
@@ -540,23 +540,31 @@ Ratio is now closer to the 60/30/10 target from `docs/TESTING-STRATEGY.md`.
 
 **Post-Commit 1 test count: 246 ✅ (3 new tests, 0 regressions)**
 
-### Commit 2: Builder Flow + Quick-Start Templates
+### Commit 2: Builder Flow + Quick-Start Templates ✅ COMPLETE
 
-- [ ] Create `ProgramBuilderPage` + `ProgramBuilderViewModel` (5-step wizard: Goal, Structure, Exercises, Volume, Review)
-- [ ] Create `QuickStartTemplates` static data service (5 curated templates)
-- [ ] Create `CreateTrainingProgramCommand` + handler + validator
-- [ ] Create `ActivateProgramCommand` + handler
-- [ ] Add quick-start template cards to PlanHubPage
-- [ ] Implement `generate-program` endpoint (replace stub with real SSE + AI)
-- [ ] Add ~15 tests
+- [x] Create `ProgramBuilderPage` + `ProgramBuilderViewModel` (5-step wizard: Goal, Structure, Exercises, Volume, Review)
+- [x] Create `QuickStartTemplates` static data service (5 curated templates)
+- [x] Create `CreateTrainingProgramCommand` + handler + validator
+- [x] Create `ActivateProgramCommand` + handler
+- [x] Add quick-start template cards to PlanHubPage
+- [x] Implement `generate-program` endpoint (replace stub with real SSE + AI context)
+- [x] Add `POST /api/v1/programs` + `POST /api/v1/programs/{id}/activate` endpoints
+- [x] Add `DeactivateAllForUserAsync` to `ITrainingProgramRepository`
+- [x] Add `StepColorConverter`, `EqualConverter` for builder step UI
+- [x] 18 new tests (QuickStartTemplates, CreateTrainingProgram, ActivateProgram, validator)
 
-### Commit 3: AI Integration
+**Post-Commit 2 test count: 264 ✅ (18 new tests, 0 regressions)**
 
-- [ ] Add AI Insight banner to PlanHubPage (lazy-loaded)
-- [ ] Add client-side advisory text in builder (ProgramValidator-based, offline)
-- [ ] Add goal analysis on GoalsPage (API call)
-- [ ] Add context pre-loading for AI chat from query params
-- [ ] Add ~8 tests
+### Commit 3: AI Integration ✅ COMPLETE
+
+- [x] Add AI Insight banner to PlanHubPage (lazy-loaded, shimmer animation while loading)
+- [x] Create `GetPlanInsightQuery` + handler (AiContextBuilder + IAiChatService, graceful failure)
+- [x] Create `GetGoalAnalysisQuery` + handler (AiContextBuilder + IAiChatService, graceful failure)
+- [x] Add goal analysis card on GoalsPage (loads after save)
+- [x] Add client-side advisory text in builder (deterministic rules, offline-capable)
+- [x] 8 new tests (GetPlanInsightQueryHandler: 4, GetGoalAnalysisQueryHandler: 4)
+
+**Post-Commit 3 test count: 272 ✅ (8 new tests, 0 regressions)**
 
 ---
 

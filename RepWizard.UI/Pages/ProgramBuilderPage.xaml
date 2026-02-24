@@ -110,6 +110,20 @@
                     <Picker ItemsSource="{Binding SplitTypes}"
                             SelectedIndex="{Binding SelectedSplitIndex}"
                             FontSize="15" />
+
+                    <!-- Advisory text (client-side, deterministic rules) -->
+                    <Border Padding="10,8"
+                            StrokeThickness="0"
+                            BackgroundColor="{StaticResource TertiaryContainer}"
+                            IsVisible="{Binding HasAdvisory}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Label Text="{Binding AdvisoryText}"
+                               FontSize="12"
+                               TextColor="{StaticResource OnTertiaryContainer}"
+                               LineBreakMode="WordWrap" />
+                    </Border>
                 </VerticalStackLayout>
 
                 <!-- Step 2: Exercises -->
